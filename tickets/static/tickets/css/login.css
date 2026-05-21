@@ -1,0 +1,279 @@
+
+        :root {
+            --navy:        #0f2544;
+            --navy-light:  #1a3a6b;
+            --teal:        #0a8a7a;
+            --teal-light:  #e6f5f3;
+            --red:         #dc2626;
+            --red-light:   #fef2f2;
+            --red-border:  #fca5a5;
+            --bg:          #f1f5f9;
+            --card:        #ffffff;
+            --border:      #e2e8f0;
+            --text:        #1e293b;
+            --muted:       #64748b;
+            --subtle:      #94a3b8;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Split Layout ────────────────────────────── */
+        .layout {
+            flex: 1;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ── Left Panel ──────────────────────────────── */
+        .panel-left {
+            flex: 1;
+            background: var(--navy);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 60px 64px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Decorative background shapes */
+        .panel-left::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -80px;
+            width: 340px;
+            height: 340px;
+            background: rgba(10,138,122,.18);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .panel-left::after {
+            content: '';
+            position: absolute;
+            bottom: -100px;
+            left: -60px;
+            width: 280px;
+            height: 280px;
+            background: rgba(255,255,255,.04);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .brand-lockup {
+            position: relative;
+            z-index: 1;
+            margin-bottom: 48px;
+        }
+
+        .brand-icon-wrap {
+            width: 56px;
+            height: 56px;
+            background: var(--teal);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            margin-bottom: 22px;
+            box-shadow: 0 8px 24px rgba(10,138,122,.4);
+        }
+
+        .brand-name {
+            font-family: 'Sora', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: white;
+            line-height: 1.2;
+            margin-bottom: 10px;
+        }
+
+        .brand-tagline {
+            font-size: .95rem;
+            color: rgba(255,255,255,.55);
+            font-weight: 400;
+            line-height: 1.5;
+            max-width: 280px;
+        }
+
+        .feature-list {
+            position: relative;
+            z-index: 1;
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            color: rgba(255,255,255,.75);
+            font-size: .9rem;
+            line-height: 1.45;
+        }
+
+        .feature-dot {
+            width: 28px;
+            height: 28px;
+            background: rgba(10,138,122,.25);
+            border: 1px solid rgba(10,138,122,.5);
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .85rem;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        /* ── Right Panel (Form) ──────────────────────── */
+        .panel-right {
+            width: 480px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px 48px;
+            background: var(--card);
+        }
+
+        .form-wrap {
+            width: 100%;
+            max-width: 360px;
+        }
+
+        .form-heading {
+            margin-bottom: 32px;
+        }
+
+        .form-heading h2 {
+            font-family: 'Sora', sans-serif;
+            font-size: 1.55rem;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 6px;
+        }
+
+        .form-heading p {
+            font-size: .875rem;
+            color: var(--muted);
+        }
+
+        /* ── Error Alert ─────────────────────────────── */
+        .error-alert {
+            background: var(--red-light);
+            border: 1px solid var(--red-border);
+            border-radius: 8px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 22px;
+            font-size: .875rem;
+            color: var(--red);
+            font-weight: 500;
+            animation: shake .35s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%       { transform: translateX(-5px); }
+            40%       { transform: translateX(5px); }
+            60%       { transform: translateX(-4px); }
+            80%       { transform: translateX(4px); }
+        }
+
+        /* ── Django Form Fields (as_p) ────────────────── */
+        form p {
+            margin-bottom: 20px;
+        }
+
+        form label {
+            display: block;
+            font-size: .875rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 7px;
+            letter-spacing: .1px;
+        }
+
+        form input[type="text"],
+        form input[type="password"],
+        form input[type="email"] {
+            display: block;
+            width: 100%;
+            padding: 11px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: .9rem;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text);
+            background: #fafbfc;
+            outline: none;
+            transition: border-color .18s, box-shadow .18s, background .15s;
+        }
+
+        form input[type="text"]:focus,
+        form input[type="password"]:focus,
+        form input[type="email"]:focus {
+            border-color: var(--teal);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(10,138,122,.12);
+        }
+
+        /* ── Sign In Button ──────────────────────────── */
+        .btn-login {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 13px;
+            background: var(--navy);
+            color: white;
+            border: none;
+            border-radius: 9px;
+            font-size: .95rem;
+            font-weight: 700;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background .18s, transform .15s, box-shadow .15s;
+            letter-spacing: .2px;
+        }
+
+        .btn-login:hover {
+            background: var(--navy-light);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(15,37,68,.3);
+        }
+
+        .btn-login:active { transform: translateY(0); }
+
+        /* ── Footer Note ─────────────────────────────── */
+        .form-footer {
+            margin-top: 28px;
+            text-align: center;
+            font-size: .78rem;
+            color: var(--subtle);
+            line-height: 1.5;
+        }
+
+        /* ── Responsive collapse ─────────────────────── */
+        @media (max-width: 768px) {
+            .panel-left { display: none; }
+            .panel-right { width: 100%; padding: 40px 28px; }
+        }

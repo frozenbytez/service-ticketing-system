@@ -1,0 +1,118 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Workspace | City Clinic IT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'tickets/css/it_staff_dashboard.css' %}">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="navbar-brand">
+        <div class="brand-icon">🛠️</div>
+        My Assigned Tasks
+    </div>
+    <div class="navbar-right">
+        <a href="?view={% if view_mode == 'history' %}active{% else %}history{% endif %}" class="btn btn-slate">
+            {% if view_mode == 'history' %}🔙 Back to Tasks{% else %}📁 View History{% endif %}
+        </a>
+        <form action="{% url 'logout' %}" method="post" style="margin:0;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost">Logout</button>
+        </form>
+    </div>
+</nav>
+
+<div class="container">
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="toast">✅ {{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    {% if view_mode == 'history' %}
+
+        <div class="section-header">
+            <h2 class="section-title">📁 My Resolved Tickets</h2>
+        </div>
+
+        {% for ticket in history_tickets %}
+        <div class="history-card">
+            <h4>{{ ticket.title }}</h4>
+            <div class="history-meta">
+                <span>👤 {{ ticket.client_name }}</span>
+                <span>🏢 {{ ticket.get_department_display }}</span>
+            </div>
+            <div class="resolution-notes">
+                <strong>Resolution Notes:</strong> {{ ticket.resolution_notes }}
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <h4>No resolved tickets yet</h4>
+            <p>Tickets you resolve will appear here.</p>
+        </div>
+        {% endfor %}
+
+    {% else %}
+
+        <div class="section-header">
+            <h2 class="section-title">Active Tasks</h2>
+        </div>
+
+        {% for ticket in my_tasks %}
+        <div class="task-card">
+            <div class="task-header">
+                <h3 class="task-title">{{ ticket.title }}</h3>
+                <span class="status-chip">In Progress</span>
+            </div>
+
+            <div class="task-meta">
+                <span>👤 {{ ticket.client_name }}</span>
+                <span>🏢 {{ ticket.get_department_display }}</span>
+                <span>🔺 {{ ticket.priority }}</span>
+            </div>
+
+            <div class="task-desc">{{ ticket.description }}</div>
+
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+
+                <label class="form-label" for="notes-{{ ticket.id }}">
+                    Resolution Notes
+                    <span>— document the steps you took to fix this issue</span>
+                </label>
+                <textarea
+                    id="notes-{{ ticket.id }}"
+                    name="resolution_notes"
+                    class="textarea-notes"
+                    rows="3"
+                    placeholder="e.g. Restarted the print spooler service, updated drivers, tested with a test page..."
+                    required
+                ></textarea>
+
+                <div class="action-row">
+                    <button type="submit" name="action" value="RESOLVE" class="btn btn-resolve">✅ Mark as Resolved</button>
+                    <button type="submit" name="action" value="ESCALATE" class="btn btn-escalate" formnovalidate>⬆ Escalate to Tier 2</button>
+                </div>
+            </form>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <div class="empty-icon">☕</div>
+            <h4>You have no assigned tasks</h4>
+            <p>Take a break — or check with your IT Head for new assignments!</p>
+        </div>
+        {% endfor %}
+
+    {% endif %}
+</div>
+</body>
+</html>

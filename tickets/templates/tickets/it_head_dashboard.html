@@ -1,0 +1,114 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Head Dispatcher | City Clinic</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+     <link rel="stylesheet" href="{% static 'tickets/css/it_head_dashboard.css' %}">
+
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="navbar-brand">
+        <div class="brand-icon">🌐</div>
+        IT Head Dispatcher
+    </div>
+    <div class="navbar-right">
+        <a href="?view={% if view_mode == 'history' %}active{% else %}history{% endif %}" class="btn btn-success">
+            {% if view_mode == 'history' %}🔙 Back to Queue{% else %}📁 View History{% endif %}
+        </a>
+        <form action="{% url 'logout' %}" method="post" style="margin:0;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost">Logout</button>
+        </form>
+    </div>
+</nav>
+
+<div class="container">
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="toast">✅ {{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    {% if view_mode == 'history' %}
+
+        <div class="section-header">
+            <h2 class="section-title">📁 Dispatched Ticket History</h2>
+        </div>
+
+        <div class="history-grid">
+            {% for ticket in history_tickets %}
+            <div class="history-card">
+                <div class="history-info">
+                    <h4>{{ ticket.title }}</h4>
+                    <p>Assigned to: {{ ticket.assigned_to.username|default:"Unassigned" }}</p>
+                </div>
+                <span class="status-chip">{{ ticket.status }}</span>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <div class="empty-icon">📂</div>
+                <h4>No history found</h4>
+                <p>Dispatched tickets will appear here.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+
+        <div class="section-header">
+            <h2 class="section-title">Unassigned Queue — Approved &amp; Emergencies</h2>
+        </div>
+
+        <div class="grid">
+            {% for ticket in unassigned_tickets %}
+            <div class="dispatch-card {% if ticket.is_escalated %}critical{% endif %}">
+                <div class="card-header">
+                    <span class="card-title">{{ ticket.title }}</span>
+                    {% if ticket.is_escalated %}
+                        <span class="escalated-badge">⚠ Escalated</span>
+                    {% else %}
+                        <span class="priority-label">{{ ticket.priority }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="card-meta">
+                    <span>🏢 {{ ticket.get_department_display }}</span>
+                    <span>👤 {{ ticket.client_name }}</span>
+                </div>
+
+                <p class="card-desc">{{ ticket.description }}</p>
+
+                <hr class="card-divider">
+
+                <form method="POST" class="assign-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+                    <select name="tech_id" required class="assign-select">
+                        <option value="" disabled selected>— Assign to Tech —</option>
+                        {% for tech in it_team %}
+                            <option value="{{ tech.id }}">{{ tech.username }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-primary">Assign</button>
+                </form>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <div class="empty-icon">✅</div>
+                <h4>Queue is completely clear</h4>
+                <p>Excellent work — all tickets have been assigned!</p>
+            </div>
+            {% endfor %}
+        </div>
+
+    {% endif %}
+</div>
+</body>
+</html>
