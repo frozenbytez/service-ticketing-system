@@ -4,4 +4,5 @@ from .models import Ticket
 class TicketForm(forms.ModelForm):
     class Meta:
         model = Ticket
-        fields = ['client_name', 'client_email', 'title', 'description', 'priority', 'needs_head_approval']
+        # We removed 'priority' from this list entirely
+        fields = ['title', 'description', 'client_name']

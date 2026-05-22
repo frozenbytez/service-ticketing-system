@@ -87,17 +87,35 @@
 
                 <hr class="card-divider">
 
-                <form method="POST" class="assign-form">
-                    {% csrf_token %}
-                    <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
-                    <select name="tech_id" required class="assign-select">
-                        <option value="" disabled selected>— Assign to Tech —</option>
-                        {% for tech in it_team %}
-                            <option value="{{ tech.id }}">{{ tech.username }}</option>
-                        {% endfor %}
-                    </select>
-                    <button type="submit" class="btn btn-primary">Assign</button>
-                </form>
+                            <form method="POST" style="margin-top: 15px; background: #f8f9fa; padding: 15px; border-radius: 5px;">
+                {% csrf_token %}
+                <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+                
+                <div style="display: flex; gap: 15px; align-items: flex-end;">
+                    
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.85rem; font-weight: bold; color: #555;">Triage Priority:</label>
+                        <select name="priority" required style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                            <option value="LOW">Low</option>
+                            <option value="MEDIUM" selected>Medium</option>
+                            <option value="HIGH">High</option>
+                            <option value="URGENT">Urgent (System Down)</option>
+                        </select>
+                    </div>
+
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.85rem; font-weight: bold; color: #555;">Assign Technician:</label>
+                        <select name="tech_id" required style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                            <option value="" disabled selected>-- Select IT Staff --</option>
+                            {% for tech in it_team %}
+                                <option value="{{ tech.id }}">{{ tech.get_full_name|default:tech.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="padding: 9px 20px;">Dispatch</button>
+                </div>
+            </form>
             </div>
             {% empty %}
             <div class="empty-state">

@@ -58,16 +58,21 @@ def create_ticket(request):
             ticket.requester = request.user 
             ticket.department = request.user.employeeprofile.department
             
-            if ticket.priority == 'URGENT' or not ticket.needs_head_approval:
-                ticket.approval_status = 'NOT_REQUIRED' 
-            else:
-                ticket.approval_status = 'PENDING' 
+            # 1. We default the priority to 'MEDIUM' (or 'LOW') for all new tickets
+            ticket.priority = 'MEDIUM'
+            
+            # 2. Every ticket now requires Dept Head approval by default
+            ticket.needs_head_approval = True
+            ticket.approval_status = 'PENDING'
                 
             ticket.save()
             messages.success(request, "Request submitted successfully!")
             return redirect('clinic_portal')
     else:
-        form = TicketForm()
+        form = TicketForm(initial={
+            'client_name': request.user.get_full_name() or request.user.username,
+        })
+        
     return render(request, 'tickets/create_ticket.html', {'form': form})
 
 
@@ -128,18 +133,21 @@ def it_head_dashboard(request):
     if request.method == 'POST':
         ticket_id = request.POST.get('ticket_id')
         tech_id = request.POST.get('tech_id')
+        
+        # --- 1. NEW: Grab the priority from the IT Head's form ---
+        new_priority = request.POST.get('priority') 
+        
         ticket = get_object_or_404(Ticket, id=ticket_id)
         tech = get_object_or_404(User, id=tech_id)
         
-        # Assign the ticket and push it to the Staff's active queue
+        # --- 2. Update all the dispatch values ---
         ticket.assigned_to = tech
+        ticket.priority = new_priority  # Apply the IT Head's priority
         ticket.status = 'IN_PROGRESS'
-        
-        # --- THE FIX: Clear the escalation flag so it's a fresh task! ---
         ticket.is_escalated = False 
         
         ticket.save()
-        messages.success(request, f"Ticket assigned to {tech.username}.")
+        messages.success(request, f"Ticket assigned to {tech.username} with {new_priority} priority.")
         return redirect('it_head_dashboard')
 
     if view_mode == 'history':
