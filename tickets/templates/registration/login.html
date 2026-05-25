@@ -1,0 +1,84 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In | City Clinic Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'tickets/css/login.css' %}">
+</head>
+<body>
+
+<div class="layout">
+
+    <!-- Left branding panel -->
+    <div class="panel-left">
+        <div class="brand-lockup">
+            <div class="brand-icon-wrap">
+                <i class="fa-solid fa-hospital"></i>
+            </div>
+            <h1 class="brand-name">City Clinic<br><span>IT Support</span></h1>
+            <hr class="brand-divider">
+            <p class="brand-tagline">Internal portal for managing IT support requests across departments.</p>
+        </div>
+
+        <ul class="feature-list">
+            <li class="feature-item">
+                <span class="feature-dot"><i class="fa-solid fa-ticket"></i></span>
+                Submit and track support tickets in real time
+            </li>
+            <li class="feature-item">
+                <span class="feature-dot"><i class="fa-solid fa-circle-check"></i></span>
+                Manager approval workflow for non-urgent requests
+            </li>
+            <li class="feature-item">
+                <span class="feature-dot"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+                IT staff assignment and escalation management
+            </li>
+            <li class="feature-item">
+                <span class="feature-dot"><i class="fa-solid fa-folder-open"></i></span>
+                Full history and resolution notes per ticket
+            </li>
+        </ul>
+    </div>
+
+    <!-- Right form panel -->
+    <div class="panel-right">
+        <div class="form-wrap">
+
+            <div class="form-heading">
+                <h2>Welcome back</h2>
+                <p>Sign in with your clinic credentials to continue.</p>
+            </div>
+
+            {% if form.errors %}
+            <div class="error-alert">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                Incorrect username or password. Please try again.
+            </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn-login">
+                    Sign In
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </form>
+
+            <p class="form-footer">
+                <i class="fa-solid fa-headset"></i>
+                Having trouble signing in? Contact your IT administrator for assistance.
+            </p>
+
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

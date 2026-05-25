@@ -1,0 +1,153 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Head Dispatcher | City Clinic</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'tickets/css/it_head_dashboard.css' %}">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="navbar-brand">
+        <div class="brand-icon"><i class="fa-solid fa-network-wired"></i></div>
+        IT Head Dispatcher
+    </div>
+    <div class="navbar-right">
+        <a href="?view={% if view_mode == 'history' %}active{% else %}history{% endif %}" class="btn btn-success">
+            {% if view_mode == 'history' %}
+                <i class="fa-solid fa-arrow-left"></i> Back to Queue
+            {% else %}
+                <i class="fa-solid fa-folder-open"></i> View History
+            {% endif %}
+        </a>
+        <form action="{% url 'logout' %}" method="post" style="margin:0;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+        </form>
+    </div>
+</nav>
+
+<div class="container">
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="toast">
+            <i class="fa-solid fa-circle-check"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if view_mode == 'history' %}
+
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fa-solid fa-folder-open"></i>
+                Dispatched Ticket History
+            </h2>
+        </div>
+
+        <div class="history-grid">
+            {% for ticket in history_tickets %}
+            <div class="history-card">
+                <div class="history-info">
+                    <h4>{{ ticket.title }}</h4>
+                    <p>
+                        <i class="fa-solid fa-user-gear"></i>
+                        Assigned to: {{ ticket.assigned_to.username|default:"Unassigned" }}
+                    </p>
+                </div>
+                <span class="status-chip">{{ ticket.status }}</span>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <div class="empty-icon"><i class="fa-solid fa-folder-open"></i></div>
+                <h4>No history found</h4>
+                <p>Dispatched tickets will appear here.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fa-solid fa-list-check"></i>
+                Unassigned Queue — Approved &amp; Emergencies
+            </h2>
+        </div>
+
+        <div class="grid">
+            {% for ticket in unassigned_tickets %}
+            <div class="dispatch-card {% if ticket.is_escalated %}critical{% endif %}">
+                <div class="card-header">
+                    <span class="card-title">{{ ticket.title }}</span>
+                    {% if ticket.is_escalated %}
+                        <span class="escalated-badge">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Escalated
+                        </span>
+                    {% else %}
+                        <span class="priority-label">{{ ticket.priority }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="card-meta">
+                    <span><i class="fa-solid fa-building"></i> {{ ticket.get_department_display }}</span>
+                    <span><i class="fa-solid fa-user"></i> {{ ticket.client_name }}</span>
+                </div>
+
+                <p class="card-desc">{{ ticket.description }}</p>
+
+                <hr class="card-divider">
+
+                <form method="POST" style="margin-top: 0;">
+                    {% csrf_token %}
+                    <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+
+                    <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 120px;">
+                            <label>Triage Priority</label>
+                            <select name="priority" required>
+                                <option value="LOW">Low</option>
+                                <option value="MEDIUM" selected>Medium</option>
+                                <option value="HIGH">High</option>
+                                <option value="URGENT">Urgent (System Down)</option>
+                            </select>
+                        </div>
+
+                        <div style="flex: 1; min-width: 140px;">
+                            <label>Assign Technician</label>
+                            <select name="tech_id" required>
+                                <option value="" disabled selected>— Select IT Staff —</option>
+                                {% for tech in it_team %}
+                                    <option value="{{ tech.id }}">{{ tech.get_full_name|default:tech.username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="padding: 9px 20px; white-space: nowrap;">
+                            <i class="fa-solid fa-paper-plane"></i> Dispatch
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <div class="empty-icon"><i class="fa-solid fa-circle-check"></i></div>
+                <h4>Queue is completely clear</h4>
+                <p>Excellent work — all tickets have been assigned!</p>
+            </div>
+            {% endfor %}
+        </div>
+
+    {% endif %}
+</div>
+</body>
+</html>

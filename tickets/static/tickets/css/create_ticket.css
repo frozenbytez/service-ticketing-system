@@ -1,0 +1,322 @@
+/* ================================================================
+   City Clinic IT Support — Create Ticket Page
+   ================================================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:          #0b1d3a;
+  --navy-mid:      #122c5c;
+  --navy-light:    #1a3d7c;
+  --navy-deep:     #060f1e;
+  --teal:          #00c4b8;
+  --teal-glow:     #00e5d8;
+  --teal-dim:      rgba(0,196,184,0.12);
+  --teal-light:    #e0faf8;
+  --bg:            #f2f6fb;
+  --white:         #ffffff;
+  --slate:         #5e6e8a;
+  --slate-light:   #8fa0b8;
+  --border:        #d8e4f0;
+  --text:          #0f1f3d;
+  --radius-sm:     8px;
+  --radius-md:     14px;
+  --shadow-sm:     0 2px 8px rgba(11,29,58,0.07);
+  --shadow-md:     0 6px 22px rgba(11,29,58,0.11);
+  --transition:    all 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html, body {
+  min-height: 100%;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Navbar ─────────────────────────────────────────────────── */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 36px;
+  height: 66px;
+  background: var(--navy-deep);
+  background-image: linear-gradient(90deg, var(--navy-deep) 0%, var(--navy) 100%);
+  box-shadow: 0 2px 20px rgba(6,15,30,0.45);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  font-family: 'Sora', sans-serif;
+  font-size: 16.5px;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.brand-icon {
+  width: 38px;
+  height: 38px;
+  background: rgba(0,196,184,0.15);
+  border: 1px solid rgba(0,196,184,0.3);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-icon i {
+  font-size: 17px;
+  color: var(--teal);
+}
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.72);
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid rgba(255,255,255,0.18);
+  transition: var(--transition);
+}
+.btn-back:hover {
+  background: rgba(255,255,255,0.09);
+  color: var(--white);
+  border-color: rgba(255,255,255,0.32);
+  transform: translateX(-2px);
+}
+
+/* ── Container ───────────────────────────────────────────────── */
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 44px 28px 80px;
+}
+
+/* ── Breadcrumb ──────────────────────────────────────────────── */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--slate);
+  margin-bottom: 30px;
+}
+
+.breadcrumb a {
+  color: var(--teal);
+  text-decoration: none;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: var(--transition);
+}
+.breadcrumb a:hover { color: var(--teal-glow); }
+.breadcrumb-sep { color: var(--slate-light); font-size: 16px; }
+
+/* ── Form Card ───────────────────────────────────────────────── */
+.form-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  animation: fadeSlideUp 0.45s ease both;
+}
+
+.form-card-header {
+  padding: 30px 36px 26px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, #f6f9fd 0%, var(--white) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative accent */
+.form-card-header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--teal), var(--navy-mid));
+}
+
+.form-card-header h2 {
+  font-family: 'Sora', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: -0.4px;
+  margin-bottom: 7px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.form-card-header h2 i {
+  font-size: 20px;
+  color: var(--teal);
+}
+
+.form-card-header p {
+  font-size: 14px;
+  color: var(--slate);
+  line-height: 1.6;
+}
+
+.form-body {
+  padding: 36px;
+}
+
+/* ── Django Form Fields ──────────────────────────────────────── */
+.form-body form p {
+  margin-bottom: 22px;
+}
+
+.form-body form label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--navy-mid);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.form-body form input[type="text"],
+.form-body form input[type="number"],
+.form-body form input[type="email"],
+.form-body form textarea,
+.form-body form select {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14.5px;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  transition: var(--transition);
+  appearance: none;
+}
+
+.form-body form select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235e6e8a' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  padding-right: 38px;
+}
+
+.form-body form textarea {
+  resize: vertical;
+  min-height: 110px;
+  line-height: 1.6;
+}
+
+.form-body form input:focus,
+.form-body form textarea:focus,
+.form-body form select:focus {
+  border-color: var(--teal);
+  background: var(--white);
+  box-shadow: 0 0 0 4px rgba(0,196,184,0.1);
+}
+
+/* Checkbox */
+.form-body form input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--teal);
+  cursor: pointer;
+  margin-right: 9px;
+}
+
+.form-body form p:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+}
+.form-body form p:has(input[type="checkbox"]) label {
+  margin-bottom: 0;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  cursor: pointer;
+}
+
+/* ── Button Group ────────────────────────────────────────────── */
+.button-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 36px;
+  padding-top: 26px;
+  border-top: 1px solid var(--border);
+}
+
+.btn-submit {
+  flex: 1;
+  padding: 14px 24px;
+  background: var(--navy);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'Sora', sans-serif;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+}
+.btn-submit:hover {
+  background: var(--navy-light);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(11,29,58,0.28);
+}
+
+.btn-cancel {
+  padding: 14px 24px;
+  background: var(--white);
+  color: var(--slate);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-cancel:hover {
+  border-color: #b0c1d8;
+  color: var(--navy);
+  background: var(--bg);
+}
+
+/* ── Animation ───────────────────────────────────────────────── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 640px) {
+  .navbar { padding: 0 18px; }
+  .form-card-header, .form-body { padding: 22px; }
+  .button-group { flex-direction: column; }
+}

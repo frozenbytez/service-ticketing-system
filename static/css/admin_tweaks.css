@@ -1,0 +1,8 @@
+@media (min-width: 768px) {
+    body.sidebar-collapse .content-wrapper,
+    body.sidebar-collapse .main-footer,
+    body.sidebar-collapse .main-header {
+        margin-left: 0 !important;
+        transition: margin-left 0.3s ease-in-out;
+    }
+}

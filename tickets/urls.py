@@ -1,0 +1,20 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    # THE TRAFFIC COP
+    path('', views.dashboard_redirect, name='dashboard_redirect'),
+    
+    # PAGE 1: Employee
+    path('portal/', views.clinic_portal, name='clinic_portal'),
+    path('new/', views.create_ticket, name='create_ticket'),
+    
+    # PAGE 2: Dept Head
+    path('head-dashboard/', views.head_dashboard, name='head_dashboard'),
+    
+    # PAGE 3: IT Head (Dispatcher)
+    path('it-head/', views.it_head_dashboard, name='it_head_dashboard'),
+    
+    # PAGE 4: IT Staff (Resolver)
+    path('it-staff/', views.it_staff_dashboard, name='it_staff_dashboard'),
+]

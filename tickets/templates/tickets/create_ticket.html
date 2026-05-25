@@ -1,0 +1,76 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Support Request | City Clinic</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'tickets/css/create_ticket.css' %}">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="navbar-brand">
+        <div class="brand-icon"><i class="fa-solid fa-hospital"></i></div>
+        City Clinic Support
+    </div>
+    <a href="{% url 'clinic_portal' %}" class="btn-back">
+        <i class="fa-solid fa-arrow-left"></i> Back to Portal
+    </a>
+</nav>
+
+<div class="container">
+    <div class="breadcrumb">
+        <a href="{% url 'clinic_portal' %}">
+            <i class="fa-solid fa-house"></i> My Tickets
+        </a>
+        <span class="breadcrumb-sep">›</span>
+        <span>New Request</span>
+    </div>
+
+    <div class="form-card">
+        <div class="form-card-header">
+            <h2>
+                <i class="fa-solid fa-ticket"></i>
+                Submit a New Support Request
+            </h2>
+            <p>Fill in the details below and our IT team will get back to you promptly.</p>
+        </div>
+
+        <div class="form-body">
+            <form method="POST">
+                {% csrf_token %}
+
+                {{ form.as_p }}
+
+                <div class="button-group">
+                    <button type="submit" class="btn-submit">
+                        <i class="fa-solid fa-check"></i> Submit Request
+                    </button>
+                    <a href="{% url 'clinic_portal' %}" class="btn-cancel">
+                        <i class="fa-solid fa-xmark"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const prioritySelect = document.querySelector('select[name="priority"]');
+    const approvalCheckbox = document.querySelector('input[name="needs_head_approval"]');
+
+    prioritySelect.addEventListener('change', function() {
+        if (this.value === 'URGENT') {
+            approvalCheckbox.checked = false;
+            approvalCheckbox.disabled = true;
+        } else {
+            approvalCheckbox.disabled = false;
+        }
+    });
+</script>
+</body>
+</html>

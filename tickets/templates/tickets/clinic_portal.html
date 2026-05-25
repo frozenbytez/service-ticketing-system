@@ -1,0 +1,97 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Support Portal | City Clinic</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'tickets/css/clinic_portal.css' %}">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="navbar-brand">
+        <div class="brand-icon"><i class="fa-solid fa-hospital"></i></div>
+        IT Support Portal
+    </div>
+    <div class="navbar-right">
+        <span class="welcome-chip">
+            <i class="fa-solid fa-circle-user"></i>
+            {{ request.user.username }}
+        </span>
+        <a href="{% url 'create_ticket' %}" class="btn btn-new">
+            <i class="fa-solid fa-plus"></i> New Request
+        </a>
+        <form action="{% url 'logout' %}" method="post" style="margin:0;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+        </form>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fa-solid fa-layer-group"></i>
+            My Support Tickets
+        </h1>
+        <span class="ticket-count">Showing all active requests</span>
+    </div>
+
+    <div class="ticket-list">
+        {% for ticket in my_tickets %}
+        <div class="ticket-card">
+            <div class="ticket-header">
+                <span class="ticket-title">{{ ticket.title }}</span>
+                <span class="badge badge-default">{{ ticket.get_status_display }}</span>
+            </div>
+
+            <div class="ticket-meta">
+                <span><i class="fa-solid fa-building"></i> {{ ticket.client_name }}</span>
+                <span><i class="fa-solid fa-flag"></i> {{ ticket.priority }}</span>
+            </div>
+
+            {% if ticket.status == 'RESOLVED' %}
+            <hr class="divider">
+            <div class="feedback-box">
+                <p class="feedback-label">
+                    <i class="fa-solid fa-circle-info"></i>
+                    IT has resolved this issue — please confirm and close the ticket.
+                </p>
+                <form method="POST" class="feedback-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+                    <label for="rating-{{ ticket.id }}">Rate the fix (1–5):</label>
+                    <select id="rating-{{ ticket.id }}" name="rating" required>
+                        <option value="" disabled selected>-- Select Rating --</option>
+                        <option value="5">5 - Excellent</option>
+                        <option value="4">4 - Good</option>
+                        <option value="3">3 - Average</option>
+                        <option value="2">2 - Poor</option>
+                        <option value="1">1 - Terrible</option>
+                    </select>
+                    <input type="text" name="feedback_notes" placeholder="Any comments? (optional)">
+                    <button type="submit" name="submit_feedback" class="btn-feedback">
+                        <i class="fa-solid fa-paper-plane"></i> Submit &amp; Close Ticket
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <div class="empty-icon"><i class="fa-solid fa-inbox"></i></div>
+            <h4>No active support requests</h4>
+            <p>All clear! Use the "+ New Request" button above if you need assistance.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+</body>
+</html>

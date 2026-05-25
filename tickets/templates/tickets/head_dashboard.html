@@ -1,0 +1,110 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Dashboard | City Clinic</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'tickets/css/head_dashboard.css' %}">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="navbar-brand">
+        <div class="brand-icon"><i class="fa-solid fa-briefcase"></i></div>
+        Manager Dashboard
+    </div>
+    <div class="navbar-right">
+        <a href="?view={% if view_mode == 'history' %}active{% else %}history{% endif %}" class="btn btn-info">
+            {% if view_mode == 'history' %}
+                <i class="fa-solid fa-arrow-left"></i> Back to Approvals
+            {% else %}
+                <i class="fa-solid fa-folder-open"></i> View History
+            {% endif %}
+        </a>
+        <form action="{% url 'logout' %}" method="post" style="margin:0;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+        </form>
+    </div>
+</nav>
+
+<div class="container">
+
+    {% if view_mode == 'history' %}
+
+        <div class="section-header">
+            <div class="section-icon icon-slate"><i class="fa-solid fa-folder-open"></i></div>
+            <h2 class="section-title">My Approval History</h2>
+        </div>
+
+        {% for ticket in history_tickets %}
+        <div class="history-card">
+            <div class="history-info">
+                <h4>{{ ticket.title }}</h4>
+                <p>
+                    <i class="fa-solid fa-user"></i>
+                    Requested by {{ ticket.requester.username }}
+                    &nbsp;·&nbsp;
+                    <i class="fa-regular fa-calendar"></i>
+                    {{ ticket.updated_at|date:"M d, Y" }}
+                </p>
+            </div>
+            <span class="status-pill status-default">{{ ticket.approval_status }}</span>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <div class="empty-icon"><i class="fa-solid fa-folder-open"></i></div>
+            <p>No approval history found.</p>
+        </div>
+        {% endfor %}
+
+    {% else %}
+
+        <div class="section-header">
+            <div class="section-icon icon-amber"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h2 class="section-title">Pending Approvals</h2>
+        </div>
+
+        {% for ticket in pending_approvals %}
+        <div class="approval-card">
+            <div class="approval-card-top">
+                <p class="approval-title">{{ ticket.title }}</p>
+                <div class="approval-meta">
+                    <span><i class="fa-solid fa-user"></i> {{ ticket.requester.username }}</span>
+                    <span><i class="fa-solid fa-building"></i> {{ ticket.client_name }}</span>
+                </div>
+                <div class="approval-desc">{{ ticket.description }}</div>
+            </div>
+
+            <div class="approval-actions">
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+                    <input type="hidden" name="handle_approval" value="true">
+                    <button type="submit" name="action" value="APPROVE" class="btn btn-approve">
+                        <i class="fa-solid fa-check"></i> Approve
+                    </button>
+                    <button type="submit" name="action" value="REJECT" class="btn btn-reject">
+                        <i class="fa-solid fa-ban"></i> Reject
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <div class="empty-icon"><i class="fa-solid fa-circle-check"></i></div>
+            <p>No pending approvals. You're all caught up!</p>
+        </div>
+        {% endfor %}
+
+    {% endif %}
+
+</div>
+</body>
+</html>
