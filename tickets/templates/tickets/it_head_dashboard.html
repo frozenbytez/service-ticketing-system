@@ -18,11 +18,19 @@
         IT Head Dispatcher
     </div>
     <div class="navbar-right">
+        <span class="welcome-chip">
+            <i class="fa-solid fa-circle-user"></i>
+            {{ request.user.get_full_name|default:request.user.username }}
+            <span class="welcome-sep">|</span>
+            {{ request.user.employeeprofile.get_department_display }}
+            <span class="welcome-sep">·</span>
+            {% if request.user.employeeprofile.is_department_head %}Department Head{% else %}Staff{% endif %}
+        </span>
         <a href="?view={% if view_mode == 'history' %}active{% else %}history{% endif %}" class="btn btn-success">
             {% if view_mode == 'history' %}
                 <i class="fa-solid fa-arrow-left"></i> Back to Queue
             {% else %}
-                <i class="fa-solid fa-folder-open"></i> View History
+                <i class="fa-solid fa-folder-open"></i> All Tickets
             {% endif %}
         </a>
         <form action="{% url 'logout' %}" method="post" style="margin:0;">
@@ -49,27 +57,58 @@
 
         <div class="section-header">
             <h2 class="section-title">
-                <i class="fa-solid fa-folder-open"></i>
-                Dispatched Ticket History
+                <i class="fa-solid fa-layer-group"></i>
+                All Dispatched Tickets
             </h2>
+        </div>
+
+        <div class="filter-bar">
+            <form method="GET" class="search-form">
+                <input type="hidden" name="view" value="history">
+                <div class="search-input-wrapper">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" name="q" placeholder="Search by Ticket #, Title, or User..." value="{{ request.GET.q }}">
+                </div>
+                <select name="status_filter">
+                    <option value="">All Statuses</option>
+                    <option value="IN_PROGRESS" {% if request.GET.status_filter == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+                    <option value="RESOLVED" {% if request.GET.status_filter == 'RESOLVED' %}selected{% endif %}>Resolved</option>
+                    <option value="CLOSED" {% if request.GET.status_filter == 'CLOSED' %}selected{% endif %}>Closed</option>
+                </select>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
         </div>
 
         <div class="history-grid">
             {% for ticket in history_tickets %}
-            <div class="history-card">
-                <div class="history-info">
-                    <h4>{{ ticket.title }}</h4>
-                    <p>
-                        <i class="fa-solid fa-user-gear"></i>
-                        Assigned to: {{ ticket.assigned_to.username|default:"Unassigned" }}
-                    </p>
+            <div class="dispatch-card" style="margin-bottom: 0;">
+                <div class="card-header">
+                    <span class="card-title">
+                        {% if ticket.ticket_number %}<span class="text-teal">#{{ ticket.ticket_number }}</span>{% endif %}
+                        {{ ticket.title }}
+                    </span>
+                    <span class="status-chip">{{ ticket.get_status_display }}</span>
                 </div>
-                <span class="status-chip">{{ ticket.status }}</span>
+                <div class="card-meta">
+                    <span><i class="fa-solid fa-building"></i> {{ ticket.get_department_display }}</span>
+                    <span><i class="fa-solid fa-user"></i> {{ ticket.client_name }}</span>
+                    <span><i class="fa-solid fa-user-gear"></i> Assigned to: {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username|default:"Unassigned" }}</span>
+                </div>
+                <p class="card-desc" style="margin-bottom: 14px;">{{ ticket.description }}</p>
+
+                {% if ticket.client_feedback_rating %}
+                <div style="background: #f8fafc; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 13px; color: var(--slate);">
+                    <p style="margin-bottom: 4px;"><strong><i class="fa-solid fa-star" style="color: #d97706;"></i> Client Rating:</strong> {{ ticket.client_feedback_rating }} / 5</p>
+                    {% if ticket.client_feedback_notes %}
+                        <p style="margin-bottom: 0;"><strong><i class="fa-regular fa-comment"></i> Comments:</strong> "{{ ticket.client_feedback_notes }}"</p>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
             {% empty %}
             <div class="empty-state">
                 <div class="empty-icon"><i class="fa-solid fa-folder-open"></i></div>
-                <h4>No history found</h4>
+                <h4>No tickets found</h4>
                 <p>Dispatched tickets will appear here.</p>
             </div>
             {% endfor %}
@@ -149,5 +188,19 @@
 
     {% endif %}
 </div>
+
+<script>
+    // Server-Sent Events (SSE) Auto-Refresh Listener
+    const evtSource = new EventSource("{% url 'ticket_updates_sse' %}");
+    evtSource.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        if (data.refresh_required) {
+            window.location.reload();
+        }
+    };
+
+    
+</script>
+
 </body>
 </html>

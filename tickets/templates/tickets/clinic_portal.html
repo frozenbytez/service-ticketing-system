@@ -20,7 +20,11 @@
     <div class="navbar-right">
         <span class="welcome-chip">
             <i class="fa-solid fa-circle-user"></i>
-            {{ request.user.username }}
+            {{ request.user.get_full_name|default:request.user.username }}
+            <span class="welcome-sep">|</span>
+            {{ request.user.employeeprofile.get_department_display }}
+            <span class="welcome-sep">·</span>
+            {% if request.user.employeeprofile.is_department_head %}Department Head{% else %}Staff{% endif %}
         </span>
         <a href="{% url 'create_ticket' %}" class="btn btn-new">
             <i class="fa-solid fa-plus"></i> New Request
@@ -36,6 +40,7 @@
 
 <div class="container">
     <div class="page-header">
+            
         <h1 class="page-title">
             <i class="fa-solid fa-layer-group"></i>
             My Support Tickets
@@ -43,18 +48,44 @@
         <span class="ticket-count">Showing all active requests</span>
     </div>
 
+    <div class="filter-bar">
+        <form method="GET" class="search-form">
+            <div class="search-input-wrapper">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" name="q" placeholder="Search my requests..." value="{{ request.GET.q }}">
+            </div>
+            <select name="status_filter">
+                <option value="">All Statuses</option>
+                <option value="OPEN" {% if request.GET.status_filter == 'OPEN' %}selected{% endif %}>Open</option>
+                <option value="IN_PROGRESS" {% if request.GET.status_filter == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+                <option value="RESOLVED" {% if request.GET.status_filter == 'RESOLVED' %}selected{% endif %}>Resolved</option>
+                <option value="CLOSED" {% if request.GET.status_filter == 'CLOSED' %}selected{% endif %}>Closed</option>
+            </select>
+            <button type="submit" class="btn btn-new" style="box-shadow: none;">Search</button>
+        </form>
+    </div>
+
     <div class="ticket-list">
         {% for ticket in my_tickets %}
         <div class="ticket-card">
             <div class="ticket-header">
-                <span class="ticket-title">{{ ticket.title }}</span>
+                <span class="ticket-title">
+                    {% if ticket.ticket_number %}<span class="text-teal">#{{ ticket.ticket_number }}</span>{% endif %}
+                    {{ ticket.title }}
+                </span>
                 <span class="badge badge-default">{{ ticket.get_status_display }}</span>
             </div>
 
             <div class="ticket-meta">
                 <span><i class="fa-solid fa-building"></i> {{ ticket.client_name }}</span>
-                <span><i class="fa-solid fa-flag"></i> {{ ticket.priority }}</span>
+                <span><i class="fa-solid fa-flag"></i> {{ ticket.get_priority_display }}</span>
             </div>
+
+            {% if ticket.assigned_to %}
+            <div style="margin-top: 10px; font-size: 13px; color: var(--slate);">
+                <i class="fa-solid fa-user-gear"></i> Assigned IT: <strong>{{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}</strong>
+            </div>
+            {% endif %}
 
             {% if ticket.status == 'RESOLVED' %}
             <hr class="divider">
@@ -81,6 +112,16 @@
                     </button>
                 </form>
             </div>
+            
+            {% elif ticket.status == 'CLOSED' and ticket.client_feedback_rating %}
+            <hr class="divider">
+            <div style="background: #f8fafc; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                <h5 style="margin-bottom: 8px; font-size: 13px; color: var(--navy);"><i class="fa-solid fa-star" style="color: #d97706;"></i> My Feedback</h5>
+                <p style="font-size: 13px; margin-bottom: 4px; color: var(--slate);"><strong>Rating:</strong> {{ ticket.client_feedback_rating }} / 5</p>
+                {% if ticket.client_feedback_notes %}
+                    <p style="font-size: 13px; margin-bottom: 0; color: var(--slate);"><strong>Comments:</strong> "{{ ticket.client_feedback_notes }}"</p>
+                {% endif %}
+            </div>
             {% endif %}
         </div>
         {% empty %}
@@ -92,6 +133,23 @@
         {% endfor %}
     </div>
 </div>
+
+<script>
+    // Server-Sent Events (SSE) Auto-Refresh Listener
+    const evtSource = new EventSource("{% url 'ticket_updates_sse' %}");
+    
+    evtSource.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        if (data.refresh_required) {
+            window.location.reload();
+        }
+    };
+
+    // Cleanly close the connection before the browser navigates away (Prevents broken pipes!)
+    window.addEventListener('beforeunload', function() {
+        evtSource.close();
+    });
+</script>
 
 </body>
 </html>

@@ -47,6 +47,16 @@ class Ticket(models.Model):
         ('NOT_REQUIRED', 'Not Required (Emergency)'),
     ]
 
+
+    # --- TICKET TRACKING ---
+    ticket_number = models.CharField(
+        max_length=20, 
+        null=True, 
+        blank=True, 
+        unique=True, 
+        verbose_name="Ticket Number"
+    )
+    
     # --- FLOWCHART: APPROVAL STAGE ---
     needs_head_approval = models.BooleanField(default=True, verbose_name="Needs Dept Head Approval")
     approval_status = models.CharField(max_length=20, choices=APPROVAL_CHOICES, default='PENDING')

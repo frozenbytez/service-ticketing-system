@@ -17,4 +17,6 @@ urlpatterns = [
     
     # PAGE 4: IT Staff (Resolver)
     path('it-staff/', views.it_staff_dashboard, name='it_staff_dashboard'),
+
+    path('sse/ticket-updates/', views.ticket_updates_sse, name='ticket_updates_sse'),
 ]

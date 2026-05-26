@@ -18,11 +18,19 @@
         Manager Dashboard
     </div>
     <div class="navbar-right">
+        <span class="welcome-chip">
+            <i class="fa-solid fa-circle-user"></i>
+            {{ request.user.get_full_name|default:request.user.username }}
+            <span class="welcome-sep">|</span>
+            {{ request.user.employeeprofile.get_department_display }}
+            <span class="welcome-sep">·</span>
+            {% if request.user.employeeprofile.is_department_head %}Department Head{% else %}Staff{% endif %}
+        </span>
         <a href="?view={% if view_mode == 'history' %}active{% else %}history{% endif %}" class="btn btn-info">
             {% if view_mode == 'history' %}
                 <i class="fa-solid fa-arrow-left"></i> Back to Approvals
             {% else %}
-                <i class="fa-solid fa-folder-open"></i> View History
+                <i class="fa-solid fa-folder-open"></i> Tickets
             {% endif %}
         </a>
         <form action="{% url 'logout' %}" method="post" style="margin:0;">
@@ -39,28 +47,64 @@
     {% if view_mode == 'history' %}
 
         <div class="section-header">
-            <div class="section-icon icon-slate"><i class="fa-solid fa-folder-open"></i></div>
-            <h2 class="section-title">My Approval History</h2>
+            <div class="section-icon icon-slate"><i class="fa-solid fa-layer-group"></i></div>
+            <h2 class="section-title">Department Tickets</h2>
+        </div>
+
+        <div class="filter-bar">
+            <form method="GET" class="search-form">
+                <input type="hidden" name="view" value="history">
+                <div class="search-input-wrapper">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" name="q" placeholder="Search department tickets..." value="{{ request.GET.q }}">
+                </div>
+                <select name="status_filter">
+                    <option value="">All Statuses</option>
+                    <option value="OPEN" {% if request.GET.status_filter == 'OPEN' %}selected{% endif %}>Open</option>
+                    <option value="IN_PROGRESS" {% if request.GET.status_filter == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+                    <option value="RESOLVED" {% if request.GET.status_filter == 'RESOLVED' %}selected{% endif %}>Resolved</option>
+                </select>
+                <button type="submit" class="btn btn-info" style="color:var(--navy); background:var(--bg);">Filter</button>
+            </form>
         </div>
 
         {% for ticket in history_tickets %}
-        <div class="history-card">
-            <div class="history-info">
-                <h4>{{ ticket.title }}</h4>
-                <p>
-                    <i class="fa-solid fa-user"></i>
-                    Requested by {{ ticket.requester.username }}
-                    &nbsp;·&nbsp;
-                    <i class="fa-regular fa-calendar"></i>
-                    {{ ticket.updated_at|date:"M d, Y" }}
+        <div class="approval-card" style="padding: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <p class="approval-title" style="margin-bottom: 0;">
+                    {% if ticket.ticket_number %}<span class="text-teal">#{{ ticket.ticket_number }}</span>{% endif %}
+                    {{ ticket.title }}
                 </p>
+                <span class="status-pill status-default">{{ ticket.get_status_display }}</span>
             </div>
-            <span class="status-pill status-default">{{ ticket.approval_status }}</span>
+            <div class="approval-meta">
+                <span><i class="fa-solid fa-user"></i> {{ ticket.requester.username }} ({{ ticket.client_name }})</span>
+                <span><i class="fa-regular fa-calendar"></i> {{ ticket.created_at|date:"M d, Y" }}</span>
+                <span><i class="fa-solid fa-flag"></i> {{ ticket.get_priority_display }}</span>
+            </div>
+            <div class="approval-desc" style="margin-bottom: 14px;">{{ ticket.description }}</div>
+            
+            {% if ticket.assigned_to or ticket.client_feedback_rating %}
+            <div style="background: #f8fafc; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 13px; color: var(--slate);">
+                {% if ticket.assigned_to %}
+                    <p style="margin-bottom: {% if ticket.client_feedback_rating %}8px{% else %}0{% endif %};">
+                        <i class="fa-solid fa-user-gear text-teal"></i> <strong>Resolved by:</strong> {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}
+                    </p>
+                {% endif %}
+                
+                {% if ticket.client_feedback_rating %}
+                    <p style="margin-bottom: 4px;"><strong><i class="fa-solid fa-star" style="color: #d97706;"></i> Client Rating:</strong> {{ ticket.client_feedback_rating }} / 5</p>
+                    {% if ticket.client_feedback_notes %}
+                        <p style="margin-bottom: 0;"><strong><i class="fa-regular fa-comment"></i> Comments:</strong> "{{ ticket.client_feedback_notes }}"</p>
+                    {% endif %}
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
         {% empty %}
         <div class="empty-state">
             <div class="empty-icon"><i class="fa-solid fa-folder-open"></i></div>
-            <p>No approval history found.</p>
+            <p>No tickets found for your department.</p>
         </div>
         {% endfor %}
 
@@ -106,5 +150,22 @@
     {% endif %}
 
 </div>
+
+<script>
+    // Server-Sent Events (SSE) Auto-Refresh Listener
+    const evtSource = new EventSource("{% url 'ticket_updates_sse' %}");
+    
+    evtSource.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        if (data.refresh_required) {
+            window.location.reload();
+        }
+    };
+
+    // Cleanly close the connection before the browser navigates away (Prevents broken pipes!)
+    window.addEventListener('beforeunload', function() {
+        evtSource.close();
+    });
+</script>
 </body>
 </html>
