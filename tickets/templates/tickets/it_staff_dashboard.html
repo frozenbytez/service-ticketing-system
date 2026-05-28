@@ -12,19 +12,79 @@
 </head>
 <body>
 
+<!-- ══ Rating Data (embedded for modal chart) ═════════════════ -->
+<script id="ratingBreakdown" type="application/json">{{ rating_breakdown_json|safe }}</script>
+<script id="ratingData" type="application/json">{{ rating_data_json|safe }}</script>
+
+<!-- ══ Rating Modal ═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="ratingModal" onclick="closeRatingModal(event)">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-title"><i class="fa-solid fa-star"></i> My Performance Ratings</span>
+            <button class="modal-close" onclick="document.getElementById('ratingModal').classList.remove('open')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="modal-body" id="modalBody">
+            {% if my_stats.total_closed and my_stats.total_closed > 0 %}
+            <div class="modal-avg">
+                <div>
+                    <div class="modal-avg-num">{{ my_stats.average_rating|floatformat:1|default:"—" }}</div>
+                    <div class="modal-avg-label">Average Rating &middot; {{ my_stats.total_closed }} review{{ my_stats.total_closed|pluralize }}</div>
+                </div>
+            </div>
+            <div class="chart-wrap">
+                <canvas id="ratingChart"></canvas>
+            </div>
+            <div class="feedback-list-title">
+                <i class="fa-solid fa-comments"></i> Individual Feedback
+            </div>
+            <div id="feedbackList"></div>
+            {% else %}
+            <div class="no-feedback">
+                <i class="fa-regular fa-star" style="font-size:36px; display:block; margin-bottom:12px; color:#d1dae8;"></i>
+                No ratings yet. Resolved tickets with client feedback will appear here.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ══ Navbar ══════════════════════════════════════════════════ -->
 <nav class="navbar">
     <div class="navbar-brand">
         <div class="brand-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
         My Assigned Tasks
     </div>
     <div class="navbar-right">
+
+        <!-- Tier 2 Escalation Bell -->
+        {% if profile.it_tier == 'TIER_2' %}
+        <button class="bell-btn {% if new_escalation_count > 0 %}has-alerts{% endif %}"
+                title="Escalated tickets assigned to you">
+            <i class="fa-solid fa-bell"></i>
+            {% if new_escalation_count > 0 %}
+            <span class="bell-badge">{{ new_escalation_count }}</span>
+            {% endif %}
+        </button>
+        {% endif %}
+
+        <!-- Rating Chip -->
+        {% if my_stats.total_closed and my_stats.total_closed > 0 %}
+        <button class="rating-chip" onclick="document.getElementById('ratingModal').classList.add('open')" title="View my ratings">
+            <i class="fa-solid fa-star"></i>
+            <span class="rating-num">{{ my_stats.average_rating|floatformat:1 }}</span>
+            <span class="rating-label">/ 5 &middot; {{ my_stats.total_closed }} reviews</span>
+        </button>
+        {% endif %}
+
         <span class="welcome-chip">
             <i class="fa-solid fa-circle-user"></i>
             {{ request.user.get_full_name|default:request.user.username }}
             <span class="welcome-sep">|</span>
-            {{ request.user.employeeprofile.get_department_display }}
+            {{ profile.get_it_tier_display }}
             <span class="welcome-sep">·</span>
-            {% if request.user.employeeprofile.is_department_head %}Department Head{% else %}Staff{% endif %}
+            {% if profile.is_department_head %}IT Head{% else %}IT Staff{% endif %}
         </span>
         <a href="?view={% if view_mode == 'history' %}active{% else %}history{% endif %}" class="btn btn-slate">
             {% if view_mode == 'history' %}
@@ -46,32 +106,11 @@
 
     {% if messages %}
         {% for message in messages %}
-        <div class="toast">
-            <i class="fa-solid fa-circle-check"></i>
+        <div class="toast{% if 'escalat' in message.tags or 'warning' in message.tags %}-escalation{% endif %}">
+            <i class="fa-solid fa-{% if 'escalat' in message.tags or 'warning' in message.tags %}triangle-exclamation{% else %}circle-check{% endif %}"></i>
             {{ message }}
         </div>
         {% endfor %}
-    {% endif %}
-
-    {% if my_stats.total_closed > 0 %}
-    <div style="background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 100%); border-radius: var(--radius-md); padding: 24px; margin-bottom: 30px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow-md); color: white; flex-wrap: wrap; gap: 16px;">
-        <div style="flex: 1; min-width: 200px;">
-            <h3 style="font-family: 'Sora', sans-serif; font-size: 18px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-chart-line" style="color: var(--teal);"></i> My Performance Metrics
-            </h3>
-            <p style="font-size: 14px; color: rgba(255,255,255,0.7); margin: 0; line-height: 1.5;">
-                You have successfully resolved <strong>{{ my_stats.total_closed }}</strong> tasks. Keep up the excellent work providing support!
-            </p>
-        </div>
-        <div style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); padding: 14px 24px; border-radius: var(--radius-sm); text-align: center; min-width: 140px;">
-            <div style="font-size: 24px; font-weight: 700; color: #fcd34d; font-family: 'Sora', sans-serif; margin-bottom: 4px;">
-                <i class="fa-solid fa-star"></i> {{ my_stats.average_rating|floatformat:1|default:"-- " }}
-            </div>
-            <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.6);">
-                Average Rating
-            </div>
-        </div>
-    </div>
     {% endif %}
 
     {% if view_mode == 'history' %}
@@ -85,12 +124,23 @@
 
         {% for ticket in history_tickets %}
         <div class="history-card" style="display: block; padding: 24px;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px; flex-wrap: wrap;">
                 <h4 style="margin: 0; font-family: 'Sora', sans-serif; font-size: 16.5px; color: var(--navy);">
                     {% if ticket.ticket_number %}<span style="color: #00c4b8;">#{{ ticket.ticket_number }}</span>{% endif %}
                     {{ ticket.title }}
                 </h4>
-                <span style="padding: 5px 14px; background: #e8f0fe; color: #122c5c; border-radius: 20px; font-size: 11.5px; font-weight: 700; text-transform: uppercase;">{{ ticket.get_status_display }}</span>
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    {% if ticket.priority == 'LOW' %}
+                        <span class="priority-badge priority-low"><i class="fa-solid fa-circle-dot"></i> Low</span>
+                    {% elif ticket.priority == 'MEDIUM' %}
+                        <span class="priority-badge priority-medium"><i class="fa-solid fa-circle-half-stroke"></i> Medium</span>
+                    {% elif ticket.priority == 'HIGH' %}
+                        <span class="priority-badge priority-high"><i class="fa-solid fa-circle-exclamation"></i> High</span>
+                    {% elif ticket.priority == 'URGENT' %}
+                        <span class="priority-badge priority-urgent"><i class="fa-solid fa-bolt"></i> URGENT</span>
+                    {% endif %}
+                    <span style="padding: 5px 14px; background: #e8f0fe; color: #122c5c; border-radius: 20px; font-size: 11.5px; font-weight: 700; text-transform: uppercase;">{{ ticket.get_status_display }}</span>
+                </div>
             </div>
 
             <div class="history-meta" style="display: flex; gap: 16px; font-size: 13px; color: #5e6e8a; margin-bottom: 16px; flex-wrap: wrap;">
@@ -98,7 +148,7 @@
                 <span><i class="fa-solid fa-building"></i> {{ ticket.get_department_display }}</span>
                 <span><i class="fa-regular fa-calendar"></i> {{ ticket.updated_at|date:"M d, Y" }}</span>
             </div>
-            
+
             <div style="font-size: 13.5px; color: #5e6e8a; line-height: 1.6; padding: 14px 18px; background: #f2f6fb; border-radius: 8px; border: 1px solid #d8e4f0; margin-bottom: 16px;">
                 <strong style="color: #122c5c;"><i class="fa-solid fa-circle-exclamation"></i> Original Issue:</strong><br>
                 {{ ticket.description }}
@@ -132,34 +182,77 @@
             <h2 class="section-title">
                 <i class="fa-solid fa-bolt"></i>
                 Active Tasks
+                {% if profile.it_tier == 'TIER_2' %}
+                <span style="font-size:13px; font-weight:600; color:var(--teal); font-family:'DM Sans',sans-serif; padding:3px 10px; background:var(--teal-dim); border-radius:20px; letter-spacing:0;">Tier 2 — Advanced Support</span>
+                {% endif %}
             </h2>
         </div>
 
+        <!-- Priority Filter Bar -->
+        <div class="filter-bar">
+            <form method="GET" class="search-form" id="filterForm">
+                <select name="priority_filter" id="priorityFilter">
+                    <option value="">All Priorities</option>
+                    <option value="LOW"    {% if priority_filter == 'LOW' %}selected{% endif %}>🟢 Low</option>
+                    <option value="MEDIUM" {% if priority_filter == 'MEDIUM' %}selected{% endif %}>🔵 Medium</option>
+                    <option value="HIGH"   {% if priority_filter == 'HIGH' %}selected{% endif %}>🟡 High</option>
+                    <option value="URGENT" {% if priority_filter == 'URGENT' %}selected{% endif %}>🔴 Urgent</option>
+                </select>
+                {% if priority_filter %}
+                <a href="?" style="display:inline-flex; align-items:center; gap:6px; padding:9px 14px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:13px; color:var(--slate); text-decoration:none; font-weight:600; background:var(--bg);">
+                    <i class="fa-solid fa-xmark"></i> Clear Filter
+                </a>
+                {% endif %}
+                <span style="font-size:13px; color:var(--slate-light); display:flex; align-items:center; gap:5px; margin-left:auto;">
+                    <i class="fa-solid fa-filter"></i>
+                    {% if priority_filter %}Showing {{ priority_filter|lower }} priority tasks{% else %}Showing all tasks{% endif %}
+                </span>
+            </form>
+        </div>
+
         {% for ticket in my_tasks %}
-        <div class="task-card">
+        <div class="task-card" data-priority="{{ ticket.priority }}">
             <div class="task-header">
                 <h3 class="task-title">
                     {% if ticket.ticket_number %}<span style="color: #00c4b8;">#{{ ticket.ticket_number }}</span>{% endif %}
                     {{ ticket.title }}
                 </h3>
-                <span class="status-chip">
-                    <i class="fa-solid fa-spinner fa-spin"></i> In Progress
-                </span>
+                <div class="task-badge-group">
+                    {% if ticket.priority == 'LOW' %}
+                        <span class="priority-badge priority-low"><i class="fa-solid fa-circle-dot"></i> Low</span>
+                    {% elif ticket.priority == 'MEDIUM' %}
+                        <span class="priority-badge priority-medium"><i class="fa-solid fa-circle-half-stroke"></i> Medium</span>
+                    {% elif ticket.priority == 'HIGH' %}
+                        <span class="priority-badge priority-high"><i class="fa-solid fa-circle-exclamation"></i> High</span>
+                    {% elif ticket.priority == 'URGENT' %}
+                        <span class="priority-badge priority-urgent"><i class="fa-solid fa-bolt"></i> URGENT</span>
+                    {% endif %}
+                    {% if ticket.is_escalated %}
+                    <span class="escalated-chip"><i class="fa-solid fa-arrow-up-right-dots"></i> Escalated</span>
+                    {% endif %}
+                    <span class="status-chip">
+                        <i class="fa-solid fa-spinner fa-spin"></i> In Progress
+                    </span>
+                </div>
             </div>
 
             <div class="task-meta">
                 <span><i class="fa-solid fa-user"></i> {{ ticket.client_name }}</span>
                 <span><i class="fa-solid fa-building"></i> {{ ticket.get_department_display }}</span>
-                <span><i class="fa-solid fa-flag"></i> {{ ticket.get_priority_display }}</span>
                 <span><i class="fa-regular fa-calendar"></i> {{ ticket.created_at|date:"M d, Y" }}</span>
             </div>
 
-            <div class="task-desc" style="margin-bottom: 16px;">{{ ticket.description }}</div>
+            <!-- Description: always show for In Progress -->
+            <div class="task-desc" style="margin-bottom: 16px;">
+                <strong style="font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--navy-mid); display:flex; align-items:center; gap:5px; margin-bottom:6px;">
+                    <i class="fa-solid fa-align-left" style="color:var(--teal);"></i> Description
+                </strong>
+                {{ ticket.description }}
+            </div>
 
             <form method="POST">
                 {% csrf_token %}
                 <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
-
                 <label class="form-label" for="notes-{{ ticket.id }}">
                     Resolution Notes
                     <span>— document the steps you took to fix this issue</span>
@@ -174,11 +267,11 @@
                 ></textarea>
 
                 <div class="action-row">
-                    <button type="submit" name="action" value="RESOLVE" class="btn btn-resolve">
+                    <button type="submit" name="action" value="RESOLVE" class="btn-resolve">
                         <i class="fa-solid fa-circle-check"></i> Mark as Resolved
                     </button>
-                    <button type="submit" name="action" value="ESCALATE" class="btn btn-escalate" formnovalidate>
-                        <i class="fa-solid fa-arrow-up-right-dots"></i> Escalate to Tier 2
+                    <button type="submit" name="action" value="ESCALATE" class="btn-escalate" formnovalidate>
+                        <i class="fa-solid fa-arrow-up-right-dots"></i> Escalate to {% if profile.it_tier == 'TIER_1' %}Tier 2{% else %}IT Head{% endif %}
                     </button>
                 </div>
             </form>
@@ -186,30 +279,103 @@
         {% empty %}
         <div class="empty-state">
             <div class="empty-icon"><i class="fa-solid fa-mug-hot"></i></div>
-            <h4>You have no assigned tasks</h4>
-            <p>Take a break — or check with your IT Head for new assignments!</p>
+            <h4>{% if priority_filter %}No {{ priority_filter|lower }} priority tasks{% else %}You have no assigned tasks{% endif %}</h4>
+            <p>{% if priority_filter %}Try clearing the filter to see all tasks.{% else %}Take a break — or check with your IT Head for new assignments!{% endif %}</p>
         </div>
         {% endfor %}
 
     {% endif %}
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-    // Server-Sent Events (SSE) Auto-Refresh Listener
-    const evtSource = new EventSource("{% url 'ticket_updates_sse' %}");
-    
-    evtSource.onmessage = function(event) {
-        const data = JSON.parse(event.data);
-        if (data.refresh_required) {
-            window.location.reload();
-        }
-    };
-
-    // Cleanly close the connection before the browser navigates away (Prevents broken pipes!)
-    window.addEventListener('beforeunload', function() {
-        evtSource.close();
+// ── Priority Filter Auto-submit ─────────────────────────────
+const priorityFilter = document.getElementById('priorityFilter');
+if (priorityFilter) {
+    priorityFilter.addEventListener('change', () => {
+        document.getElementById('filterForm').submit();
     });
-</script>
+}
 
+// ── Rating Modal ────────────────────────────────────────────
+function closeRatingModal(e) {
+    if (e.target === document.getElementById('ratingModal')) {
+        document.getElementById('ratingModal').classList.remove('open');
+    }
+}
+
+// Build chart & feedback list when modal is rendered
+(function() {
+    const breakdownEl = document.getElementById('ratingBreakdown');
+    const dataEl = document.getElementById('ratingData');
+    if (!breakdownEl || !dataEl) return;
+
+    let breakdown, feedbacks;
+    try {
+        breakdown = JSON.parse(breakdownEl.textContent);
+        feedbacks = JSON.parse(dataEl.textContent);
+    } catch(e) { return; }
+
+    // ── Chart ───────────────────────────────────────────────
+    const canvas = document.getElementById('ratingChart');
+    if (canvas && Object.keys(breakdown).length > 0) {
+        const labels = ['1 ★', '2 ★', '3 ★', '4 ★', '5 ★'];
+        const counts = [1,2,3,4,5].map(k => breakdown[k] || 0);
+        const colors = ['#ef4444','#f97316','#eab308','#22c55e','#059669'];
+        new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    data: counts,
+                    backgroundColor: colors,
+                    borderRadius: 6,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1, font: { family: 'DM Sans' } },
+                        grid: { color: '#e8f0fe' }
+                    },
+                    x: { ticks: { font: { family: 'DM Sans', weight: '600' } }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    // ── Feedback List ───────────────────────────────────────
+    const listEl = document.getElementById('feedbackList');
+    if (!listEl || !feedbacks.length) return;
+
+    const starStr = n => '★'.repeat(n) + '☆'.repeat(5-n);
+    listEl.innerHTML = feedbacks.map(f => `
+        <div class="feedback-item">
+            <div class="feedback-item-header">
+                <div class="feedback-item-info">
+                    <div class="feedback-item-ticket">#${f.ticket_number} &middot; ${f.date}</div>
+                    <div class="feedback-item-title">${f.title}</div>
+                    <div class="feedback-item-client"><i class="fa-solid fa-user" style="font-size:10px;"></i> ${f.client_name}</div>
+                </div>
+                <div class="feedback-item-stars">${starStr(f.rating)}</div>
+            </div>
+            ${f.notes ? `<div class="feedback-item-note">"${f.notes}"</div>` : ''}
+        </div>
+    `).join('');
+})();
+
+// ── SSE Auto-Refresh ────────────────────────────────────────
+const evtSource = new EventSource("{% url 'ticket_updates_sse' %}");
+evtSource.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+    if (data.refresh_required) window.location.reload();
+};
+window.addEventListener('beforeunload', () => evtSource.close());
+</script>
 </body>
 </html>

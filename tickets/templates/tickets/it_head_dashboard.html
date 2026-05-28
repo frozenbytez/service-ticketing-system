@@ -18,6 +18,16 @@
         IT Head Dispatcher
     </div>
     <div class="navbar-right">
+
+        <!-- Escalation Bell -->
+        <button class="bell-btn {% if escalation_count > 0 %}has-alerts{% endif %}"
+                title="{% if escalation_count > 0 %}{{ escalation_count }} escalated ticket{{ escalation_count|pluralize }} in queue{% else %}No escalated tickets{% endif %}">
+            <i class="fa-solid fa-bell"></i>
+            {% if escalation_count > 0 %}
+            <span class="bell-badge">{{ escalation_count }}</span>
+            {% endif %}
+        </button>
+
         <span class="welcome-chip">
             <i class="fa-solid fa-circle-user"></i>
             {{ request.user.get_full_name|default:request.user.username }}
@@ -63,25 +73,33 @@
         </div>
 
         <div class="filter-bar">
-            <form method="GET" class="search-form">
+            <form method="GET" class="search-form" id="historyFilterForm">
                 <input type="hidden" name="view" value="history">
                 <div class="search-input-wrapper">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" name="q" placeholder="Search by Ticket #, Title, or User..." value="{{ request.GET.q }}">
+                    <input type="text" name="q" id="historySearch"
+                           placeholder="Search by Ticket #, Title, or User..."
+                           value="{{ request.GET.q }}" autocomplete="off">
                 </div>
-                <select name="status_filter">
+                <select name="status_filter" id="historyStatusFilter">
                     <option value="">All Statuses</option>
                     <option value="IN_PROGRESS" {% if request.GET.status_filter == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
-                    <option value="RESOLVED" {% if request.GET.status_filter == 'RESOLVED' %}selected{% endif %}>Resolved</option>
-                    <option value="CLOSED" {% if request.GET.status_filter == 'CLOSED' %}selected{% endif %}>Closed</option>
+                    <option value="RESOLVED"    {% if request.GET.status_filter == 'RESOLVED' %}selected{% endif %}>Resolved</option>
+                    <option value="CLOSED"      {% if request.GET.status_filter == 'CLOSED' %}selected{% endif %}>Closed</option>
                 </select>
-                <button type="submit" class="btn btn-primary">Search</button>
+                <select name="priority_filter" id="historyPriorityFilter">
+                    <option value="">All Priorities</option>
+                    <option value="LOW"    {% if request.GET.priority_filter == 'LOW' %}selected{% endif %}>🟢 Low</option>
+                    <option value="MEDIUM" {% if request.GET.priority_filter == 'MEDIUM' %}selected{% endif %}>🔵 Medium</option>
+                    <option value="HIGH"   {% if request.GET.priority_filter == 'HIGH' %}selected{% endif %}>🟡 High</option>
+                    <option value="URGENT" {% if request.GET.priority_filter == 'URGENT' %}selected{% endif %}>🔴 Urgent</option>
+                </select>
             </form>
         </div>
 
         <div class="history-grid">
             {% for ticket in history_tickets %}
-            <div class="dispatch-card" style="margin-bottom: 0;">
+            <div class="dispatch-card" data-priority="{{ ticket.priority }}" style="margin-bottom: 0;">
                 <div class="card-header">
                     <span class="card-title">
                         {% if ticket.ticket_number %}<span class="text-teal">#{{ ticket.ticket_number }}</span>{% endif %}
@@ -92,12 +110,30 @@
                 <div class="card-meta">
                     <span><i class="fa-solid fa-building"></i> {{ ticket.get_department_display }}</span>
                     <span><i class="fa-solid fa-user"></i> {{ ticket.client_name }}</span>
-                    <span><i class="fa-solid fa-user-gear"></i> Assigned to: {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username|default:"Unassigned" }}</span>
+                    <span><i class="fa-solid fa-user-gear"></i> {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username|default:"Unassigned" }}</span>
                 </div>
-                <p class="card-desc" style="margin-bottom: 14px;">{{ ticket.description }}</p>
+
+                <!-- Priority Badge -->
+                <div style="margin-bottom: 10px;">
+                    {% if ticket.priority == 'LOW' %}
+                        <span class="priority-badge priority-low"><i class="fa-solid fa-circle-dot"></i> Low</span>
+                    {% elif ticket.priority == 'MEDIUM' %}
+                        <span class="priority-badge priority-medium"><i class="fa-solid fa-circle-half-stroke"></i> Medium</span>
+                    {% elif ticket.priority == 'HIGH' %}
+                        <span class="priority-badge priority-high"><i class="fa-solid fa-circle-exclamation"></i> High</span>
+                    {% elif ticket.priority == 'URGENT' %}
+                        <span class="priority-badge priority-urgent"><i class="fa-solid fa-bolt"></i> URGENT</span>
+                    {% endif %}
+                </div>
+
+                <!-- Description toggle -->
+                <button class="btn-desc-toggle" onclick="toggleDesc(this)">
+                    <i class="fa-solid fa-chevron-down"></i> Show Description
+                </button>
+                <div class="desc-body">{{ ticket.description }}</div>
 
                 {% if ticket.client_feedback_rating %}
-                <div style="background: #f8fafc; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 13px; color: var(--slate);">
+                <div style="background: #f8fafc; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 13px; color: var(--slate); margin-top: 12px;">
                     <p style="margin-bottom: 4px;"><strong><i class="fa-solid fa-star" style="color: #d97706;"></i> Client Rating:</strong> {{ ticket.client_feedback_rating }} / 5</p>
                     {% if ticket.client_feedback_notes %}
                         <p style="margin-bottom: 0;"><strong><i class="fa-regular fa-comment"></i> Comments:</strong> "{{ ticket.client_feedback_notes }}"</p>
@@ -123,9 +159,28 @@
             </h2>
         </div>
 
+        <!-- Queue Filter Bar -->
+        <div class="filter-bar">
+            <form method="GET" class="search-form" id="queueFilterForm">
+                <div class="search-input-wrapper">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" name="q" id="queueSearch"
+                           placeholder="Search tickets..."
+                           value="{{ request.GET.q }}" autocomplete="off">
+                </div>
+                <select name="priority_filter" id="queuePriorityFilter">
+                    <option value="">All Priorities</option>
+                    <option value="LOW"    {% if request.GET.priority_filter == 'LOW' %}selected{% endif %}>🟢 Low</option>
+                    <option value="MEDIUM" {% if request.GET.priority_filter == 'MEDIUM' %}selected{% endif %}>🔵 Medium</option>
+                    <option value="HIGH"   {% if request.GET.priority_filter == 'HIGH' %}selected{% endif %}>🟡 High</option>
+                    <option value="URGENT" {% if request.GET.priority_filter == 'URGENT' %}selected{% endif %}>🔴 Urgent</option>
+                </select>
+            </form>
+        </div>
+
         <div class="grid">
             {% for ticket in unassigned_tickets %}
-            <div class="dispatch-card {% if ticket.is_escalated %}critical{% endif %}">
+            <div class="dispatch-card {% if ticket.is_escalated %}critical{% endif %}" data-priority="{{ ticket.priority }}">
                 <div class="card-header">
                     <span class="card-title">{{ ticket.title }}</span>
                     {% if ticket.is_escalated %}
@@ -133,16 +188,29 @@
                             <i class="fa-solid fa-triangle-exclamation"></i> Escalated
                         </span>
                     {% else %}
-                        <span class="priority-label">{{ ticket.priority }}</span>
+                        {% if ticket.priority == 'LOW' %}
+                            <span class="priority-badge priority-low"><i class="fa-solid fa-circle-dot"></i> Low</span>
+                        {% elif ticket.priority == 'MEDIUM' %}
+                            <span class="priority-badge priority-medium"><i class="fa-solid fa-circle-half-stroke"></i> Medium</span>
+                        {% elif ticket.priority == 'HIGH' %}
+                            <span class="priority-badge priority-high"><i class="fa-solid fa-circle-exclamation"></i> High</span>
+                        {% elif ticket.priority == 'URGENT' %}
+                            <span class="priority-badge priority-urgent"><i class="fa-solid fa-bolt"></i> URGENT</span>
+                        {% endif %}
                     {% endif %}
                 </div>
 
                 <div class="card-meta">
                     <span><i class="fa-solid fa-building"></i> {{ ticket.get_department_display }}</span>
                     <span><i class="fa-solid fa-user"></i> {{ ticket.client_name }}</span>
+                    {% if ticket.ticket_number %}<span><i class="fa-solid fa-hashtag"></i> #{{ ticket.ticket_number }}</span>{% endif %}
                 </div>
 
-                <p class="card-desc">{{ ticket.description }}</p>
+                <!-- Description toggle -->
+                <button class="btn-desc-toggle" onclick="toggleDesc(this)">
+                    <i class="fa-solid fa-chevron-down"></i> Show Description
+                </button>
+                <div class="desc-body" style="margin-bottom:12px;">{{ ticket.description }}</div>
 
                 <hr class="card-divider">
 
@@ -166,7 +234,10 @@
                             <select name="tech_id" required>
                                 <option value="" disabled selected>— Select IT Staff —</option>
                                 {% for tech in it_team %}
-                                    <option value="{{ tech.id }}">{{ tech.get_full_name|default:tech.username }}</option>
+                                    <option value="{{ tech.id }}">
+                                        {{ tech.get_full_name|default:tech.username }}
+                                        {% if tech.employeeprofile.it_tier == 'TIER_2' %} [Tier 2]{% else %} [Tier 1]{% endif %}
+                                    </option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -190,17 +261,41 @@
 </div>
 
 <script>
-    // Server-Sent Events (SSE) Auto-Refresh Listener
-    const evtSource = new EventSource("{% url 'ticket_updates_sse' %}");
-    evtSource.onmessage = function(event) {
-        const data = JSON.parse(event.data);
-        if (data.refresh_required) {
-            window.location.reload();
-        }
-    };
+// ── Description Toggle ──────────────────────────────────────
+function toggleDesc(btn) {
+    const body = btn.nextElementSibling;
+    const isOpen = body.classList.toggle('visible');
+    btn.innerHTML = isOpen
+        ? '<i class="fa-solid fa-chevron-up"></i> Hide Description'
+        : '<i class="fa-solid fa-chevron-down"></i> Show Description';
+}
 
-    
+// ── Live Search (debounce) ──────────────────────────────────
+function setupLiveSearch(inputId, formId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    let timer;
+    input.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => document.getElementById(formId).submit(), 450);
+    });
+}
+setupLiveSearch('historySearch', 'historyFilterForm');
+setupLiveSearch('queueSearch', 'queueFilterForm');
+
+// ── Auto-submit on filter change ────────────────────────────
+['historyStatusFilter','historyPriorityFilter','queuePriorityFilter'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', () => el.closest('form').submit());
+});
+
+// ── SSE Auto-Refresh ────────────────────────────────────────
+const evtSource = new EventSource("{% url 'ticket_updates_sse' %}");
+evtSource.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+    if (data.refresh_required) window.location.reload();
+};
+window.addEventListener('beforeunload', () => evtSource.close());
 </script>
-
 </body>
 </html>

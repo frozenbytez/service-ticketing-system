@@ -52,54 +52,83 @@
         </div>
 
         <div class="filter-bar">
-            <form method="GET" class="search-form">
+            <form method="GET" class="search-form" id="filterForm">
                 <input type="hidden" name="view" value="history">
                 <div class="search-input-wrapper">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" name="q" placeholder="Search department tickets..." value="{{ request.GET.q }}">
+                    <input type="text" name="q" id="liveSearch"
+                           placeholder="Search department tickets…"
+                           value="{{ request.GET.q }}" autocomplete="off">
                 </div>
-                <select name="status_filter">
+                <select name="status_filter" id="statusFilter">
                     <option value="">All Statuses</option>
-                    <option value="OPEN" {% if request.GET.status_filter == 'OPEN' %}selected{% endif %}>Open</option>
+                    <option value="OPEN"        {% if request.GET.status_filter == 'OPEN' %}selected{% endif %}>Open</option>
                     <option value="IN_PROGRESS" {% if request.GET.status_filter == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
-                    <option value="RESOLVED" {% if request.GET.status_filter == 'RESOLVED' %}selected{% endif %}>Resolved</option>
+                    <option value="RESOLVED"    {% if request.GET.status_filter == 'RESOLVED' %}selected{% endif %}>Resolved</option>
+                    <option value="CLOSED"      {% if request.GET.status_filter == 'CLOSED' %}selected{% endif %}>Closed</option>
                 </select>
-                <button type="submit" class="btn btn-info" style="color:var(--navy); background:var(--bg);">Filter</button>
+                <select name="priority_filter" id="priorityFilter">
+                    <option value="">All Priorities</option>
+                    <option value="LOW"    {% if request.GET.priority_filter == 'LOW' %}selected{% endif %}>🟢 Low</option>
+                    <option value="MEDIUM" {% if request.GET.priority_filter == 'MEDIUM' %}selected{% endif %}>🔵 Medium</option>
+                    <option value="HIGH"   {% if request.GET.priority_filter == 'HIGH' %}selected{% endif %}>🟡 High</option>
+                    <option value="URGENT" {% if request.GET.priority_filter == 'URGENT' %}selected{% endif %}>🔴 Urgent</option>
+                </select>
             </form>
         </div>
 
         {% for ticket in history_tickets %}
-        <div class="approval-card" style="padding: 24px;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                <p class="approval-title" style="margin-bottom: 0;">
-                    {% if ticket.ticket_number %}<span class="text-teal">#{{ ticket.ticket_number }}</span>{% endif %}
-                    {{ ticket.title }}
-                </p>
-                <span class="status-pill status-default">{{ ticket.get_status_display }}</span>
-            </div>
-            <div class="approval-meta">
-                <span><i class="fa-solid fa-user"></i> {{ ticket.requester.username }} ({{ ticket.client_name }})</span>
-                <span><i class="fa-regular fa-calendar"></i> {{ ticket.created_at|date:"M d, Y" }}</span>
-                <span><i class="fa-solid fa-flag"></i> {{ ticket.get_priority_display }}</span>
-            </div>
-            <div class="approval-desc" style="margin-bottom: 14px;">{{ ticket.description }}</div>
-            
-            {% if ticket.assigned_to or ticket.client_feedback_rating %}
-            <div style="background: #f8fafc; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 13px; color: var(--slate);">
-                {% if ticket.assigned_to %}
-                    <p style="margin-bottom: {% if ticket.client_feedback_rating %}8px{% else %}0{% endif %};">
-                        <i class="fa-solid fa-user-gear text-teal"></i> <strong>Resolved by:</strong> {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}
+        <div class="approval-card" data-priority="{{ ticket.priority }}" style="padding:0;">
+            <div class="approval-card-top">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; gap:10px; flex-wrap:wrap;">
+                    <p class="approval-title" style="margin-bottom:0;">
+                        {% if ticket.ticket_number %}<span class="text-teal">#{{ ticket.ticket_number }}</span>{% endif %}
+                        {{ ticket.title }}
                     </p>
-                {% endif %}
-                
-                {% if ticket.client_feedback_rating %}
-                    <p style="margin-bottom: 4px;"><strong><i class="fa-solid fa-star" style="color: #d97706;"></i> Client Rating:</strong> {{ ticket.client_feedback_rating }} / 5</p>
-                    {% if ticket.client_feedback_notes %}
-                        <p style="margin-bottom: 0;"><strong><i class="fa-regular fa-comment"></i> Comments:</strong> "{{ ticket.client_feedback_notes }}"</p>
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        {% if ticket.priority == 'LOW' %}
+                            <span class="priority-badge priority-low"><i class="fa-solid fa-circle-dot"></i> Low</span>
+                        {% elif ticket.priority == 'MEDIUM' %}
+                            <span class="priority-badge priority-medium"><i class="fa-solid fa-circle-half-stroke"></i> Medium</span>
+                        {% elif ticket.priority == 'HIGH' %}
+                            <span class="priority-badge priority-high"><i class="fa-solid fa-circle-exclamation"></i> High</span>
+                        {% elif ticket.priority == 'URGENT' %}
+                            <span class="priority-badge priority-urgent"><i class="fa-solid fa-bolt"></i> URGENT</span>
+                        {% endif %}
+                        <span class="status-pill status-default">{{ ticket.get_status_display }}</span>
+                    </div>
+                </div>
+                <div class="approval-meta">
+                    <span><i class="fa-solid fa-user"></i> {{ ticket.requester.username }} ({{ ticket.client_name }})</span>
+                    <span><i class="fa-regular fa-calendar"></i> {{ ticket.created_at|date:"M d, Y" }}</span>
+                </div>
+
+                <div class="desc-label"><i class="fa-solid fa-align-left"></i> Description</div>
+                <div class="approval-desc" style="margin-bottom:14px;">{{ ticket.description }}</div>
+
+                {% if ticket.assigned_to or ticket.client_feedback_rating %}
+                <div style="background:#f8fafc; padding:14px; border-radius:var(--radius-sm); border:1px solid var(--border); font-size:13px; color:var(--slate);">
+                    {% if ticket.assigned_to %}
+                    <p style="margin-bottom:{% if ticket.client_feedback_rating %}8px{% else %}0{% endif %};">
+                        <i class="fa-solid fa-user-gear text-teal"></i>
+                        <strong>Resolved by:</strong> {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}
+                    </p>
                     {% endif %}
+                    {% if ticket.client_feedback_rating %}
+                    <p style="margin-bottom:4px;">
+                        <strong><i class="fa-solid fa-star" style="color:#d97706;"></i> Client Rating:</strong>
+                        {{ ticket.client_feedback_rating }} / 5
+                    </p>
+                    {% if ticket.client_feedback_notes %}
+                    <p style="margin-bottom:0;">
+                        <strong><i class="fa-regular fa-comment"></i> Comments:</strong>
+                        "{{ ticket.client_feedback_notes }}"
+                    </p>
+                    {% endif %}
+                    {% endif %}
+                </div>
                 {% endif %}
             </div>
-            {% endif %}
         </div>
         {% empty %}
         <div class="empty-state">
@@ -115,14 +144,47 @@
             <h2 class="section-title">Pending Approvals</h2>
         </div>
 
+        <div class="filter-bar">
+            <form method="GET" class="search-form" id="filterForm">
+                <div class="search-input-wrapper">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" name="q" id="liveSearch"
+                           placeholder="Search pending approvals…"
+                           value="{{ request.GET.q }}" autocomplete="off">
+                </div>
+                <select name="priority_filter" id="priorityFilter">
+                    <option value="">All Priorities</option>
+                    <option value="LOW"    {% if request.GET.priority_filter == 'LOW' %}selected{% endif %}>🟢 Low</option>
+                    <option value="MEDIUM" {% if request.GET.priority_filter == 'MEDIUM' %}selected{% endif %}>🔵 Medium</option>
+                    <option value="HIGH"   {% if request.GET.priority_filter == 'HIGH' %}selected{% endif %}>🟡 High</option>
+                    <option value="URGENT" {% if request.GET.priority_filter == 'URGENT' %}selected{% endif %}>🔴 Urgent</option>
+                </select>
+            </form>
+        </div>
+
         {% for ticket in pending_approvals %}
-        <div class="approval-card">
+        <div class="approval-card" data-priority="{{ ticket.priority }}">
             <div class="approval-card-top">
-                <p class="approval-title">{{ ticket.title }}</p>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; gap:10px; flex-wrap:wrap;">
+                    <p class="approval-title" style="margin-bottom:0;">{{ ticket.title }}</p>
+                    {% if ticket.priority == 'LOW' %}
+                        <span class="priority-badge priority-low"><i class="fa-solid fa-circle-dot"></i> Low</span>
+                    {% elif ticket.priority == 'MEDIUM' %}
+                        <span class="priority-badge priority-medium"><i class="fa-solid fa-circle-half-stroke"></i> Medium</span>
+                    {% elif ticket.priority == 'HIGH' %}
+                        <span class="priority-badge priority-high"><i class="fa-solid fa-circle-exclamation"></i> High</span>
+                    {% elif ticket.priority == 'URGENT' %}
+                        <span class="priority-badge priority-urgent"><i class="fa-solid fa-bolt"></i> URGENT</span>
+                    {% endif %}
+                </div>
                 <div class="approval-meta">
                     <span><i class="fa-solid fa-user"></i> {{ ticket.requester.username }}</span>
                     <span><i class="fa-solid fa-building"></i> {{ ticket.client_name }}</span>
+                    <span><i class="fa-regular fa-calendar"></i> {{ ticket.created_at|date:"M d, Y" }}</span>
                 </div>
+
+                <!-- Description: always shown in approval view -->
+                <div class="desc-label"><i class="fa-solid fa-align-left"></i> Desc</div>
                 <div class="approval-desc">{{ ticket.description }}</div>
             </div>
 
@@ -152,20 +214,29 @@
 </div>
 
 <script>
-    // Server-Sent Events (SSE) Auto-Refresh Listener
-    const evtSource = new EventSource("{% url 'ticket_updates_sse' %}");
-    
-    evtSource.onmessage = function(event) {
-        const data = JSON.parse(event.data);
-        if (data.refresh_required) {
-            window.location.reload();
-        }
-    };
-
-    // Cleanly close the connection before the browser navigates away (Prevents broken pipes!)
-    window.addEventListener('beforeunload', function() {
-        evtSource.close();
+// ── Live Search ─────────────────────────────────────────────
+const liveSearch = document.getElementById('liveSearch');
+if (liveSearch) {
+    let timer;
+    liveSearch.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => document.getElementById('filterForm').submit(), 450);
     });
-</script>
+}
+
+// ── Auto-submit on any filter change ───────────────────────
+['statusFilter','priorityFilter'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', () => document.getElementById('filterForm').submit());
+});
+
+// ── SSE Auto-Refresh ────────────────────────────────────────
+const evtSource = new EventSource("{% url 'ticket_updates_sse' %}");
+evtSource.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+    if (data.refresh_required) window.location.reload();
+};
+window.addEventListener('beforeunload', () => evtSource.close());
+</script>       
 </body>
 </html>

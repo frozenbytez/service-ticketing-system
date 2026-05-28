@@ -40,7 +40,6 @@
 
 <div class="container">
     <div class="page-header">
-            
         <h1 class="page-title">
             <i class="fa-solid fa-layer-group"></i>
             My Support Tickets
@@ -49,41 +48,71 @@
     </div>
 
     <div class="filter-bar">
-        <form method="GET" class="search-form">
+        <form method="GET" class="search-form" id="filterForm">
             <div class="search-input-wrapper">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" name="q" placeholder="Search my requests..." value="{{ request.GET.q }}">
+                <input type="text" name="q" id="liveSearch"
+                       placeholder="Search my requests…"
+                       value="{{ request.GET.q }}"
+                       autocomplete="off">
             </div>
-            <select name="status_filter">
+            <select name="status_filter" id="statusFilter">
                 <option value="">All Statuses</option>
-                <option value="OPEN" {% if request.GET.status_filter == 'OPEN' %}selected{% endif %}>Open</option>
+                <option value="OPEN"        {% if request.GET.status_filter == 'OPEN' %}selected{% endif %}>Open</option>
                 <option value="IN_PROGRESS" {% if request.GET.status_filter == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
-                <option value="RESOLVED" {% if request.GET.status_filter == 'RESOLVED' %}selected{% endif %}>Resolved</option>
-                <option value="CLOSED" {% if request.GET.status_filter == 'CLOSED' %}selected{% endif %}>Closed</option>
+                <option value="RESOLVED"    {% if request.GET.status_filter == 'RESOLVED' %}selected{% endif %}>Resolved</option>
+                <option value="CLOSED"      {% if request.GET.status_filter == 'CLOSED' %}selected{% endif %}>Closed</option>
             </select>
-            <button type="submit" class="btn btn-new" style="box-shadow: none;">Search</button>
         </form>
     </div>
 
     <div class="ticket-list">
         {% for ticket in my_tickets %}
-        <div class="ticket-card">
+        <div class="ticket-card" data-priority="{{ ticket.priority }}">
             <div class="ticket-header">
                 <span class="ticket-title">
                     {% if ticket.ticket_number %}<span class="text-teal">#{{ ticket.ticket_number }}</span>{% endif %}
                     {{ ticket.title }}
                 </span>
-                <span class="badge badge-default">{{ ticket.get_status_display }}</span>
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    {% if ticket.priority == 'LOW' %}
+                        <span class="priority-badge priority-low"><i class="fa-solid fa-circle-dot"></i> Low</span>
+                    {% elif ticket.priority == 'MEDIUM' %}
+                        <span class="priority-badge priority-medium"><i class="fa-solid fa-circle-half-stroke"></i> Medium</span>
+                    {% elif ticket.priority == 'HIGH' %}
+                        <span class="priority-badge priority-high"><i class="fa-solid fa-circle-exclamation"></i> High</span>
+                    {% elif ticket.priority == 'URGENT' %}
+                        <span class="priority-badge priority-urgent"><i class="fa-solid fa-bolt"></i> URGENT</span>
+                    {% endif %}
+                    <span class="badge badge-default">{{ ticket.get_status_display }}</span>
+                </div>
             </div>
 
             <div class="ticket-meta">
                 <span><i class="fa-solid fa-building"></i> {{ ticket.client_name }}</span>
-                <span><i class="fa-solid fa-flag"></i> {{ ticket.get_priority_display }}</span>
+                <span><i class="fa-regular fa-calendar"></i> {{ ticket.created_at|date:"M d, Y" }}</span>
+                {% if ticket.assigned_to %}
+                <span><i class="fa-solid fa-user-gear"></i> {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}</span>
+                {% endif %}
             </div>
 
-            {% if ticket.assigned_to %}
-            <div style="margin-top: 10px; font-size: 13px; color: var(--slate);">
-                <i class="fa-solid fa-user-gear"></i> Assigned IT: <strong>{{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}</strong>
+            <!-- Description: always show if IN_PROGRESS, toggleable otherwise -->
+            {% if ticket.status == 'IN_PROGRESS' %}
+            <div class="desc-body always-visible" style="margin-top: 12px;">
+                <strong style="font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--navy-mid); display:block; margin-bottom:4px;">
+                    <i class="fa-solid fa-align-left" style="color:var(--teal);"></i> Description
+                </strong>
+                {{ ticket.description }}
+            </div>
+            {% else %}
+            <button class="btn-desc-toggle" onclick="toggleDesc(this)">
+                <i class="fa-solid fa-chevron-down"></i> Show Description
+            </button>
+            <div class="desc-body">
+                <strong style="font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--navy-mid); display:block; margin-bottom:4px;">
+                    <i class="fa-solid fa-align-left" style="color:var(--teal);"></i> Description
+                </strong>
+                {{ ticket.description }}
             </div>
             {% endif %}
 
@@ -100,11 +129,11 @@
                     <label for="rating-{{ ticket.id }}">Rate the fix (1–5):</label>
                     <select id="rating-{{ ticket.id }}" name="rating" required>
                         <option value="" disabled selected>-- Select Rating --</option>
-                        <option value="5">5 - Excellent</option>
-                        <option value="4">4 - Good</option>
-                        <option value="3">3 - Average</option>
-                        <option value="2">2 - Poor</option>
-                        <option value="1">1 - Terrible</option>
+                        <option value="5">5 — Excellent</option>
+                        <option value="4">4 — Good</option>
+                        <option value="3">3 — Average</option>
+                        <option value="2">2 — Poor</option>
+                        <option value="1">1 — Terrible</option>
                     </select>
                     <input type="text" name="feedback_notes" placeholder="Any comments? (optional)">
                     <button type="submit" name="submit_feedback" class="btn-feedback">
@@ -112,14 +141,20 @@
                     </button>
                 </form>
             </div>
-            
+
             {% elif ticket.status == 'CLOSED' and ticket.client_feedback_rating %}
             <hr class="divider">
-            <div style="background: #f8fafc; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
-                <h5 style="margin-bottom: 8px; font-size: 13px; color: var(--navy);"><i class="fa-solid fa-star" style="color: #d97706;"></i> My Feedback</h5>
-                <p style="font-size: 13px; margin-bottom: 4px; color: var(--slate);"><strong>Rating:</strong> {{ ticket.client_feedback_rating }} / 5</p>
+            <div style="background:#f8fafc; padding:14px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+                <h5 style="margin-bottom:8px; font-size:13px; color:var(--navy);">
+                    <i class="fa-solid fa-star" style="color:#d97706;"></i> My Feedback
+                </h5>
+                <p style="font-size:13px; margin-bottom:4px; color:var(--slate);">
+                    <strong>Rating:</strong> {{ ticket.client_feedback_rating }} / 5
+                </p>
                 {% if ticket.client_feedback_notes %}
-                    <p style="font-size: 13px; margin-bottom: 0; color: var(--slate);"><strong>Comments:</strong> "{{ ticket.client_feedback_notes }}"</p>
+                <p style="font-size:13px; margin-bottom:0; color:var(--slate);">
+                    <strong>Comments:</strong> "{{ ticket.client_feedback_notes }}"
+                </p>
                 {% endif %}
             </div>
             {% endif %}
@@ -135,21 +170,36 @@
 </div>
 
 <script>
-    // Server-Sent Events (SSE) Auto-Refresh Listener
-    const evtSource = new EventSource("{% url 'ticket_updates_sse' %}");
-    
-    evtSource.onmessage = function(event) {
-        const data = JSON.parse(event.data);
-        if (data.refresh_required) {
-            window.location.reload();
-        }
-    };
+// ── Description Toggle ──────────────────────────────────────
+function toggleDesc(btn) {
+    const body = btn.nextElementSibling;
+    const open = body.style.display !== 'block';
+    body.style.display = open ? 'block' : 'none';
+    btn.innerHTML = open
+        ? '<i class="fa-solid fa-chevron-up"></i> Hide Description'
+        : '<i class="fa-solid fa-chevron-down"></i> Show Description';
+}
 
-    // Cleanly close the connection before the browser navigates away (Prevents broken pipes!)
-    window.addEventListener('beforeunload', function() {
-        evtSource.close();
-    });
+// ── Live Search (debounce 500ms) ────────────────────────────
+const searchInput = document.getElementById('liveSearch');
+let searchTimer;
+searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => document.getElementById('filterForm').submit(), 500);
+});
+
+// ── Auto-submit on filter select change ────────────────────
+document.getElementById('statusFilter').addEventListener('change', () => {
+    document.getElementById('filterForm').submit();
+});
+
+// ── SSE Auto-Refresh ────────────────────────────────────────
+const evtSource = new EventSource("{% url 'ticket_updates_sse' %}");
+evtSource.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+    if (data.refresh_required) window.location.reload();
+};
+window.addEventListener('beforeunload', () => evtSource.close());
 </script>
-
 </body>
 </html>
