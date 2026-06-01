@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'tickets/css/it_staff_dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'tickets/css/sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'tickets/css/dashboard.css' %}">
 </head>
 <body>
 
@@ -50,58 +52,45 @@
     </div>
 </div>
 
-<!-- ══ Navbar ══════════════════════════════════════════════════ -->
-<nav class="navbar">
-    <div class="navbar-brand">
-        <div class="brand-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
-        My Assigned Tasks
+<!-- ══ IT STAFF SIDEBAR ════════════════════════════════════════ -->
+<aside class="sidebar">
+    <a href="{% url 'it_staff_dashboard_home' %}" class="sb-brand">
+        <div class="sb-brand-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+        <span class="sb-brand-text">My Workspace</span>
+    </a>
+    <div class="sb-user">
+        <div class="sb-avatar">{{ request.user.get_full_name|default:request.user.username|slice:":2"|upper }}</div>
+        <div class="sb-user-info">
+            <div class="sb-user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+            <div class="sb-user-role">IT Staff</div>
+        </div>
     </div>
-    <div class="navbar-right">
-
-        <!-- Tier 2 Escalation Bell -->
-        {% if profile.it_tier == 'TIER_2' %}
-        <button class="bell-btn {% if new_escalation_count > 0 %}has-alerts{% endif %}"
-                title="Escalated tickets assigned to you">
-            <i class="fa-solid fa-bell"></i>
-            {% if new_escalation_count > 0 %}
-            <span class="bell-badge">{{ new_escalation_count }}</span>
-            {% endif %}
-        </button>
-        {% endif %}
-
-        <!-- Rating Chip -->
-        {% if my_stats.total_closed and my_stats.total_closed > 0 %}
-        <button class="rating-chip" onclick="document.getElementById('ratingModal').classList.add('open')" title="View my ratings">
-            <i class="fa-solid fa-star"></i>
-            <span class="rating-num">{{ my_stats.average_rating|floatformat:1 }}</span>
-            <span class="rating-label">/ 5 &middot; {{ my_stats.total_closed }} reviews</span>
-        </button>
-        {% endif %}
-
-        <span class="welcome-chip">
-            <i class="fa-solid fa-circle-user"></i>
-            {{ request.user.get_full_name|default:request.user.username }}
-            <span class="welcome-sep">|</span>
-            {{ profile.get_it_tier_display }}
-            <span class="welcome-sep">·</span>
-            {% if profile.is_department_head %}IT Head{% else %}IT Staff{% endif %}
-        </span>
-        <a href="?view={% if view_mode == 'history' %}active{% else %}history{% endif %}" class="btn btn-slate">
-            {% if view_mode == 'history' %}
-                <i class="fa-solid fa-arrow-left"></i> Back to Tasks
-            {% else %}
-                <i class="fa-solid fa-folder-open"></i> Resolved Tickets
-            {% endif %}
+    <nav class="sb-nav">
+        <a href="{% url 'it_staff_dashboard_home' %}" class="sb-item" title="Dashboard">
+            <div class="sb-icon"><i class="fa-solid fa-gauge-high"></i></div>
+            <span class="sb-label">My Performance</span>
         </a>
-        <form action="{% url 'logout' %}" method="post" style="margin:0;">
+        <a href="{% url 'it_staff_dashboard' %}" class="sb-item {% if view_mode == 'active' or not view_mode %}active{% endif %}" title="Active Tasks">
+            <div class="sb-icon"><i class="fa-solid fa-bolt"></i></div>
+            <span class="sb-label">Active Tasks</span>
+        </a>
+        <a href="{% url 'it_staff_dashboard' %}?view=history" class="sb-item {% if view_mode == 'history' %}active{% endif %}" title="Resolved Tickets">
+            <div class="sb-icon"><i class="fa-solid fa-folder-open"></i></div>
+            <span class="sb-label">Resolved Tickets</span>
+        </a>
+    </nav>
+    <div class="sb-footer">
+        <form action="{% url 'logout' %}" method="post" style="margin: 0;">
             {% csrf_token %}
-            <button type="submit" class="btn btn-ghost">
-                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            <button type="submit" class="sb-logout-btn" title="Logout">
+                <div class="sb-logout-icon"><i class="fa-solid fa-right-from-bracket"></i></div>
+                <span class="sb-logout-label">Logout</span>
             </button>
         </form>
     </div>
-</nav>
+</aside>
 
+<div class="page-wrapper">
 <div class="container">
 
     {% if messages %}
@@ -286,7 +275,7 @@
 
     {% endif %}
 </div>
-
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 // ── Priority Filter Auto-submit ─────────────────────────────

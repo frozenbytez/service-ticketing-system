@@ -9,11 +9,139 @@ from .models import Ticket, EmployeeProfile
 import time
 import json
 from datetime import datetime
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Count, Avg
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import Ticket, User, DEPARTMENT_CHOICES
 
 
 # ──────────────────────────────────────────────────────────────
 # HELPERS
 # ──────────────────────────────────────────────────────────────
+
+def apply_time_filter(queryset, time_filter):
+    now = timezone.now()
+    if time_filter == 'daily':
+        return queryset.filter(created_at__date=now.date())
+    elif time_filter == 'weekly':
+        start_of_week = now - timedelta(days=now.weekday())
+        return queryset.filter(created_at__date__gte=start_of_week.date())
+    elif time_filter == 'monthly':
+        return queryset.filter(created_at__year=now.year, created_at__month=now.month)
+    elif time_filter == 'yearly':
+        return queryset.filter(created_at__year=now.year)
+    return queryset
+
+# ── 1. Department Manager / Head Dashboard ───────────────────────────
+@login_required
+def head_dashboard_home(request):
+    time_filter = request.GET.get('time_filter', 'all')
+    dept = request.user.employeeprofile.department
+    tickets = apply_time_filter(Ticket.objects.filter(department=dept), time_filter)
+    
+    stats = {
+        'sent': tickets.count(),
+        'approved': tickets.filter(approval_status='APPROVED').count(),
+        'declined': tickets.filter(approval_status='REJECTED').count(),
+        'fixed': tickets.filter(status__in=['RESOLVED', 'CLOSED']).count(),
+        'feedbacks': tickets.filter(client_feedback_rating__isnull=False).count(),
+    }
+    
+    context = {
+        'time_filter': time_filter,
+        **stats,
+        'approval_chart_data': json.dumps([stats['approved'], stats['declined'], stats['sent'] - (stats['approved'] + stats['declined'])]),
+    }
+    return render(request, 'tickets/head_dashboard_home.html', context)
+# ── 2. IT Head / Supervisor Dashboard ────────────────────────────────
+@login_required
+def it_head_dashboard_home(request):
+    time_filter = request.GET.get('time_filter', 'all')
+    dept_filter = request.GET.get('dept_filter', 'all')
+    
+    tickets = apply_time_filter(Ticket.objects.all(), time_filter)
+    if dept_filter != 'all': tickets = tickets.filter(department=dept_filter)
+    
+    # Chart 1: Department Breakdown
+    dept_counts = tickets.values('department').annotate(count=Count('id'))
+    chart_depts = [d['department'] for d in dept_counts]
+    chart_dept_counts = [d['count'] for d in dept_counts]
+
+    # Chart 2: Approval Breakdown
+    approved = tickets.filter(approval_status='APPROVED').count()
+    declined = tickets.filter(approval_status='REJECTED').count()
+    pending = tickets.count() - (approved + declined)
+
+    # IT Staff Stats
+    staff_stats = []
+    it_staffs = User.objects.filter(employeeprofile__department='IT', employeeprofile__is_department_head=False)
+    for staff in it_staffs:
+        staff_tix = apply_time_filter(Ticket.objects.filter(assigned_to=staff, client_feedback_rating__isnull=False), time_filter)
+        agg = staff_tix.aggregate(avg_rating=Avg('client_feedback_rating'), total_feedbacks=Count('id'))
+        staff_stats.append({
+            'name': staff.get_full_name() or staff.username,
+            'assigned': tickets.filter(assigned_to=staff).count(),
+            'resolved': tickets.filter(assigned_to=staff, status__in=['RESOLVED','CLOSED']).count(),
+            'avg_rating': round(agg['avg_rating'], 1) if agg['avg_rating'] else 0.0,
+            'total_feedbacks': agg['total_feedbacks'] or 0
+        })
+
+    context = {
+        'time_filter': time_filter,
+        'dept_filter': dept_filter,
+        'departments': [d[0] for d in DEPARTMENT_CHOICES],
+        'total_sent': tickets.count(),
+        'total_assigned': tickets.filter(assigned_to__isnull=False).count(),
+        'total_escalated': tickets.filter(is_escalated=True).count(),
+        'staff_stats': sorted(staff_stats, key=lambda x: x['avg_rating'], reverse=True),
+        # JSON data for Chart.js
+        'chart_depts_json': json.dumps(chart_depts),
+        'chart_dept_counts_json': json.dumps(chart_dept_counts),
+        'approval_chart_data': json.dumps([approved, declined, pending])
+    }
+    return render(request, 'tickets/it_head_dashboard_home.html', context)
+
+# ── 3. IT Staff Dashboard ────────────────────────────────────────────
+@login_required
+def it_staff_dashboard_home(request):
+    time_filter = request.GET.get('time_filter', 'all')
+    tickets = apply_time_filter(Ticket.objects.filter(assigned_to=request.user), time_filter)
+    
+    # Chart 1: Department Breakdown for THIS specific IT Staff
+    dept_counts = tickets.values('department').annotate(count=Count('id'))
+    chart_depts = [d['department'] for d in dept_counts]
+    chart_dept_counts = [d['count'] for d in dept_counts]
+    
+    # Chart 2: Rating Breakdown calculation
+    rating_data = [
+        tickets.filter(client_feedback_rating=5).count(),
+        tickets.filter(client_feedback_rating=4).count(),
+        tickets.filter(client_feedback_rating=3).count(),
+        tickets.filter(client_feedback_rating=2).count(),
+        tickets.filter(client_feedback_rating=1).count(),
+    ]
+    max_rating_count = max(rating_data) if max(rating_data) > 0 else 1
+    
+    # Overall averages
+    agg = tickets.filter(client_feedback_rating__isnull=False).aggregate(avg=Avg('client_feedback_rating'), count=Count('id'))
+
+    context = {
+        'time_filter': time_filter,
+        'total_assigned': tickets.count(),
+        'total_resolved': tickets.filter(status__in=['RESOLVED', 'CLOSED']).count(),
+        'pending': tickets.exclude(status__in=['RESOLVED', 'CLOSED']).count(),
+        'total_feedbacks': agg['count'] or 0,
+        'avg_rating': round(agg['avg'], 1) if agg['avg'] else 0.0,
+        
+        # JSON data for rendering
+        'chart_depts_json': json.dumps(chart_depts),
+        'chart_dept_counts_json': json.dumps(chart_dept_counts),
+        'rating_data': rating_data,
+        'max_rating': max_rating_count,
+    }
+    return render(request, 'tickets/it_staff_dashboard_home.html', context)
 
 def _generate_ticket_number():
     """Generate a sequential ticket number like TKT-202506-0001."""
@@ -46,21 +174,29 @@ def _escalation_count():
 
 @login_required
 def dashboard_redirect(request):
-    """Routes users to 1 of 4 specific dashboards based on their exact role."""
+    """Routes users to their specific metrics dashboard based on their exact role."""
+    
+    # If it's a superuser with no profile, send them to the IT Head dashboard
     if request.user.is_superuser and not hasattr(request.user, 'employeeprofile'):
-        return redirect('it_head_dashboard')
+        return redirect('it_head_dashboard_home')
 
     if hasattr(request.user, 'employeeprofile'):
         profile = request.user.employeeprofile
+        
         if profile.department == 'IT':
             if profile.is_department_head:
-                return redirect('it_head_dashboard')
+                # IT Supervisor lands on their metrics
+                return redirect('it_head_dashboard_home')
             else:
-                return redirect('it_staff_dashboard')   # Tier 1 & Tier 2 share dashboard
+                # IT Staff lands on their metrics
+                return redirect('it_staff_dashboard_home')
+                
         if profile.is_department_head:
-            return redirect('head_dashboard')
+            # Non-IT Department Head lands on their metrics
+            return redirect('head_dashboard_home')
 
-    return redirect('clinic_portal')
+    # Standard Employees land on their metrics
+    return redirect('employee_dashboard')
 
 
 # ──────────────────────────────────────────────────────────────
@@ -411,3 +547,25 @@ def ticket_updates_sse(request):
     response['Cache-Control'] = 'no-cache'
     response['X-Accel-Buffering'] = 'no'
     return response
+
+@login_required
+def employee_dashboard(request):
+    time_filter = request.GET.get('time_filter', 'all')
+    tickets = apply_time_filter(Ticket.objects.filter(requester=request.user), time_filter)
+    
+    stats = {
+        'sent': tickets.count(),
+        'approved': tickets.filter(approval_status='APPROVED').count(),
+        'declined': tickets.filter(approval_status='REJECTED').count(),
+        'fixed': tickets.filter(status__in=['RESOLVED', 'CLOSED']).count(),
+        'feedbacks': tickets.filter(client_feedback_rating__isnull=False).count(),
+    }
+    
+    context = {
+        'time_filter': time_filter,
+        **stats,
+        # Pass exact array for the chart: [Approved, Declined, Pending]
+        'status_chart_data': json.dumps([stats['approved'], stats['declined'], stats['sent'] - (stats['approved'] + stats['declined'])]),
+        'action_chart_data': json.dumps([stats['sent'], stats['fixed'], stats['feedbacks']])
+    }
+    return render(request, 'tickets/employee_dashboard.html', context)

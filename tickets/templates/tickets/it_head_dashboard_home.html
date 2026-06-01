@@ -1,0 +1,209 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Supervisor Dashboard | City Clinic</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+    <link rel="stylesheet" href="{% static 'tickets/css/it_head_dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'tickets/css/sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'tickets/css/dashboard.css' %}">
+</head>
+<body>
+
+<aside class="sidebar">
+    <a href="{% url 'it_head_dashboard_home' %}" class="sb-brand">
+        <div class="sb-brand-icon"><i class="fa-solid fa-network-wired"></i></div>
+        <span class="sb-brand-text">IT Dispatcher</span>
+    </a>
+    <div class="sb-user">
+        <div class="sb-avatar">{{ request.user.get_full_name|default:request.user.username|slice:":2"|upper }}</div>
+        <div class="sb-user-info">
+            <div class="sb-user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+            <div class="sb-user-role">IT &middot; Supervisor</div>
+        </div>
+    </div>
+    <nav class="sb-nav">
+        <a href="{% url 'it_head_dashboard_home' %}" class="sb-item active" title="Dashboard">
+            <div class="sb-icon"><i class="fa-solid fa-gauge-high"></i></div>
+            <span class="sb-label">Metrics Dashboard</span>
+        </a>
+        <a href="{% url 'it_head_dashboard' %}" class="sb-item" title="Unassigned Queue">
+            <div class="sb-icon"><i class="fa-solid fa-list-check"></i></div>
+            <span class="sb-label">Unassigned Queue</span>
+        </a>
+        <a href="{% url 'it_head_dashboard' %}?view=history" class="sb-item" title="All Dispatched">
+            <div class="sb-icon"><i class="fa-solid fa-layer-group"></i></div>
+            <span class="sb-label">All Dispatched</span>
+        </a>
+    </nav>
+    <div class="sb-footer">
+        <form action="{% url 'logout' %}" method="post" style="margin: 0;">
+            {% csrf_token %}
+            <button type="submit" class="sb-logout-btn" title="Logout">
+                <div class="sb-logout-icon"><i class="fa-solid fa-right-from-bracket"></i></div>
+                <span class="sb-logout-label">Logout</span>
+            </button>
+        </form>
+    </div>
+</aside>
+
+<div class="page-wrapper">
+    <div class="container">
+        <div class="dashboard-header">
+            <h1 class="dashboard-title"><i class="fa-solid fa-satellite-dish"></i> IT System Overview</h1>
+            <form method="GET" class="time-filter-form dual-filter-form" id="masterFilterForm">
+                <select name="dept_filter" onchange="document.getElementById('masterFilterForm').submit();">
+                    <option value="all">All Departments</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept }}" {% if dept_filter == dept %}selected{% endif %}>{{ dept }}</option>
+                    {% endfor %}
+                </select>
+                <select name="time_filter" onchange="document.getElementById('masterFilterForm').submit();">
+                    <option value="all" {% if time_filter == 'all' %}selected{% endif %}>All Time</option>
+                    <option value="daily" {% if time_filter == 'daily' %}selected{% endif %}>Today</option>
+                    <option value="weekly" {% if time_filter == 'weekly' %}selected{% endif %}>This Week</option>
+                    <option value="monthly" {% if time_filter == 'monthly' %}selected{% endif %}>This Month</option>
+                    <option value="yearly" {% if time_filter == 'yearly' %}selected{% endif %}>This Year</option>
+                </select>
+            </form>
+        </div>
+
+        <div class="stat-grid">
+            <div class="stat-card card-total">
+                <div class="stat-icon"><i class="fa-solid fa-ticket"></i></div>
+                <div class="stat-info"><span class="stat-value">{{ total_sent }}</span><span class="stat-label">Total Tickets</span></div>
+            </div>
+            <div class="stat-card card-approved">
+                <div class="stat-icon"><i class="fa-solid fa-thumbs-up"></i></div>
+                <div class="stat-info"><span class="stat-value">{{ total_approved }}</span><span class="stat-label">Manager Approved</span></div>
+            </div>
+            <div class="stat-card card-declined">
+                <div class="stat-icon"><i class="fa-solid fa-ban"></i></div>
+                <div class="stat-info"><span class="stat-value">{{ total_declined }}</span><span class="stat-label">Manager Declined</span></div>
+            </div>
+            <div class="stat-card card-assigned">
+                <div class="stat-icon"><i class="fa-solid fa-user-gear"></i></div>
+                <div class="stat-info"><span class="stat-value">{{ total_assigned }}</span><span class="stat-label">Dispatched to IT</span></div>
+            </div>
+            <div class="stat-card card-fixed">
+                <div class="stat-icon"><i class="fa-solid fa-check-double"></i></div>
+                <div class="stat-info"><span class="stat-value">{{ total_fixed }}</span><span class="stat-label">Successfully Fixed</span></div>
+            </div>
+            <div class="stat-card card-escalated">
+                <div class="stat-icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                <div class="stat-info"><span class="stat-value">{{ total_escalated }}</span><span class="stat-label">Escalated to Tier 2</span></div>
+            </div>
+        </div>
+
+        <div class="chart-row">
+            <div class="chart-card">
+                <div class="chart-title"><i class="fa-solid fa-chart-bar"></i> Tickets by Department</div>
+                <div class="chart-wrap">
+                    <canvas id="deptChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-title"><i class="fa-solid fa-chart-pie"></i> Global Approval Breakdown</div>
+                <div class="chart-wrap">
+                    <canvas id="globalApprovalChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="performance-section">
+            <h3><i class="fa-solid fa-medal"></i> IT Staff Performance Matrix</h3>
+            <table class="staff-table">
+                <thead>
+                    <tr>
+                        <th>IT Staff Member</th>
+                        <th>Tier Level</th>
+                        <th>Feedbacks Received</th>
+                        <th>Average Rating</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for staff in staff_stats %}
+                    <tr>
+                        <td class="staff-name">{{ staff.name }}</td>
+                        <td class="staff-tier">{{ staff.tier }}</td>
+                        <td>{{ staff.total_feedbacks }} responses</td>
+                        <td>
+                            {% if staff.total_feedbacks > 0 %}
+                            <span class="rating-pill">
+                                <i class="fa-solid fa-star"></i> {{ staff.avg_rating }} / 5
+                            </span>
+                            {% else %}
+                            <span style="color:var(--slate-light); font-size: 13px;">No ratings yet</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" style="text-align: center; color: var(--slate-light);">No IT Staff members found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const depts = JSON.parse('{{ chart_depts_json|escapejs|default:"[]" }}');
+        const deptCounts = JSON.parse('{{ chart_dept_counts_json|escapejs|default:"[]" }}');
+        const approvalData = JSON.parse('{{ approval_chart_data|escapejs|default:"[0,0,0]" }}');
+
+        // Department Bar Chart
+        new Chart(document.getElementById('deptChart'), {
+            type: 'bar',
+            data: {
+                labels: depts,
+                datasets: [{
+                    label: 'Tickets',
+                    data: deptCounts,
+                    backgroundColor: '#7c3aed',
+                    borderRadius: 6
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { display: false } },
+                scales: { 
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // Global Approval Donut
+        new Chart(document.getElementById('globalApprovalChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Approved', 'Declined', 'Pending'],
+                datasets: [{
+                    data: approvalData,
+                    backgroundColor: ['#059669', '#dc2626', '#d97706'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                cutout: '65%',
+                plugins: { legend: { display: false } }
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

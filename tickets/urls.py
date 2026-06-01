@@ -19,4 +19,9 @@ urlpatterns = [
     path('it-staff/', views.it_staff_dashboard, name='it_staff_dashboard'),
 
     path('sse/ticket-updates/', views.ticket_updates_sse, name='ticket_updates_sse'),
+
+    path('dashboard/employee/', views.employee_dashboard, name='employee_dashboard'),
+    path('dashboard/head/home/', views.head_dashboard_home, name='head_dashboard_home'),
+    path('dashboard/it-head/home/', views.it_head_dashboard_home, name='it_head_dashboard_home'),
+    path('dashboard/it-staff/home/', views.it_staff_dashboard_home, name='it_staff_dashboard_home'),
 ]

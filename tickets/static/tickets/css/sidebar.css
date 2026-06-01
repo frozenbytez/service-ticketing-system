@@ -1,0 +1,246 @@
+/* ================================================================
+   City Clinic IT Support — Expandable Sidebar
+   ================================================================ */
+
+:root {
+  --sidebar-collapsed: 76px;
+  --sidebar-expanded: 260px;
+}
+
+/* ── Sidebar Layout & Hover Transition ── */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  height: 100dvh; /* Add this line! (Dynamic Viewport Height) */
+  width: var(--sidebar-collapsed);
+  background: linear-gradient(180deg, var(--navy-deep) 0%, var(--navy) 100%);
+  color: var(--white);
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 4px 0 24px rgba(6, 15, 30, 0.25);
+}
+
+.sidebar:hover {
+  width: var(--sidebar-expanded);
+}
+
+/* ── Brand Logo Area ── */
+.sb-brand {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  gap: 16px;
+  text-decoration: none;
+  color: var(--white);
+  min-width: var(--sidebar-expanded);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sb-brand-icon {
+  width: 36px;
+  height: 36px;
+  background: rgba(0, 196, 184, 0.15);
+  border: 1px solid rgba(0, 196, 184, 0.3);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sb-brand-icon i {
+  color: var(--teal);
+  font-size: 16px;
+}
+
+.sb-brand-text {
+  font-family: 'Sora', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar:hover .sb-brand-text {
+  opacity: 1;
+}
+
+/* ── User Info Area ── */
+.sb-user {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  gap: 14px;
+  min-width: var(--sidebar-expanded);
+}
+
+.sb-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--teal-glow);
+  flex-shrink: 0;
+  border: 1.5px solid rgba(0, 196, 184, 0.4);
+}
+
+.sb-user-info {
+  display: flex;
+  flex-direction: column;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar:hover .sb-user-info {
+  opacity: 1;
+}
+
+.sb-user-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.sb-user-role {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 2px;
+}
+
+/* ── Navigation Links ── */
+.sb-nav {
+  flex: 1;
+  padding: 10px 0;
+  min-width: var(--sidebar-expanded);
+  /* Allow scrolling if the menu gets too long for the screen */
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sb-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  gap: 16px;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.65);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.sb-item:hover, .sb-item.active {
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sb-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--teal);
+  border-radius: 0 4px 4px 0;
+}
+
+.sb-icon {
+  width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.sb-item.active .sb-icon i {
+  color: var(--teal);
+}
+
+.sb-label {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar:hover .sb-label {
+  opacity: 1;
+}
+
+/* ── Footer / Logout ── */
+.sb-footer {
+  padding: 20px;
+  min-width: var(--sidebar-expanded);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  /* Force it to always stay pinned to the absolute bottom */
+  margin-top: auto;
+  /* Prevent it from shrinking off-screen */
+  flex-shrink: 0; 
+  /* Add background so it overlaps cleanly if the nav scrolls */
+  background: var(--navy-deep); 
+}
+
+.sb-logout-btn {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.65);
+  cursor: pointer;
+  gap: 16px;
+  transition: color 0.2s ease;
+}
+
+.sb-logout-btn:hover {
+  color: #fca5a5;
+}
+
+.sb-logout-icon {
+  width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.sb-logout-label {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar:hover .sb-logout-label {
+  opacity: 1;
+}
+
+/* ── Main Content Wrapper ── */
+/* Push the main content to the right so it isn't hidden behind the collapsed sidebar */
+.page-wrapper {
+  margin-left: var(--sidebar-collapsed);
+  min-height: 100vh;
+  transition: margin-left 0.35s ease;
+}
+
+/* Remove old navbar CSS */
+.navbar {
+  display: none !important;
+}
