@@ -14,7 +14,6 @@
 </head>
 <body>
 
-<!-- ══ IT SUPERVISOR SIDEBAR ═══════════════════════════════════ -->
 <aside class="sidebar">
     <a href="{% url 'it_head_dashboard_home' %}" class="sb-brand">
         <div class="sb-brand-icon"><i class="fa-solid fa-network-wired"></i></div>
@@ -36,9 +35,13 @@
             <div class="sb-icon"><i class="fa-solid fa-list-check"></i></div>
             <span class="sb-label">Unassigned Queue</span>
         </a>
-        <a href="{% url 'it_head_dashboard' %}?view=history" class="sb-item {% if view_mode == 'history' %}active{% endif %}" title="All Dispatched">
+        <a href="{% url 'it_head_dashboard' %}?view=history" class="sb-item {% if view_mode == 'history' or view_mode == 'pm_history' %}active{% endif %}" title="All Dispatched">
             <div class="sb-icon"><i class="fa-solid fa-layer-group"></i></div>
             <span class="sb-label">All Dispatched</span>
+        </a>
+        <a href="{% url 'it_head_dashboard' %}?view=maintenance" class="sb-item {% if view_mode == 'maintenance' %}active{% endif %}" title="Maintenance Schedules">
+            <div class="sb-icon"><i class="fa-solid fa-calendar-check"></i></div>
+            <span class="sb-label">Routine Maintenance</span>
         </a>
     </nav>
     <div class="sb-footer">
@@ -57,29 +60,141 @@
 
     {% if messages %}
         {% for message in messages %}
-        <div class="toast">
-            <i class="fa-solid fa-circle-check"></i>
+        <div class="toast {% if 'error' in message.tags %}critical{% endif %}" style="{% if 'error' in message.tags %}background:#fee2e2; border-left:4px solid #ef4444; color:#991b1b;{% endif %}">
+            <i class="fa-solid {% if 'error' in message.tags %}fa-circle-xmark{% else %}fa-circle-check{% endif %}"></i>
             {{ message }}
         </div>
         {% endfor %}
     {% endif %}
-
-    {% if view_mode == 'history' %}
-
+    
+    {% if view_mode == 'maintenance' %}
         <div class="section-header">
             <h2 class="section-title">
-                <i class="fa-solid fa-layer-group"></i>
-                All Dispatched Tickets
+                <i class="fa-solid fa-calendar-check"></i>
+                Preventive Maintenance Schedules
             </h2>
+        </div>
+
+        <div class="dispatch-card" style="margin-bottom: 24px; border: 1px solid var(--teal);">
+            <h3 style="font-family: 'Sora', sans-serif; font-size: 15px; color: var(--navy); margin-bottom: 16px;">
+                <i class="fa-solid fa-plus-circle" style="color: var(--teal);"></i> Create New Maintenance Task
+            </h3>
+            <form method="POST" style="display: flex; flex-direction: column; gap: 16px;">
+                {% csrf_token %}
+                <input type="hidden" name="create_maintenance" value="true">
+                
+                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="font-size:11px; font-weight:700; color:var(--slate); text-transform:uppercase;">Task Title</label>
+                        <input type="text" name="title" required placeholder="e.g. Server Room Cleaning" style="width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 6px;">
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="font-size:11px; font-weight:700; color:var(--slate); text-transform:uppercase;">Recurrence Rule</label>
+                        <select name="recurrence_type" id="recurrenceType" required style="width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 6px;" onchange="document.getElementById('customDateRow').style.display = (this.value === 'CUSTOM') ? 'flex' : 'none';">
+                            <option value="DAILY">Every Day (Daily)</option>
+                            <option value="WEEKLY">Every Week (Weekly)</option>
+                            <option value="MONTHLY">Every Month (Monthly)</option>
+                            <option value="QUARTERLY">Every Last Week of Quarter</option>
+                            <option value="CUSTOM">Specific Custom Dates</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="customDateRow" style="display: none; gap: 16px; flex-wrap: wrap; background: #f8fafc; padding: 12px; border-radius: 6px;">
+                    <div style="flex: 1;">
+                        <label style="font-size:11px; font-weight:700; color:var(--slate); text-transform:uppercase;">Start Date</label>
+                        <input type="date" name="custom_date_start" id="customStart" style="width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 6px;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size:11px; font-weight:700; color:var(--slate); text-transform:uppercase;">End Date</label>
+                        <input type="date" name="custom_date_end" id="customEnd" style="width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 6px;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size:11px; font-weight:700; color:var(--slate); text-transform:uppercase;">Maintenance Instructions</label>
+                    <textarea name="description" required rows="2" placeholder="Steps to perform..." style="width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 6px; resize: vertical;"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="font-size:11px; font-weight:700; color:var(--slate); text-transform:uppercase;">Default Assignee</label>
+                        <select name="tech_id" style="width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 6px;">
+                            <option value="">— Unassigned (Drops into Queue) —</option>
+                            {% for tech in it_team %}
+                                <option value="{{ tech.id }}">{{ tech.get_full_name|default:tech.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="font-size:11px; font-weight:700; color:var(--slate); text-transform:uppercase;">Priority</label>
+                        <select name="priority" style="width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 6px;">
+                            <option value="LOW">Low</option>
+                            <option value="MEDIUM" selected>Medium</option>
+                            <option value="HIGH">High</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="padding: 10px 24px; white-space: nowrap;">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Save Schedule
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="grid">
+            {% for task in maintenance_tasks %}
+            <div class="dispatch-card" style="border-left: 4px solid #8b5cf6; margin-bottom:0;">
+                <div class="card-header">
+                    <span class="card-title">{{ task.title }}</span>
+                    <span class="status-chip" style="background: #ede9fe; color: #6d28d9;">
+                        <i class="fa-solid fa-rotate"></i> {{ task.get_recurrence_type_display }}
+                    </span>
+                </div>
+                <div class="card-meta">
+                    <span><i class="fa-solid fa-user-gear"></i> Defaults to: {{ task.assigned_to.get_full_name|default:"Unassigned" }}</span>
+                    {% if task.recurrence_type == 'CUSTOM' %}
+                    <span><i class="fa-regular fa-calendar"></i> {{ task.custom_date_start }} to {{ task.custom_date_end }}</span>
+                    {% endif %}
+                    <span><i class="fa-regular fa-clock"></i> Last Generated: {{ task.last_generated|default:"Never" }}</span>
+                </div>
+                <div class="desc-body" style="display:block; margin-top: 10px; font-size: 13px;">{{ task.description }}</div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <div class="empty-icon"><i class="fa-solid fa-calendar-xmark"></i></div>
+                <h4>No maintenance scheduled</h4>
+                <p>Create a recurring task above to automate preventive maintenance.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+    {% elif view_mode == 'history' or view_mode == 'pm_history' %}
+        
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            {% if view_mode == 'history' %}
+                <h2 class="section-title" style="margin:0;">
+                    <i class="fa-solid fa-layer-group"></i> All Dispatched Tickets
+                </h2>
+                <a href="?view=pm_history" class="btn btn-primary" style="padding: 8px 16px; text-decoration: none; border-radius: 6px; font-size: 13px; background: #8b5cf6; border-color: #7c3aed;">
+                    <i class="fa-solid fa-screwdriver-wrench"></i> All Maintenance Tickets
+                </a>
+            {% else %}
+                <h2 class="section-title" style="margin:0; color: #6d28d9;">
+                    <i class="fa-solid fa-screwdriver-wrench"></i> All Maintenance Tickets
+                </h2>
+                <a href="?view=history" class="btn" style="padding: 8px 16px; text-decoration: none; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; background: var(--white); color: var(--slate);">
+                    <i class="fa-solid fa-arrow-left"></i> Back to Dispatched
+                </a>
+            {% endif %}
         </div>
 
         <div class="filter-bar">
             <form method="GET" class="search-form" id="historyFilterForm">
-                <input type="hidden" name="view" value="history">
+                <input type="hidden" name="view" value="{{ view_mode }}">
                 <div class="search-input-wrapper">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <input type="text" name="q" id="historySearch"
-                           placeholder="Search by Ticket #, Title, or User..."
+                           placeholder="Search by Ticket # or Title..."
                            value="{{ request.GET.q }}" autocomplete="off">
                 </div>
                 <select name="status_filter" id="historyStatusFilter">
@@ -99,8 +214,9 @@
         </div>
 
         <div class="history-grid">
+            <div class="history-grid">
             {% for ticket in history_tickets %}
-            <div class="dispatch-card" data-priority="{{ ticket.priority }}" style="margin-bottom: 0;">
+            <div class="dispatch-card" data-priority="{{ ticket.priority }}" style="margin-bottom: 0; {% if ticket.is_preventive_maintenance %}border-left: 4px solid #8b5cf6;{% endif %}">
                 <div class="card-header">
                     <span class="card-title">
                         {% if ticket.ticket_number %}<span class="text-teal">#{{ ticket.ticket_number }}</span>{% endif %}
@@ -108,13 +224,21 @@
                     </span>
                     <span class="status-chip">{{ ticket.get_status_display }}</span>
                 </div>
+                
                 <div class="card-meta">
+                    {% if not ticket.is_preventive_maintenance %}
                     <span><i class="fa-solid fa-building"></i> {{ ticket.get_department_display }}</span>
                     <span><i class="fa-solid fa-user"></i> {{ ticket.client_name }}</span>
-                    <span><i class="fa-solid fa-user-gear"></i> {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username|default:"Unassigned" }}</span>
+                    {% endif %}
+                    <span><i class="fa-solid fa-user-gear"></i> 
+                        {% if ticket.assigned_to %}
+                            {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}
+                        {% else %}
+                            Unassigned
+                        {% endif %}
+                    </span>
                 </div>
 
-                <!-- Priority Badge -->
                 <div style="margin-bottom: 10px;">
                     {% if ticket.priority == 'LOW' %}
                         <span class="priority-badge priority-low"><i class="fa-solid fa-circle-dot"></i> Low</span>
@@ -127,32 +251,22 @@
                     {% endif %}
                 </div>
 
-                <!-- Description toggle -->
                 <button class="btn-desc-toggle" onclick="toggleDesc(this)">
                     <i class="fa-solid fa-chevron-down"></i> Show Description
                 </button>
                 <div class="desc-body">{{ ticket.description }}</div>
-
-                {% if ticket.client_feedback_rating %}
-                <div style="background: #f8fafc; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 13px; color: var(--slate); margin-top: 12px;">
-                    <p style="margin-bottom: 4px;"><strong><i class="fa-solid fa-star" style="color: #d97706;"></i> Client Rating:</strong> {{ ticket.client_feedback_rating }} / 5</p>
-                    {% if ticket.client_feedback_notes %}
-                        <p style="margin-bottom: 0;"><strong><i class="fa-regular fa-comment"></i> Comments:</strong> "{{ ticket.client_feedback_notes }}"</p>
-                    {% endif %}
-                </div>
-                {% endif %}
             </div>
             {% empty %}
             <div class="empty-state">
                 <div class="empty-icon"><i class="fa-solid fa-folder-open"></i></div>
                 <h4>No tickets found</h4>
-                <p>Dispatched tickets will appear here.</p>
+                <p>Try adjusting your search or filters.</p>
             </div>
             {% endfor %}
         </div>
+        </div>
 
     {% else %}
-
         <div class="section-header">
             <h2 class="section-title">
                 <i class="fa-solid fa-list-check"></i>
@@ -160,7 +274,6 @@
             </h2>
         </div>
 
-        <!-- Queue Filter Bar -->
         <div class="filter-bar">
             <form method="GET" class="search-form" id="queueFilterForm">
                 <div class="search-input-wrapper">
@@ -185,9 +298,7 @@
                 <div class="card-header">
                     <span class="card-title">{{ ticket.title }}</span>
                     {% if ticket.is_escalated %}
-                        <span class="escalated-badge">
-                            <i class="fa-solid fa-triangle-exclamation"></i> Escalated
-                        </span>
+                        <span class="escalated-badge"><i class="fa-solid fa-triangle-exclamation"></i> Escalated</span>
                     {% else %}
                         {% if ticket.priority == 'LOW' %}
                             <span class="priority-badge priority-low"><i class="fa-solid fa-circle-dot"></i> Low</span>
@@ -207,18 +318,29 @@
                     {% if ticket.ticket_number %}<span><i class="fa-solid fa-hashtag"></i> #{{ ticket.ticket_number }}</span>{% endif %}
                 </div>
 
-                <!-- Description toggle -->
                 <button class="btn-desc-toggle" onclick="toggleDesc(this)">
                     <i class="fa-solid fa-chevron-down"></i> Show Description
                 </button>
-                <div class="desc-body" style="margin-bottom:12px;">{{ ticket.description }}</div>
+                <div class="desc-body" style="margin-bottom:12px;">
+                    {{ ticket.description }}
+                    
+                    {% if ticket.approval_notes %}
+                    <div style="margin-top: 12px; padding: 10px 14px; background: #f8fafc; border-left: 3px solid var(--teal); border-radius: 4px;">
+                        <strong style="font-size: 11px; text-transform: uppercase; color: var(--navy);"><i class="fa-solid fa-user-tie"></i> Dept Head Notes:</strong>
+                        <p style="margin: 4px 0 0 0; color: var(--slate); font-size: 13.5px;">{{ ticket.approval_notes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
 
                 <hr class="card-divider">
 
-                <form method="POST" style="margin-top: 0;">
+                <form method="POST" style="margin-top: 0; display: flex; flex-direction: column; gap: 12px;">
                     {% csrf_token %}
                     <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
-
+                    <div>
+                        <label style="display: block; font-size: 11px; font-weight: 700; color: var(--slate); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px;">Dispatch Instructions (Optional)</label>
+                        <textarea name="dispatch_notes" placeholder="Add specific instructions for the assigned IT Staff..." rows="2" style="width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13.5px; resize: vertical; outline: none;"></textarea>
+                    </div>
                     <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
                         <div style="flex: 1; min-width: 120px;">
                             <label>Triage Priority</label>
@@ -229,20 +351,15 @@
                                 <option value="URGENT">Urgent (System Down)</option>
                             </select>
                         </div>
-
                         <div style="flex: 1; min-width: 140px;">
                             <label>Assign Technician</label>
                             <select name="tech_id" required>
                                 <option value="" disabled selected>— Select IT Staff —</option>
                                 {% for tech in it_team %}
-                                    <option value="{{ tech.id }}">
-                                        {{ tech.get_full_name|default:tech.username }}
-                                        {% if tech.employeeprofile.it_tier == 'TIER_2' %} [Tier 2]{% else %} [Tier 1]{% endif %}
-                                    </option>
+                                    <option value="{{ tech.id }}">{{ tech.get_full_name|default:tech.username }} {% if tech.employeeprofile.it_tier == 'TIER_2' %} [Tier 2]{% else %} [Tier 1]{% endif %}</option>
                                 {% endfor %}
                             </select>
                         </div>
-
                         <button type="submit" class="btn btn-primary" style="padding: 9px 20px; white-space: nowrap;">
                             <i class="fa-solid fa-paper-plane"></i> Dispatch
                         </button>
@@ -261,8 +378,17 @@
     {% endif %}
 </div>
 </div>
+
 <script>
-// ── Description Toggle ──────────────────────────────────────
+// Point 2: Date Validation JS!
+const customStart = document.getElementById('customStart');
+const customEnd = document.getElementById('customEnd');
+if (customStart && customEnd) {
+    customStart.addEventListener('change', () => { customEnd.min = customStart.value; });
+    customEnd.addEventListener('change', () => { customStart.max = customEnd.value; });
+}
+
+// Description Toggle
 function toggleDesc(btn) {
     const body = btn.nextElementSibling;
     const isOpen = body.classList.toggle('visible');
@@ -271,7 +397,7 @@ function toggleDesc(btn) {
         : '<i class="fa-solid fa-chevron-down"></i> Show Description';
 }
 
-// ── Live Search (debounce) ──────────────────────────────────
+// Live Search (debounce)
 function setupLiveSearch(inputId, formId) {
     const input = document.getElementById(inputId);
     if (!input) return;
@@ -284,13 +410,13 @@ function setupLiveSearch(inputId, formId) {
 setupLiveSearch('historySearch', 'historyFilterForm');
 setupLiveSearch('queueSearch', 'queueFilterForm');
 
-// ── Auto-submit on filter change ────────────────────────────
+// Auto-submit on filter change
 ['historyStatusFilter','historyPriorityFilter','queuePriorityFilter'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('change', () => el.closest('form').submit());
 });
 
-// ── SSE Auto-Refresh ────────────────────────────────────────
+// SSE Auto-Refresh
 const evtSource = new EventSource("{% url 'ticket_updates_sse' %}");
 evtSource.onmessage = function(event) {
     const data = JSON.parse(event.data);

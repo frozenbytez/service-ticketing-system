@@ -41,6 +41,10 @@
             <div class="sb-icon"><i class="fa-solid fa-folder-open"></i></div>
             <span class="sb-label">Resolved Tickets</span>
         </a>
+        <a href="{% url 'it_staff_dashboard' %}?view=maintenance" class="sb-item {% if view_mode == 'maintenance' %}active{% endif %}" title="Routine Maintenance">
+            <div class="sb-icon"><i class="fa-solid fa-calendar-check"></i></div>
+            <span class="sb-label">Routine Maintenance</span>
+        </a>
     </nav>
     <div class="sb-footer">
         <form action="{% url 'logout' %}" method="post" style="margin: 0;">

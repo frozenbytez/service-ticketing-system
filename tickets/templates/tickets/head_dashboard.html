@@ -200,16 +200,21 @@
             </div>
 
             <div class="approval-actions">
-                <form method="POST">
+                <form method="POST" style="width: 100%; display: flex; flex-direction: column; gap: 12px;">
                     {% csrf_token %}
                     <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
                     <input type="hidden" name="handle_approval" value="true">
-                    <button type="submit" name="action" value="APPROVE" class="btn btn-approve">
-                        <i class="fa-solid fa-check"></i> Approve
-                    </button>
-                    <button type="submit" name="action" value="REJECT" class="btn btn-reject">
-                        <i class="fa-solid fa-ban"></i> Reject
-                    </button>
+                    
+                    <textarea name="approval_notes" placeholder="Optional: Add instructions or notes for IT..." rows="2" style="width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13.5px; resize: vertical; outline: none;"></textarea>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" name="action" value="APPROVE" class="btn btn-approve">
+                            <i class="fa-solid fa-check"></i> Approve
+                        </button>
+                        <button type="submit" name="action" value="REJECT" class="btn btn-reject">
+                            <i class="fa-solid fa-ban"></i> Reject
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>

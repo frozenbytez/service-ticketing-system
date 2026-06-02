@@ -5,17 +5,13 @@ from django.http import HttpResponseForbidden, StreamingHttpResponse
 from django.db.models import Count, Avg, Q
 from django.contrib import messages
 from .forms import TicketForm
-from .models import Ticket, EmployeeProfile
+from .models import Ticket, EmployeeProfile, DEPARTMENT_CHOICES
+from django.utils import timezone
+from datetime import timedelta, datetime, date
+import calendar
 import time
 import json
-from datetime import datetime
-from django.utils import timezone
-from datetime import timedelta
-from django.db.models import Count, Avg
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from .models import Ticket, User, DEPARTMENT_CHOICES
-
+from .models import RecurringTask
 
 # ──────────────────────────────────────────────────────────────
 # HELPERS
@@ -34,13 +30,111 @@ def apply_time_filter(queryset, time_filter):
         return queryset.filter(created_at__year=now.year)
     return queryset
 
-# ── 1. Department Manager / Head Dashboard ───────────────────────────
-@login_required
-def head_dashboard_home(request):
-    time_filter = request.GET.get('time_filter', 'all')
-    dept = request.user.employeeprofile.department
-    tickets = apply_time_filter(Ticket.objects.filter(department=dept), time_filter)
+
+def _generate_ticket_number():
+    year_month = datetime.now().strftime('%Y%m')
+    prefix = f'TKT-{year_month}-'
+    last = Ticket.objects.filter(ticket_number__startswith=prefix).order_by('-ticket_number').first()
+    if last and last.ticket_number:
+        try:
+            num = int(last.ticket_number.split('-')[-1]) + 1
+        except (ValueError, IndexError):
+            num = Ticket.objects.filter(ticket_number__isnull=False).count() + 1
+    else:
+        num = Ticket.objects.filter(ticket_number__isnull=False).count() + 1
+    return f'{prefix}{num:04d}'
+
+
+def _escalation_count():
+    return Ticket.objects.filter(status='OPEN', is_escalated=True).count()
+
+
+def check_and_generate_recurring_tasks():
+    """Checks active recurring tasks and generates standard tickets if they are due."""
+    today = date.today()
+    active_tasks = RecurringTask.objects.filter(is_active=True)
     
+    for task in active_tasks:
+        should_generate = False
+        
+        if task.recurrence_type == 'DAILY':
+            if not task.last_generated or task.last_generated < today:
+                should_generate = True
+                
+        elif task.recurrence_type == 'WEEKLY':
+            start_of_week = today - timedelta(days=today.weekday())
+            if not task.last_generated or task.last_generated < start_of_week:
+                should_generate = True
+                
+        elif task.recurrence_type == 'MONTHLY':
+            start_of_month = today.replace(day=1)
+            if not task.last_generated or task.last_generated < start_of_month:
+                should_generate = True
+                
+        elif task.recurrence_type == 'QUARTERLY':
+            if today.month in [3, 6, 9, 12]:
+                last_day = calendar.monthrange(today.year, today.month)[1]
+                start_of_last_week = today.replace(day=last_day) - timedelta(days=7)
+                if today >= start_of_last_week:
+                    if not task.last_generated or task.last_generated < start_of_last_week:
+                        should_generate = True
+                        
+        elif task.recurrence_type == 'CUSTOM':
+            if task.custom_date_start and task.custom_date_end:
+                if task.custom_date_start <= today <= task.custom_date_end:
+                    if not task.last_generated or task.last_generated < task.custom_date_start:
+                        should_generate = True
+                        
+        if should_generate:
+            # Point 4: Attach specific dates if it is a Custom PM!
+            notes = f"Auto-generated for {task.get_recurrence_type_display()} maintenance schedule."
+            if task.recurrence_type == 'CUSTOM' and task.custom_date_start and task.custom_date_end:
+                notes += f" (Must be completed between {task.custom_date_start.strftime('%b %d')} and {task.custom_date_end.strftime('%b %d, %Y')})"
+                
+            ticket = Ticket.objects.create(
+                title=f"[PM] {task.title}",
+                description=task.description,
+                department='IT',
+                requester=task.created_by,
+                client_name="System Scheduled Maintenance",
+                assigned_to=task.assigned_to,
+                priority=task.priority,
+                status='IN_PROGRESS' if task.assigned_to else 'OPEN',
+                approval_status='APPROVED',
+                needs_head_approval=False,
+                is_preventive_maintenance=True,
+                dispatch_notes=notes
+            )
+            ticket.ticket_number = _generate_ticket_number()
+            ticket.save()
+            
+            task.last_generated = today
+            task.save()
+
+# ──────────────────────────────────────────────────────────────
+# TRAFFIC COP & HOME DASHBOARDS
+# ──────────────────────────────────────────────────────────────
+
+@login_required
+def dashboard_redirect(request):
+    if request.user.is_superuser and not hasattr(request.user, 'employeeprofile'):
+        return redirect('it_head_dashboard_home')
+
+    if hasattr(request.user, 'employeeprofile'):
+        profile = request.user.employeeprofile
+        if profile.department == 'IT':
+            if profile.is_department_head:
+                return redirect('it_head_dashboard_home')
+            else:
+                return redirect('it_staff_dashboard_home')
+        if profile.is_department_head:
+            return redirect('head_dashboard_home')
+    return redirect('employee_dashboard')
+
+@login_required
+def employee_dashboard(request):
+    time_filter = request.GET.get('time_filter', 'all')
+    tickets = apply_time_filter(Ticket.objects.filter(requester=request.user), time_filter)
     stats = {
         'sent': tickets.count(),
         'approved': tickets.filter(approval_status='APPROVED').count(),
@@ -48,14 +142,31 @@ def head_dashboard_home(request):
         'fixed': tickets.filter(status__in=['RESOLVED', 'CLOSED']).count(),
         'feedbacks': tickets.filter(client_feedback_rating__isnull=False).count(),
     }
-    
     context = {
-        'time_filter': time_filter,
-        **stats,
+        'time_filter': time_filter, **stats,
+        'status_chart_data': json.dumps([stats['approved'], stats['declined'], stats['sent'] - (stats['approved'] + stats['declined'])]),
+        'action_chart_data': json.dumps([stats['sent'], stats['fixed'], stats['feedbacks']])
+    }
+    return render(request, 'tickets/employee_dashboard.html', context)
+
+@login_required
+def head_dashboard_home(request):
+    time_filter = request.GET.get('time_filter', 'all')
+    dept = request.user.employeeprofile.department
+    tickets = apply_time_filter(Ticket.objects.filter(department=dept), time_filter)
+    stats = {
+        'sent': tickets.count(),
+        'approved': tickets.filter(approval_status='APPROVED').count(),
+        'declined': tickets.filter(approval_status='REJECTED').count(),
+        'fixed': tickets.filter(status__in=['RESOLVED', 'CLOSED']).count(),
+        'feedbacks': tickets.filter(client_feedback_rating__isnull=False).count(),
+    }
+    context = {
+        'time_filter': time_filter, **stats,
         'approval_chart_data': json.dumps([stats['approved'], stats['declined'], stats['sent'] - (stats['approved'] + stats['declined'])]),
     }
     return render(request, 'tickets/head_dashboard_home.html', context)
-# ── 2. IT Head / Supervisor Dashboard ────────────────────────────────
+
 @login_required
 def it_head_dashboard_home(request):
     time_filter = request.GET.get('time_filter', 'all')
@@ -64,17 +175,14 @@ def it_head_dashboard_home(request):
     tickets = apply_time_filter(Ticket.objects.all(), time_filter)
     if dept_filter != 'all': tickets = tickets.filter(department=dept_filter)
     
-    # Chart 1: Department Breakdown
     dept_counts = tickets.values('department').annotate(count=Count('id'))
     chart_depts = [d['department'] for d in dept_counts]
     chart_dept_counts = [d['count'] for d in dept_counts]
 
-    # Chart 2: Approval Breakdown
     approved = tickets.filter(approval_status='APPROVED').count()
     declined = tickets.filter(approval_status='REJECTED').count()
     pending = tickets.count() - (approved + declined)
 
-    # IT Staff Stats
     staff_stats = []
     it_staffs = User.objects.filter(employeeprofile__department='IT', employeeprofile__is_department_head=False)
     for staff in it_staffs:
@@ -89,118 +197,45 @@ def it_head_dashboard_home(request):
         })
 
     context = {
-        'time_filter': time_filter,
-        'dept_filter': dept_filter,
-        'departments': [d[0] for d in DEPARTMENT_CHOICES],
-        'total_sent': tickets.count(),
-        'total_assigned': tickets.filter(assigned_to__isnull=False).count(),
+        'time_filter': time_filter, 'dept_filter': dept_filter, 'departments': [d[0] for d in DEPARTMENT_CHOICES],
+        'total_sent': tickets.count(), 'total_assigned': tickets.filter(assigned_to__isnull=False).count(),
         'total_escalated': tickets.filter(is_escalated=True).count(),
         'staff_stats': sorted(staff_stats, key=lambda x: x['avg_rating'], reverse=True),
-        # JSON data for Chart.js
-        'chart_depts_json': json.dumps(chart_depts),
-        'chart_dept_counts_json': json.dumps(chart_dept_counts),
+        'chart_depts_json': json.dumps(chart_depts), 'chart_dept_counts_json': json.dumps(chart_dept_counts),
         'approval_chart_data': json.dumps([approved, declined, pending])
     }
     return render(request, 'tickets/it_head_dashboard_home.html', context)
 
-# ── 3. IT Staff Dashboard ────────────────────────────────────────────
 @login_required
 def it_staff_dashboard_home(request):
     time_filter = request.GET.get('time_filter', 'all')
     tickets = apply_time_filter(Ticket.objects.filter(assigned_to=request.user), time_filter)
     
-    # Chart 1: Department Breakdown for THIS specific IT Staff
     dept_counts = tickets.values('department').annotate(count=Count('id'))
     chart_depts = [d['department'] for d in dept_counts]
     chart_dept_counts = [d['count'] for d in dept_counts]
     
-    # Chart 2: Rating Breakdown calculation
     rating_data = [
-        tickets.filter(client_feedback_rating=5).count(),
-        tickets.filter(client_feedback_rating=4).count(),
-        tickets.filter(client_feedback_rating=3).count(),
-        tickets.filter(client_feedback_rating=2).count(),
+        tickets.filter(client_feedback_rating=5).count(), tickets.filter(client_feedback_rating=4).count(),
+        tickets.filter(client_feedback_rating=3).count(), tickets.filter(client_feedback_rating=2).count(),
         tickets.filter(client_feedback_rating=1).count(),
     ]
     max_rating_count = max(rating_data) if max(rating_data) > 0 else 1
-    
-    # Overall averages
     agg = tickets.filter(client_feedback_rating__isnull=False).aggregate(avg=Avg('client_feedback_rating'), count=Count('id'))
 
     context = {
-        'time_filter': time_filter,
-        'total_assigned': tickets.count(),
+        'time_filter': time_filter, 'total_assigned': tickets.count(),
         'total_resolved': tickets.filter(status__in=['RESOLVED', 'CLOSED']).count(),
         'pending': tickets.exclude(status__in=['RESOLVED', 'CLOSED']).count(),
-        'total_feedbacks': agg['count'] or 0,
-        'avg_rating': round(agg['avg'], 1) if agg['avg'] else 0.0,
-        
-        # JSON data for rendering
-        'chart_depts_json': json.dumps(chart_depts),
-        'chart_dept_counts_json': json.dumps(chart_dept_counts),
-        'rating_data': rating_data,
-        'max_rating': max_rating_count,
+        'total_feedbacks': agg['count'] or 0, 'avg_rating': round(agg['avg'], 1) if agg['avg'] else 0.0,
+        'chart_depts_json': json.dumps(chart_depts), 'chart_dept_counts_json': json.dumps(chart_dept_counts),
+        'rating_data': rating_data, 'max_rating': max_rating_count,
     }
     return render(request, 'tickets/it_staff_dashboard_home.html', context)
 
-def _generate_ticket_number():
-    """Generate a sequential ticket number like TKT-202506-0001."""
-    year_month = datetime.now().strftime('%Y%m')
-    prefix = f'TKT-{year_month}-'
-    last = (
-        Ticket.objects
-        .filter(ticket_number__startswith=prefix)
-        .order_by('-ticket_number')
-        .first()
-    )
-    if last and last.ticket_number:
-        try:
-            num = int(last.ticket_number.split('-')[-1]) + 1
-        except (ValueError, IndexError):
-            num = Ticket.objects.filter(ticket_number__isnull=False).count() + 1
-    else:
-        num = Ticket.objects.filter(ticket_number__isnull=False).count() + 1
-    return f'{prefix}{num:04d}'
-
-
-def _escalation_count():
-    """Count of escalated tickets sitting in the open queue."""
-    return Ticket.objects.filter(status='OPEN', is_escalated=True).count()
-
 
 # ──────────────────────────────────────────────────────────────
-# TRAFFIC COP (Login Router)
-# ──────────────────────────────────────────────────────────────
-
-@login_required
-def dashboard_redirect(request):
-    """Routes users to their specific metrics dashboard based on their exact role."""
-    
-    # If it's a superuser with no profile, send them to the IT Head dashboard
-    if request.user.is_superuser and not hasattr(request.user, 'employeeprofile'):
-        return redirect('it_head_dashboard_home')
-
-    if hasattr(request.user, 'employeeprofile'):
-        profile = request.user.employeeprofile
-        
-        if profile.department == 'IT':
-            if profile.is_department_head:
-                # IT Supervisor lands on their metrics
-                return redirect('it_head_dashboard_home')
-            else:
-                # IT Staff lands on their metrics
-                return redirect('it_staff_dashboard_home')
-                
-        if profile.is_department_head:
-            # Non-IT Department Head lands on their metrics
-            return redirect('head_dashboard_home')
-
-    # Standard Employees land on their metrics
-    return redirect('employee_dashboard')
-
-
-# ──────────────────────────────────────────────────────────────
-# PAGE 1: CLINIC PORTAL (Requester)
+# QUEUE PAGES (Tasks and Forms)
 # ──────────────────────────────────────────────────────────────
 
 @login_required
@@ -217,21 +252,13 @@ def clinic_portal(request):
 
     search_query = request.GET.get('q', '').strip()
     status_filter = request.GET.get('status_filter', '')
-
     my_tickets = Ticket.objects.filter(requester=request.user).order_by('-created_at')
 
     if search_query:
-        my_tickets = my_tickets.filter(
-            Q(title__icontains=search_query) |
-            Q(ticket_number__icontains=search_query) |
-            Q(description__icontains=search_query)
-        )
-
+        my_tickets = my_tickets.filter(Q(title__icontains=search_query) | Q(ticket_number__icontains=search_query) | Q(description__icontains=search_query))
     if status_filter:
         my_tickets = my_tickets.filter(status=status_filter)
-
     return render(request, 'tickets/clinic_portal.html', {'my_tickets': my_tickets})
-
 
 @login_required
 def create_ticket(request):
@@ -248,16 +275,8 @@ def create_ticket(request):
             messages.success(request, "Request submitted successfully!")
             return redirect('clinic_portal')
     else:
-        form = TicketForm(initial={
-            'client_name': request.user.get_full_name() or request.user.username,
-        })
-
+        form = TicketForm(initial={'client_name': request.user.get_full_name() or request.user.username})
     return render(request, 'tickets/create_ticket.html', {'form': form})
-
-
-# ──────────────────────────────────────────────────────────────
-# PAGE 2: DEPT HEAD DASHBOARD (Approver)
-# ──────────────────────────────────────────────────────────────
 
 @login_required
 def head_dashboard(request):
@@ -276,6 +295,7 @@ def head_dashboard(request):
         ticket_id = request.POST.get('ticket_id')
         action = request.POST.get('action')
         ticket = get_object_or_404(Ticket, id=ticket_id, department=profile.department)
+        ticket.approval_notes = request.POST.get('approval_notes', '').strip()
 
         if action == 'APPROVE':
             ticket.approval_status = 'APPROVED'
@@ -287,122 +307,109 @@ def head_dashboard(request):
         ticket.save()
         return redirect('head_dashboard')
 
-    pending_approvals = (
-        Ticket.objects
-        .filter(department=profile.department, approval_status='PENDING')
-        .order_by('-created_at')
-    )
-    history_tickets = (
-        Ticket.objects
-        .filter(department=profile.department)
-        .exclude(approval_status='PENDING')
-        .order_by('-updated_at')
-    )
+    pending_approvals = Ticket.objects.filter(department=profile.department, approval_status='PENDING').order_by('-created_at')
+    history_tickets = Ticket.objects.filter(department=profile.department).exclude(approval_status='PENDING').order_by('-updated_at')
 
     if search_query:
-        q = Q(title__icontains=search_query) | Q(ticket_number__icontains=search_query) | \
-            Q(client_name__icontains=search_query) | Q(description__icontains=search_query)
+        q = Q(title__icontains=search_query) | Q(ticket_number__icontains=search_query) | Q(client_name__icontains=search_query) | Q(description__icontains=search_query)
         pending_approvals = pending_approvals.filter(q)
         history_tickets = history_tickets.filter(q)
 
     if status_filter:
-        if view_mode == 'history':
-            history_tickets = history_tickets.filter(status=status_filter)
-        else:
-            pending_approvals = pending_approvals.filter(status=status_filter)
+        if view_mode == 'history': history_tickets = history_tickets.filter(status=status_filter)
+        else: pending_approvals = pending_approvals.filter(status=status_filter)
 
     ctx = {'view_mode': view_mode}
-    if view_mode == 'history':
-        ctx['history_tickets'] = history_tickets
-    else:
-        ctx['pending_approvals'] = pending_approvals
-
+    if view_mode == 'history': ctx['history_tickets'] = history_tickets
+    else: ctx['pending_approvals'] = pending_approvals
     return render(request, 'tickets/head_dashboard.html', ctx)
-
-
-# ──────────────────────────────────────────────────────────────
-# PAGE 3: IT HEAD DASHBOARD (Dispatcher)
-# ──────────────────────────────────────────────────────────────
 
 @login_required
 def it_head_dashboard(request):
+    check_and_generate_recurring_tasks()
+
     view_mode = request.GET.get('view', 'active')
     search_query = request.GET.get('q', '').strip()
     status_filter = request.GET.get('status_filter', '')
+    priority_filter = request.GET.get('priority_filter', '')
 
-    # ── DISPATCH POST ───────────────────────────────────────────
     if request.method == 'POST':
-        ticket_id = request.POST.get('ticket_id')
-        tech_id = request.POST.get('tech_id')
-        priority = request.POST.get('priority', 'MEDIUM')
-        ticket = get_object_or_404(Ticket, id=ticket_id)
-        tech = get_object_or_404(User, id=tech_id)
+        if 'create_maintenance' in request.POST:
+            title = request.POST.get('title')
+            description = request.POST.get('description')
+            recurrence = request.POST.get('recurrence_type')
+            tech_id = request.POST.get('tech_id')
+            priority = request.POST.get('priority', 'MEDIUM')
+            custom_start = request.POST.get('custom_date_start') or None
+            custom_end = request.POST.get('custom_date_end') or None
+            
+            if recurrence == 'CUSTOM' and custom_start and custom_end:
+                if custom_start > custom_end:
+                    messages.error(request, "Validation Error: Custom Start Date cannot be after End Date.")
+                    return redirect('/tickets/it-head/?view=maintenance')
+            
+            assigned_tech = User.objects.filter(id=tech_id).first() if tech_id else None
+            RecurringTask.objects.create(
+                title=title, description=description, recurrence_type=recurrence,
+                custom_date_start=custom_start, custom_date_end=custom_end,
+                assigned_to=assigned_tech, priority=priority, created_by=request.user
+            )
+            messages.success(request, f"Maintenance schedule '{title}' created successfully!")
+            return redirect('/tickets/it-head/?view=maintenance')
+            
+        elif 'ticket_id' in request.POST:
+            ticket_id = request.POST.get('ticket_id')
+            tech_id = request.POST.get('tech_id')
+            priority = request.POST.get('priority', 'MEDIUM')
+            ticket = get_object_or_404(Ticket, id=ticket_id)
+            tech = get_object_or_404(User, id=tech_id)
+            ticket.assigned_to = tech
+            ticket.priority = priority
+            ticket.status = 'IN_PROGRESS'
+            ticket.dispatch_notes = request.POST.get('dispatch_notes', '').strip()
+            if not ticket.ticket_number: ticket.ticket_number = _generate_ticket_number()
+            ticket.save()
+            tech_name = tech.get_full_name() or tech.username
+            messages.success(request, f"Ticket #{ticket.ticket_number} dispatched to {tech_name}!")
+            return redirect('it_head_dashboard')
 
-        ticket.assigned_to = tech
-        ticket.priority = priority
-        ticket.status = 'IN_PROGRESS'
+    unassigned_tickets = Ticket.objects.filter(status='OPEN', approval_status__in=['APPROVED', 'NOT_REQUIRED']).order_by('-is_escalated', '-created_at')
+    
+    # ── FIXED: Strictly isolate normal tickets vs PM tickets ──
+    history_tickets = Ticket.objects.filter(is_preventive_maintenance=False).exclude(status='OPEN').order_by('-updated_at')
+    pm_history_tickets = Ticket.objects.filter(is_preventive_maintenance=True).order_by('-created_at')
 
-        # Generate ticket number on first dispatch
-        if not ticket.ticket_number:
-            ticket.ticket_number = _generate_ticket_number()
-
-        ticket.save()
-        tech_name = tech.get_full_name() or tech.username
-        messages.success(
-            request,
-            f"Ticket #{ticket.ticket_number} dispatched to {tech_name}!"
-        )
-        return redirect('it_head_dashboard')
-
-    # ── QUERYSETS ───────────────────────────────────────────────
-    unassigned_tickets = (
-        Ticket.objects
-        .filter(status='OPEN', approval_status__in=['APPROVED', 'NOT_REQUIRED'])
-        .order_by('-is_escalated', '-created_at')   # escalated first
-    )
-    history_tickets = (
-        Ticket.objects
-        .exclude(status='OPEN')
-        .order_by('-updated_at')
-    )
+    if priority_filter:
+        unassigned_tickets = unassigned_tickets.filter(priority=priority_filter)
+        history_tickets = history_tickets.filter(priority=priority_filter)
+        pm_history_tickets = pm_history_tickets.filter(priority=priority_filter)
 
     if search_query:
-        unassigned_tickets = unassigned_tickets.filter(
-            Q(title__icontains=search_query) | Q(ticket_number__icontains=search_query) |
-            Q(client_name__icontains=search_query) | Q(description__icontains=search_query)
-        )
-        history_tickets = history_tickets.filter(
-            Q(title__icontains=search_query) | Q(ticket_number__icontains=search_query) |
-            Q(client_name__icontains=search_query) |
-            Q(assigned_to__username__icontains=search_query)
-        )
+        unassigned_tickets = unassigned_tickets.filter(Q(title__icontains=search_query) | Q(ticket_number__icontains=search_query) | Q(client_name__icontains=search_query) | Q(description__icontains=search_query))
+        history_tickets = history_tickets.filter(Q(title__icontains=search_query) | Q(ticket_number__icontains=search_query) | Q(client_name__icontains=search_query) | Q(assigned_to__username__icontains=search_query))
+        pm_history_tickets = pm_history_tickets.filter(Q(title__icontains=search_query) | Q(ticket_number__icontains=search_query))
 
     if status_filter:
-        if view_mode == 'history':
-            history_tickets = history_tickets.filter(status=status_filter)
-        else:
-            unassigned_tickets = unassigned_tickets.filter(status=status_filter)
+        if view_mode == 'history': history_tickets = history_tickets.filter(status=status_filter)
+        elif view_mode == 'pm_history': pm_history_tickets = pm_history_tickets.filter(status=status_filter)
+        else: unassigned_tickets = unassigned_tickets.filter(status=status_filter)
 
-    # IT team with tier info
-    it_team = (
-        User.objects
-        .filter(employeeprofile__department='IT', employeeprofile__is_department_head=False)
-        .select_related('employeeprofile')
-    )
+    it_team = User.objects.filter(employeeprofile__department='IT', employeeprofile__is_department_head=False).select_related('employeeprofile')
+
+    # ── FIXED: Pass only the correct list based on the active tab ──
+    active_history_list = pm_history_tickets if view_mode == 'pm_history' else history_tickets
 
     context = {
         'unassigned_tickets': unassigned_tickets,
-        'history_tickets': history_tickets,
+        'history_tickets': active_history_list,  # Template will now loop cleanly over this
+        'maintenance_tasks': RecurringTask.objects.all().order_by('-created_at'),
         'it_team': it_team,
         'view_mode': view_mode,
+        'priority_filter': priority_filter,
         'escalation_count': _escalation_count(),
     }
     return render(request, 'tickets/it_head_dashboard.html', context)
 
-
-# ──────────────────────────────────────────────────────────────
-# PAGE 4: IT STAFF DASHBOARD (Resolver — Tier 1 & Tier 2)
-# ──────────────────────────────────────────────────────────────
 
 @login_required
 def it_staff_dashboard(request):
@@ -414,7 +421,11 @@ def it_staff_dashboard(request):
         return HttpResponseForbidden("Access Denied.")
 
     view_mode = request.GET.get('view', 'active')
+    
+    # Capture all 3 filters from the frontend
     priority_filter = request.GET.get('priority_filter', '')
+    status_filter = request.GET.get('status_filter', '')
+    type_filter = request.GET.get('type_filter', '')
 
     if request.method == 'POST':
         ticket_id = request.POST.get('ticket_id')
@@ -423,149 +434,103 @@ def it_staff_dashboard(request):
 
         if action == 'ESCALATE':
             ticket.is_escalated = True
-            ticket.escalated_from_tier = profile.it_tier   # track which tier escalated
+            ticket.escalated_from_tier = profile.it_tier
             ticket.assigned_to = None
             ticket.status = 'OPEN'
             tier_label = profile.get_it_tier_display()
-            messages.warning(
-                request,
-                f"Ticket '{ticket.title}' escalated from {tier_label} back to IT Head."
-            )
+            messages.warning(request, f"Ticket '{ticket.title}' escalated from {tier_label} back to IT Head.")
         elif action == 'RESOLVE':
             ticket.status = 'RESOLVED'
             ticket.resolution_notes = request.POST.get('resolution_notes', 'Resolved by IT.')
             messages.success(request, f"Ticket '{ticket.title}' marked as Resolved.")
-
+        
         ticket.save()
         return redirect('it_staff_dashboard')
 
-    # ── PERFORMANCE STATS ────────────────────────────────────────
-    my_stats = Ticket.objects.filter(
-        assigned_to=request.user,
-        status='CLOSED',
-        client_feedback_rating__isnull=False
-    ).aggregate(
-        total_closed=Count('id'),
-        average_rating=Avg('client_feedback_rating')
-    )
-
-    # ── RATING DETAIL DATA FOR MODAL ─────────────────────────────
-    rating_tickets_qs = (
-        Ticket.objects
-        .filter(assigned_to=request.user, status='CLOSED', client_feedback_rating__isnull=False)
-        .order_by('-updated_at')
-    )
-
+    # Calculate ratings and modal stats
+    my_stats = Ticket.objects.filter(assigned_to=request.user, status='CLOSED', client_feedback_rating__isnull=False).aggregate(total_closed=Count('id'), average_rating=Avg('client_feedback_rating'))
+    rating_tickets_qs = Ticket.objects.filter(assigned_to=request.user, status='CLOSED', client_feedback_rating__isnull=False).order_by('-updated_at')
+    
     rating_data = []
     for t in rating_tickets_qs:
         rating_data.append({
-            'ticket_number': t.ticket_number or '—',
-            'title': t.title,
-            'client_name': t.client_name,
-            'rating': t.client_feedback_rating,
-            'notes': t.client_feedback_notes or '',
+            'ticket_number': t.ticket_number or '—', 'title': t.title, 'client_name': t.client_name,
+            'rating': t.client_feedback_rating, 'notes': t.client_feedback_notes or '',
             'date': t.updated_at.strftime('%b %d, %Y') if t.updated_at else '',
         })
+    rating_breakdown = {i: rating_tickets_qs.filter(client_feedback_rating=i).count() for i in range(1, 6)}
 
-    rating_breakdown = {}
-    for i in range(1, 6):
-        rating_breakdown[i] = rating_tickets_qs.filter(client_feedback_rating=i).count()
+    # Tier 2 specific escalation notification count
+    new_escalation_count = Ticket.objects.filter(assigned_to=request.user, status='IN_PROGRESS', is_escalated=True).count() if profile.it_tier == 'TIER_2' else 0
 
-    # Notification count: escalated tickets newly assigned to this Tier 2 user
-    new_escalation_count = 0
-    if profile.it_tier == 'TIER_2':
-        new_escalation_count = Ticket.objects.filter(
-            assigned_to=request.user,
-            status='IN_PROGRESS',
-            is_escalated=True
-        ).count()
-
+    # Base Context injected into all views
     base_ctx = {
-        'my_stats': my_stats,
-        'view_mode': view_mode,
-        'profile': profile,
-        'rating_data_json': json.dumps(rating_data),
-        'rating_breakdown_json': json.dumps(rating_breakdown),
-        'new_escalation_count': new_escalation_count,
+        'my_stats': my_stats, 'view_mode': view_mode, 'profile': profile,
+        'rating_data_json': json.dumps(rating_data), 'rating_breakdown_json': json.dumps(rating_breakdown),
+        'new_escalation_count': new_escalation_count, 
+        
+        # Pass the active filters back to the template so the dropdowns stay selected
         'priority_filter': priority_filter,
+        'status_filter': status_filter, 
+        'type_filter': type_filter,
+        
+        # Passing Maintenance Tasks to IT Staff
+        'maintenance_tasks': RecurringTask.objects.filter(is_active=True).order_by('-created_at'),
     }
 
     if view_mode == 'history':
-        history_tickets = (
-            Ticket.objects
-            .filter(assigned_to=request.user, status__in=['RESOLVED', 'CLOSED'])
-            .order_by('-updated_at')
-        )
-        return render(
-            request, 'tickets/it_staff_dashboard.html',
-            {**base_ctx, 'history_tickets': history_tickets}
-        )
+        history_tickets = Ticket.objects.filter(assigned_to=request.user, status__in=['RESOLVED', 'CLOSED']).order_by('-updated_at')
+        
+        # Apply the filters specific to the History view
+        if priority_filter: 
+            history_tickets = history_tickets.filter(priority=priority_filter)
+        if status_filter: 
+            history_tickets = history_tickets.filter(status=status_filter)
+            
+        if type_filter == 'pm': 
+            history_tickets = history_tickets.filter(is_preventive_maintenance=True)
+        elif type_filter == 'standard': 
+            history_tickets = history_tickets.filter(is_preventive_maintenance=False)
+            
+        return render(request, 'tickets/it_staff_dashboard.html', {**base_ctx, 'history_tickets': history_tickets})
+        
+    elif view_mode == 'maintenance':
+        # UI Handled cleanly inside the template
+        return render(request, 'tickets/it_staff_dashboard.html', base_ctx)
+        
     else:
-        my_tasks = Ticket.objects.filter(
-            assigned_to=request.user, status='IN_PROGRESS'
-        ).order_by('-created_at')
-
-        if priority_filter:
+        # Get active tasks
+        my_tasks = Ticket.objects.filter(assigned_to=request.user, status='IN_PROGRESS').order_by('-created_at')
+        
+        # Apply the Priority Filter
+        if priority_filter: 
             my_tasks = my_tasks.filter(priority=priority_filter)
+            
+        # Apply the Ticket Type Filter (PM vs Standard)
+        if type_filter == 'pm': 
+            my_tasks = my_tasks.filter(is_preventive_maintenance=True)
+        elif type_filter == 'standard': 
+            my_tasks = my_tasks.filter(is_preventive_maintenance=False)
+            
+        return render(request, 'tickets/it_staff_dashboard.html', {**base_ctx, 'my_tasks': my_tasks})
 
-        return render(
-            request, 'tickets/it_staff_dashboard.html',
-            {**base_ctx, 'my_tasks': my_tasks}
-        )
-
-
-# ──────────────────────────────────────────────────────────────
-# SSE: REAL-TIME TICKET UPDATE STREAM
-# ──────────────────────────────────────────────────────────────
 
 def ticket_updates_sse(request):
-    """
-    Server-Sent Events endpoint.
-    Pushes a message to the frontend if a ticket has been updated.
-    """
     def event_stream():
         latest_ticket = Ticket.objects.order_by('-updated_at').first()
         last_update = latest_ticket.updated_at if latest_ticket else None
-
         try:
             while True:
                 time.sleep(3)
-
                 current_ticket = Ticket.objects.order_by('-updated_at').first()
                 current_update = current_ticket.updated_at if current_ticket else None
-
                 if current_update != last_update:
                     yield f"data: {json.dumps({'refresh_required': True})}\n\n"
                     last_update = current_update
                 else:
                     yield f"data: {json.dumps({'refresh_required': False})}\n\n"
-
-        except GeneratorExit:
-            return
-
+        except GeneratorExit: return
     response = StreamingHttpResponse(event_stream(), content_type='text/event-stream')
     response['Cache-Control'] = 'no-cache'
     response['X-Accel-Buffering'] = 'no'
     return response
-
-@login_required
-def employee_dashboard(request):
-    time_filter = request.GET.get('time_filter', 'all')
-    tickets = apply_time_filter(Ticket.objects.filter(requester=request.user), time_filter)
-    
-    stats = {
-        'sent': tickets.count(),
-        'approved': tickets.filter(approval_status='APPROVED').count(),
-        'declined': tickets.filter(approval_status='REJECTED').count(),
-        'fixed': tickets.filter(status__in=['RESOLVED', 'CLOSED']).count(),
-        'feedbacks': tickets.filter(client_feedback_rating__isnull=False).count(),
-    }
-    
-    context = {
-        'time_filter': time_filter,
-        **stats,
-        # Pass exact array for the chart: [Approved, Declined, Pending]
-        'status_chart_data': json.dumps([stats['approved'], stats['declined'], stats['sent'] - (stats['approved'] + stats['declined'])]),
-        'action_chart_data': json.dumps([stats['sent'], stats['fixed'], stats['feedbacks']])
-    }
-    return render(request, 'tickets/employee_dashboard.html', context)
