@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="{% static 'tickets/css/it_staff_dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'tickets/css/sidebar.css' %}">
-    <link rel="stylesheet" href="{% static 'tickets/css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'tickets/css/dashboard.css' %}">z
 </head>
 <body>
 
@@ -165,8 +165,8 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const staffDepts = JSON.parse('{{ chart_depts_json|escapejs|default:"[]" }}');
-        const staffDeptCounts = JSON.parse('{{ chart_dept_counts_json|escapejs|default:"[]" }}');
+        const staffDepts = JSON.parse('{{ chart_depts_json|safe|default:"[]" }}');
+        const staffDeptCounts = JSON.parse('{{ chart_dept_counts_json|safe|default:"[]" }}');
 
         // Personal Department Chart
         new Chart(document.getElementById('staffDeptChart'), {

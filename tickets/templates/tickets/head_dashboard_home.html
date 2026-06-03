@@ -129,7 +129,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Parse JSON for approval statuses from Django view
-        const approvalData = JSON.parse('{{ approval_chart_data|escapejs|default:"[0,0,0]" }}');
+        const approvalData = JSON.parse('{{ approval_chart_data|safe|default:"[0,0,0]" }}');
         
         // Construct activity data dynamically from existing template variables
         const activityData = [
