@@ -5,13 +5,12 @@ from django.http import HttpResponseForbidden, StreamingHttpResponse
 from django.db.models import Count, Avg, Q
 from django.contrib import messages
 from .forms import TicketForm
-from .models import Ticket, EmployeeProfile, DEPARTMENT_CHOICES
+from .models import Ticket, EmployeeProfile, DEPARTMENT_CHOICES, RecurringTask
 from django.utils import timezone
 from datetime import timedelta, datetime, date
 import calendar
 import time
 import json
-from .models import RecurringTask
 
 # ──────────────────────────────────────────────────────────────
 # HELPERS
@@ -62,7 +61,9 @@ def _monthly_trend(base_qs, months=6):
 
 
 def check_and_generate_recurring_tasks():
-    """Checks active recurring tasks and generates standard tickets if they are due."""
+    """Checks active recurring tasks and generates PM tickets if they are due.
+    Guards against duplicates: never generates if an active (OPEN/IN_PROGRESS) ticket
+    already exists for the same recurring task in the current period."""
     today = date.today()
     active_tasks = RecurringTask.objects.filter(is_active=True)
 
@@ -94,6 +95,14 @@ def check_and_generate_recurring_tasks():
                         should_generate = True
 
         if should_generate:
+            # Guard: skip if there is already an active (unresolved) ticket for this task
+            already_active = Ticket.objects.filter(
+                source_recurring_task=task,
+                status__in=['OPEN', 'IN_PROGRESS']
+            ).exists()
+            if already_active:
+                continue
+
             notes = f"Auto-generated for {task.get_recurrence_type_display()} maintenance schedule."
             if task.recurrence_type == 'CUSTOM' and task.custom_date_start and task.custom_date_end:
                 notes += f" (Must be completed between {task.custom_date_start.strftime('%b %d')} and {task.custom_date_end.strftime('%b %d, %Y')})"
@@ -110,6 +119,7 @@ def check_and_generate_recurring_tasks():
                 approval_status='APPROVED',
                 needs_head_approval=False,
                 is_preventive_maintenance=True,
+                source_recurring_task=task,
                 dispatch_notes=notes
             )
             ticket.ticket_number = _generate_ticket_number()
@@ -144,7 +154,6 @@ def employee_dashboard(request):
     time_filter = request.GET.get('time_filter', 'all')
     tickets = apply_time_filter(Ticket.objects.filter(requester=request.user), time_filter)
 
-    # ── Core Stats ──
     total_sent     = tickets.count()
     total_approved = tickets.filter(approval_status='APPROVED').count()
     total_declined = tickets.filter(approval_status='REJECTED').count()
@@ -152,7 +161,6 @@ def employee_dashboard(request):
     total_fixed    = tickets.filter(status__in=['RESOLVED', 'CLOSED']).count()
     total_feedbacks = tickets.filter(client_feedback_rating__isnull=False).count()
 
-    # ── Priority Breakdown Chart ──
     priority_data = [
         tickets.filter(priority='LOW').count(),
         tickets.filter(priority='MEDIUM').count(),
@@ -160,7 +168,6 @@ def employee_dashboard(request):
         tickets.filter(priority='URGENT').count(),
     ]
 
-    # ── Status Breakdown Chart ──
     status_data = [
         tickets.filter(status='OPEN').count(),
         tickets.filter(status='IN_PROGRESS').count(),
@@ -168,7 +175,6 @@ def employee_dashboard(request):
         tickets.filter(status='CLOSED').count(),
     ]
 
-    # ── 6-Month Trend ──
     all_my_tickets = Ticket.objects.filter(requester=request.user)
     monthly_labels, monthly_counts = _monthly_trend(all_my_tickets)
 
@@ -179,7 +185,6 @@ def employee_dashboard(request):
         'total_declined':  total_declined,
         'total_fixed':     total_fixed,
         'total_feedbacks': total_feedbacks,
-        # Chart JSON
         'status_chart_data':     json.dumps([total_approved, total_declined, total_pending]),
         'action_chart_data':     json.dumps([total_sent, total_fixed, total_feedbacks]),
         'priority_chart_data':   json.dumps(priority_data),
@@ -196,7 +201,6 @@ def head_dashboard_home(request):
     dept = request.user.employeeprofile.department
     tickets = apply_time_filter(Ticket.objects.filter(department=dept), time_filter)
 
-    # ── Core Stats ──
     total_sent     = tickets.count()
     total_approved = tickets.filter(approval_status='APPROVED').count()
     total_declined = tickets.filter(approval_status='REJECTED').count()
@@ -204,7 +208,6 @@ def head_dashboard_home(request):
     total_fixed    = tickets.filter(status__in=['RESOLVED', 'CLOSED']).count()
     total_feedbacks = tickets.filter(client_feedback_rating__isnull=False).count()
 
-    # ── Priority Breakdown Chart ──
     priority_data = [
         tickets.filter(priority='LOW').count(),
         tickets.filter(priority='MEDIUM').count(),
@@ -212,7 +215,6 @@ def head_dashboard_home(request):
         tickets.filter(priority='URGENT').count(),
     ]
 
-    # ── Status Breakdown Chart ──
     status_data = [
         tickets.filter(status='OPEN').count(),
         tickets.filter(status='IN_PROGRESS').count(),
@@ -220,7 +222,6 @@ def head_dashboard_home(request):
         tickets.filter(status='CLOSED').count(),
     ]
 
-    # ── 6-Month Trend ──
     all_dept_tickets = Ticket.objects.filter(department=dept)
     monthly_labels, monthly_counts = _monthly_trend(all_dept_tickets)
 
@@ -231,7 +232,6 @@ def head_dashboard_home(request):
         'total_declined':  total_declined,
         'total_fixed':     total_fixed,
         'total_feedbacks': total_feedbacks,
-        # Chart JSON
         'approval_chart_data':   json.dumps([total_approved, total_declined, total_pending]),
         'priority_chart_data':   json.dumps(priority_data),
         'status_breakdown_data': json.dumps(status_data),
@@ -250,21 +250,18 @@ def it_head_dashboard_home(request):
     if dept_filter != 'all':
         tickets = tickets.filter(department=dept_filter)
 
-    # ── Core Stats (all were missing from original view) ──
     total_sent     = tickets.count()
     total_approved = tickets.filter(approval_status='APPROVED').count()
     total_declined = tickets.filter(approval_status='REJECTED').count()
     total_pending  = tickets.filter(approval_status='PENDING').count()
-    total_assigned  = tickets.filter(assigned_to__isnull=False).count()
-    total_fixed     = tickets.filter(status__in=['RESOLVED', 'CLOSED']).count()
+    total_assigned = tickets.filter(assigned_to__isnull=False).count()
+    total_fixed    = tickets.filter(status__in=['RESOLVED', 'CLOSED']).count()
     total_escalated = tickets.filter(is_escalated=True).count()
 
-    # ── Department Bar Chart ──
     dept_counts = tickets.values('department').annotate(count=Count('id'))
     chart_depts       = [d['department'] for d in dept_counts]
     chart_dept_counts = [d['count']      for d in dept_counts]
 
-    # ── Status Breakdown ──
     status_data = [
         tickets.filter(status='OPEN').count(),
         tickets.filter(status='IN_PROGRESS').count(),
@@ -272,7 +269,6 @@ def it_head_dashboard_home(request):
         tickets.filter(status='CLOSED').count(),
     ]
 
-    # ── Priority Breakdown ──
     priority_data = [
         tickets.filter(priority='LOW').count(),
         tickets.filter(priority='MEDIUM').count(),
@@ -280,10 +276,8 @@ def it_head_dashboard_home(request):
         tickets.filter(priority='URGENT').count(),
     ]
 
-    # ── 6-Month Trend ──
     monthly_labels, monthly_counts = _monthly_trend(Ticket.objects.all())
 
-    # ── Staff Performance ──
     staff_stats = []
     it_staffs = User.objects.filter(
         employeeprofile__department='IT',
@@ -307,7 +301,6 @@ def it_head_dashboard_home(request):
         })
     staff_stats_sorted = sorted(staff_stats, key=lambda x: x['avg_rating'], reverse=True)
 
-    # ── Staff chart arrays ──
     staff_names    = [s['name']     for s in staff_stats_sorted]
     staff_resolved = [s['resolved'] for s in staff_stats_sorted]
     staff_ratings  = [s['avg_rating'] for s in staff_stats_sorted]
@@ -316,16 +309,13 @@ def it_head_dashboard_home(request):
         'time_filter': time_filter,
         'dept_filter': dept_filter,
         'departments': [d[0] for d in DEPARTMENT_CHOICES],
-        # Stats
         'total_sent':      total_sent,
         'total_approved':  total_approved,
         'total_declined':  total_declined,
         'total_assigned':  total_assigned,
         'total_fixed':     total_fixed,
         'total_escalated': total_escalated,
-        # Table
         'staff_stats': staff_stats_sorted,
-        # Chart JSON
         'chart_depts_json':       json.dumps(chart_depts),
         'chart_dept_counts_json': json.dumps(chart_dept_counts),
         'approval_chart_data':    json.dumps([total_approved, total_declined, total_pending]),
@@ -345,13 +335,11 @@ def it_staff_dashboard_home(request):
     time_filter = request.GET.get('time_filter', 'all')
     tickets = apply_time_filter(Ticket.objects.filter(assigned_to=request.user), time_filter)
 
-    # ── Core Stats ──
     total_assigned = tickets.count()
     total_resolved = tickets.filter(status__in=['RESOLVED', 'CLOSED']).count()
     total_active   = tickets.filter(status='IN_PROGRESS').count()
     total_open     = tickets.filter(status='OPEN').count()
 
-    # ── Most Requested Department ──
     most_dept_qs = (
         tickets.values('department')
                .annotate(count=Count('id'))
@@ -361,12 +349,10 @@ def it_staff_dashboard_home(request):
     dept_display = dict(DEPARTMENT_CHOICES)
     most_dept = dept_display.get(most_dept_qs['department'], '—') if most_dept_qs else '—'
 
-    # ── Department Bar Chart ──
     dept_counts = tickets.values('department').annotate(count=Count('id'))
     chart_depts       = [d['department'] for d in dept_counts]
     chart_dept_counts = [d['count']      for d in dept_counts]
 
-    # ── Rating Breakdown ──
     rating_data = [
         tickets.filter(client_feedback_rating=5).count(),
         tickets.filter(client_feedback_rating=4).count(),
@@ -380,7 +366,6 @@ def it_staff_dashboard_home(request):
         avg=Avg('client_feedback_rating'), count=Count('id')
     )
 
-    # ── Priority Breakdown ──
     priority_data = [
         tickets.filter(priority='LOW').count(),
         tickets.filter(priority='MEDIUM').count(),
@@ -388,10 +373,8 @@ def it_staff_dashboard_home(request):
         tickets.filter(priority='URGENT').count(),
     ]
 
-    # ── Status Breakdown ──
     status_data = [total_active, total_resolved, total_open]
 
-    # ── 6-Month Trend ──
     all_my_tickets = Ticket.objects.filter(assigned_to=request.user)
     monthly_labels, monthly_counts = _monthly_trend(all_my_tickets)
 
@@ -403,10 +386,8 @@ def it_staff_dashboard_home(request):
         'most_dept':      most_dept,
         'total_feedbacks': agg['count'] or 0,
         'avg_rating':     round(agg['avg'], 1) if agg['avg'] else 0.0,
-        # Legacy CSS bar support
         'rating_data':    rating_data,
         'max_rating':     max_rating_count,
-        # Chart JSON
         'chart_depts_json':       json.dumps(chart_depts),
         'chart_dept_counts_json': json.dumps(chart_dept_counts),
         'priority_chart_data':    json.dumps(priority_data),
@@ -561,6 +542,20 @@ def it_head_dashboard(request):
             messages.success(request, f"Maintenance schedule '{title}' created successfully!")
             return redirect('/tickets/it-head/?view=maintenance')
 
+        # ── IT Head reviews and closes a resolved PM ticket ──
+        elif 'review_pm' in request.POST:
+            ticket_id  = request.POST.get('ticket_id')
+            ticket     = get_object_or_404(Ticket, id=ticket_id, is_preventive_maintenance=True, status='RESOLVED')
+            raw_rating = request.POST.get('pm_review_rating', '').strip()
+            ticket.pm_review_rating  = int(raw_rating) if raw_rating.isdigit() else None
+            ticket.pm_review_notes   = request.POST.get('pm_review_notes', '').strip()
+            ticket.pm_reviewed_by    = request.user
+            ticket.pm_reviewed_at    = timezone.now()
+            ticket.status            = 'CLOSED'
+            ticket.save()
+            messages.success(request, f"PM Ticket '{ticket.title}' reviewed and closed.")
+            return redirect('/tickets/it-head/?view=pm_history')
+
         elif 'ticket_id' in request.POST:
             ticket_id = request.POST.get('ticket_id')
             tech_id   = request.POST.get('tech_id')
@@ -618,14 +613,19 @@ def it_head_dashboard(request):
 
     active_history_list = pm_history_tickets if view_mode == 'pm_history' else history_tickets
 
+    pending_pm_reviews_count = Ticket.objects.filter(
+        is_preventive_maintenance=True, status='RESOLVED'
+    ).count()
+
     context = {
-        'unassigned_tickets': unassigned_tickets,
-        'history_tickets':    active_history_list,
-        'maintenance_tasks':  RecurringTask.objects.all().order_by('-created_at'),
-        'it_team':            it_team,
-        'view_mode':          view_mode,
-        'priority_filter':    priority_filter,
-        'escalation_count':   _escalation_count(),
+        'unassigned_tickets':       unassigned_tickets,
+        'history_tickets':          active_history_list,
+        'maintenance_tasks':        RecurringTask.objects.all().order_by('-created_at'),
+        'it_team':                  it_team,
+        'view_mode':                view_mode,
+        'priority_filter':          priority_filter,
+        'escalation_count':         _escalation_count(),
+        'pending_pm_reviews_count': pending_pm_reviews_count,
     }
     return render(request, 'tickets/it_head_dashboard.html', context)
 
@@ -650,14 +650,14 @@ def it_staff_dashboard(request):
         ticket    = get_object_or_404(Ticket, id=ticket_id, assigned_to=request.user)
 
         if action == 'ESCALATE':
-            ticket.is_escalated       = True
+            ticket.is_escalated        = True
             ticket.escalated_from_tier = profile.it_tier
-            ticket.assigned_to        = None
-            ticket.status             = 'OPEN'
+            ticket.assigned_to         = None
+            ticket.status              = 'OPEN'
             tier_label = profile.get_it_tier_display()
             messages.warning(request, f"Ticket '{ticket.title}' escalated from {tier_label} back to IT Head.")
         elif action == 'RESOLVE':
-            ticket.status           = 'RESOLVED'
+            ticket.status            = 'RESOLVED'
             ticket.resolution_notes = request.POST.get('resolution_notes', 'Resolved by IT.')
             messages.success(request, f"Ticket '{ticket.title}' marked as Resolved.")
 
@@ -724,10 +724,15 @@ def it_staff_dashboard(request):
         my_tasks = Ticket.objects.filter(assigned_to=request.user, status='IN_PROGRESS').order_by('-created_at')
         if priority_filter:
             my_tasks = my_tasks.filter(priority=priority_filter)
+        
+        # ── Hides PMs by default if no filter is selected ──
         if type_filter == 'pm':
             my_tasks = my_tasks.filter(is_preventive_maintenance=True)
         elif type_filter == 'standard':
             my_tasks = my_tasks.filter(is_preventive_maintenance=False)
+        else:
+            my_tasks = my_tasks.filter(is_preventive_maintenance=False)
+            
         return render(request, 'tickets/it_staff_dashboard.html', {**base_ctx, 'my_tasks': my_tasks})
 
 

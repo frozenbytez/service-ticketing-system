@@ -37,7 +37,11 @@
         </a>
         <a href="{% url 'it_head_dashboard' %}?view=history" class="sb-item {% if view_mode == 'history' or view_mode == 'pm_history' %}active{% endif %}" title="All Dispatched">
             <div class="sb-icon"><i class="fa-solid fa-layer-group"></i></div>
-            <span class="sb-label">All Dispatched</span>
+            <span class="sb-label">All Dispatched
+                {% if pending_pm_reviews_count > 0 %}
+                <span style="display:inline-block; margin-left:6px; background:#8b5cf6; color:#fff; border-radius:10px; font-size:10px; font-weight:700; padding:1px 7px; vertical-align:middle;">{{ pending_pm_reviews_count }}</span>
+                {% endif %}
+            </span>
         </a>
         <a href="{% url 'it_head_dashboard' %}?view=maintenance" class="sb-item {% if view_mode == 'maintenance' %}active{% endif %}" title="Maintenance Schedules">
             <div class="sb-icon"><i class="fa-solid fa-calendar-check"></i></div>
@@ -222,7 +226,15 @@
                         {% if ticket.ticket_number %}<span class="text-teal">#{{ ticket.ticket_number }}</span>{% endif %}
                         {{ ticket.title }}
                     </span>
-                    <span class="status-chip">{{ ticket.get_status_display }}</span>
+                    <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                    {% if ticket.is_preventive_maintenance and ticket.status == 'RESOLVED' %}
+                        <span class="status-chip" style="background:#fef3c7; color:#92400e; border:1px solid #fcd34d;">
+                            <i class="fa-solid fa-clock-rotate-left"></i> Pending Your Review
+                        </span>
+                    {% else %}
+                        <span class="status-chip">{{ ticket.get_status_display }}</span>
+                    {% endif %}
+                    </div>
                 </div>
                 
                 <div class="card-meta">
@@ -255,6 +267,79 @@
                     <i class="fa-solid fa-chevron-down"></i> Show Description
                 </button>
                 <div class="desc-body">{{ ticket.description }}</div>
+
+                {% if ticket.resolution_notes %}
+                <div style="margin-top: 12px; padding: 10px 14px; background: #f0fdf4; border-left: 3px solid #22c55e; border-radius: 4px;">
+                    <strong style="font-size: 11px; text-transform: uppercase; color: #166534; display:flex; align-items:center; gap:5px;">
+                        <i class="fa-solid fa-file-lines"></i> IT Staff Resolution Notes:
+                    </strong>
+                    <p style="margin: 4px 0 0 0; color: #166534; font-size: 13.5px;">{{ ticket.resolution_notes }}</p>
+                </div>
+                {% endif %}
+
+                {# ── PM REVIEW PANEL ── #}
+                {% if ticket.is_preventive_maintenance %}
+                    {% if ticket.status == 'RESOLVED' %}
+                    {# Pending review — show review form #}
+                    <div style="margin-top: 14px; padding: 16px; background: #fffbeb; border: 1.5px solid #fcd34d; border-radius: 8px;">
+                        <p style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #92400e; margin: 0 0 12px 0;">
+                            <i class="fa-solid fa-star"></i> Review This PM Task
+                        </p>
+                        <form method="POST" style="display:flex; flex-direction:column; gap:12px;">
+                            {% csrf_token %}
+                            <input type="hidden" name="review_pm" value="true">
+                            <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+                            <div>
+                                <label style="font-size:11px; font-weight:700; color:#92400e; text-transform:uppercase; display:block; margin-bottom:6px;">
+                                    Star Rating (Optional)
+                                </label>
+                                <div style="display:flex; gap:8px; align-items:center;">
+                                    {% for i in "12345" %}
+                                    <label style="display:flex; align-items:center; gap:4px; cursor:pointer; font-size:13px; color:#92400e; font-weight:600;">
+                                        <input type="radio" name="pm_review_rating" value="{{ i }}" style="accent-color:#d97706;">
+                                        {{ i }} <i class="fa-solid fa-star" style="color:#d97706; font-size:11px;"></i>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div>
+                                <label style="font-size:11px; font-weight:700; color:#92400e; text-transform:uppercase; display:block; margin-bottom:6px;">
+                                    Review Notes (Optional)
+                                </label>
+                                <textarea name="pm_review_notes" rows="2" placeholder="e.g. Task completed correctly — server room left clean, equipment tested." style="width:100%; padding:10px; border:1.5px solid #fcd34d; border-radius:6px; font-family:'DM Sans',sans-serif; font-size:13.5px; resize:vertical; background:#fffdf0;"></textarea>
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-primary" style="background:#8b5cf6; border-color:#7c3aed; padding:9px 20px;">
+                                    <i class="fa-solid fa-circle-check"></i> Confirm & Close PM Ticket
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    {% elif ticket.status == 'CLOSED' and ticket.pm_review_rating %}
+                    {# Already reviewed — show review summary #}
+                    <div style="margin-top: 14px; padding: 14px; background: #ede9fe; border: 1px solid #c4b5fd; border-radius: 8px;">
+                        <p style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #5b21b6; margin: 0 0 6px 0;">
+                            <i class="fa-solid fa-star"></i> IT Head Review
+                        </p>
+                        <div style="display:flex; gap:16px; flex-wrap:wrap; font-size:13px; color:#4c1d95;">
+                            <span><strong>Rating:</strong>
+                                {% for i in "12345" %}{% if forloop.counter <= ticket.pm_review_rating %}<i class="fa-solid fa-star" style="color:#d97706;"></i>{% else %}<i class="fa-regular fa-star" style="color:#c4b5fd;"></i>{% endif %}{% endfor %}
+                                {{ ticket.pm_review_rating }}/5
+                            </span>
+                            {% if ticket.pm_reviewed_by %}
+                            <span><strong>Reviewed by:</strong> {{ ticket.pm_reviewed_by.get_full_name|default:ticket.pm_reviewed_by.username }}</span>
+                            {% endif %}
+                            {% if ticket.pm_reviewed_at %}
+                            <span><strong>Date:</strong> {{ ticket.pm_reviewed_at|date:"M d, Y" }}</span>
+                            {% endif %}
+                        </div>
+                        {% if ticket.pm_review_notes %}
+                        <p style="margin: 8px 0 0 0; font-size: 13.5px; color: #4c1d95;">{{ ticket.pm_review_notes }}</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                {% endif %}
+
             </div>
             {% empty %}
             <div class="empty-state">
@@ -297,6 +382,12 @@
             <div class="dispatch-card {% if ticket.is_escalated %}critical{% endif %}" data-priority="{{ ticket.priority }}">
                 <div class="card-header">
                     <span class="card-title">{{ ticket.title }}</span>
+                    <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                    {% if ticket.is_preventive_maintenance %}
+                        <span class="priority-badge" style="background:#ede9fe; color:#6d28d9; border:1px solid #c4b5fd;">
+                            <i class="fa-solid fa-screwdriver-wrench"></i> PM Task
+                        </span>
+                    {% endif %}
                     {% if ticket.is_escalated %}
                         <span class="escalated-badge"><i class="fa-solid fa-triangle-exclamation"></i> Escalated</span>
                     {% else %}
@@ -310,6 +401,7 @@
                             <span class="priority-badge priority-urgent"><i class="fa-solid fa-bolt"></i> URGENT</span>
                         {% endif %}
                     {% endif %}
+                    </div>
                 </div>
 
                 <div class="card-meta">

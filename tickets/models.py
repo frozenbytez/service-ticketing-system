@@ -122,6 +122,24 @@ class Ticket(models.Model):
     )
     client_feedback_notes = models.TextField(null=True, blank=True, verbose_name="Client Comments")
 
+    # --- PM REVIEW BY IT HEAD ---
+    # After IT Staff resolves a PM ticket, IT Head reviews it before closing.
+    source_recurring_task = models.ForeignKey(
+        'RecurringTask', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='generated_tickets', verbose_name="Source Recurring Task"
+    )
+    pm_review_rating = models.IntegerField(
+        null=True, blank=True,
+        choices=[(i, i) for i in range(1, 6)],
+        verbose_name="IT Head PM Review Rating"
+    )
+    pm_review_notes = models.TextField(null=True, blank=True, verbose_name="IT Head Review Notes")
+    pm_reviewed_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='pm_reviews_given', verbose_name="Reviewed By"
+    )
+    pm_reviewed_at = models.DateTimeField(null=True, blank=True, verbose_name="Reviewed At")
+
     # --- TIMESTAMPS ---
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
