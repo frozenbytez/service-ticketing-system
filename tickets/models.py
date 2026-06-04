@@ -72,6 +72,14 @@ class Ticket(models.Model):
         verbose_name="Ticket Number"
     )
 
+    is_preventive_maintenance = models.BooleanField(default=False, verbose_name="Is Preventive Maintenance")
+    source_recurring_task = models.ForeignKey(
+        'RecurringTask', on_delete=models.SET_NULL, null=True, blank=True, related_name='generated_tickets'
+    )
+    
+    # ── ADD THIS NEW FIELD ──
+    due_date = models.DateField(null=True, blank=True, verbose_name="Deadline")
+
 # --- ADD THIS TO YOUR Ticket MODEL (Around Line 60) ---
     is_preventive_maintenance = models.BooleanField(default=False, verbose_name="Is Preventive Maintenance")
 
@@ -178,3 +186,43 @@ class RecurringTask(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.get_recurrence_type_display()})"
+
+class Notification(models.Model):
+    NOTIF_TYPE_CHOICES = [
+        # Employee
+        ('ticket_approved',   'Ticket Approved'),
+        ('ticket_rejected',   'Ticket Rejected'),
+        ('ticket_resolved',   'Ticket Resolved'),
+        # Dept Head
+        ('needs_approval',    'Ticket Needs Approval'),
+        ('ticket_dispatched', 'Ticket Dispatched'),
+        # IT Head
+        ('needs_assigning',   'Ticket Needs Assigning'),
+        ('pm_finished',       'PM Task Finished'),
+        ('it_resolved',       'IT Staff Resolved Ticket'),
+        ('rating_received',   'IT Staff Got Rated'),
+        # IT Staff
+        ('ticket_assigned',   'Ticket Assigned to You'),
+        ('pm_announced',      'PM Task Posted'),
+        ('feedback_received', 'You Received Feedback'),
+        ('ticket_escalated',  'Ticket Escalated to You'),
+    ]
+ 
+    recipient   = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='notifications'
+    )
+    notif_type  = models.CharField(max_length=30, choices=NOTIF_TYPE_CHOICES)
+    title       = models.CharField(max_length=200)
+    message     = models.TextField()
+    ticket      = models.ForeignKey(
+        'Ticket', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='notifications'
+    )
+    is_read     = models.BooleanField(default=False)
+    created_at  = models.DateTimeField(auto_now_add=True)
+ 
+    class Meta:
+        ordering = ['-created_at']
+ 
+    def __str__(self):
+        return f"[{self.notif_type}] → {self.recipient.username}: {self.title}"

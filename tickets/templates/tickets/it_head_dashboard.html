@@ -154,12 +154,28 @@
                         <i class="fa-solid fa-rotate"></i> {{ task.get_recurrence_type_display }}
                     </span>
                 </div>
-                <div class="card-meta">
-                    <span><i class="fa-solid fa-user-gear"></i> Defaults to: {{ task.assigned_to.get_full_name|default:"Unassigned" }}</span>
-                    {% if task.recurrence_type == 'CUSTOM' %}
-                    <span><i class="fa-regular fa-calendar"></i> {{ task.custom_date_start }} to {{ task.custom_date_end }}</span>
+                <div class="card-meta" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    {% if ticket.is_preventive_maintenance %}
+                        <span style="color: #6d28d9; font-weight: 600; background: #ede9fe; padding: 4px 10px; border-radius: 6px; font-size: 12px;">
+                            <i class="fa-solid fa-rotate"></i> {{ ticket.source_recurring_task.get_recurrence_type_display|default:"Scheduled PM" }}
+                        </span>
+                        {% if ticket.due_date %}
+                        <span style="color: #b45309; font-weight: 700; background: #fffbeb; padding: 4px 10px; border-radius: 6px; font-size: 12px; border: 1px solid #fcd34d;">
+                            <i class="fa-regular fa-calendar-xmark"></i> Due: {{ ticket.due_date|date:"M d, Y" }}
+                        </span>
+                        {% endif %}
+                    {% else %}
+                        <span><i class="fa-solid fa-building"></i> {{ ticket.get_department_display }}</span>
+                        <span><i class="fa-solid fa-user"></i> {{ ticket.client_name }}</span>
                     {% endif %}
-                    <span><i class="fa-regular fa-clock"></i> Last Generated: {{ task.last_generated|default:"Never" }}</span>
+                    
+                    <span style="margin-left: auto;"><i class="fa-solid fa-user-gear"></i> 
+                        {% if ticket.assigned_to %}
+                            {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}
+                        {% else %}
+                            Unassigned
+                        {% endif %}
+                    </span>
                 </div>
                 <div class="desc-body" style="display:block; margin-top: 10px; font-size: 13px;">{{ task.description }}</div>
             </div>
@@ -516,5 +532,6 @@ evtSource.onmessage = function(event) {
 };
 window.addEventListener('beforeunload', () => evtSource.close());
 </script>
+{% include 'tickets/_notification_bell.html' %}
 </body>
 </html>

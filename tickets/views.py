@@ -1,16 +1,19 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
-from django.http import HttpResponseForbidden, StreamingHttpResponse
+from django.http import HttpResponseForbidden, StreamingHttpResponse, JsonResponse
 from django.db.models import Count, Avg, Q
 from django.contrib import messages
+from django.views.decorators.http import require_POST
 from .forms import TicketForm
-from .models import Ticket, EmployeeProfile, DEPARTMENT_CHOICES, RecurringTask
+from .models import Ticket, EmployeeProfile, DEPARTMENT_CHOICES, RecurringTask, Notification
 from django.utils import timezone
 from datetime import timedelta, datetime, date
 import calendar
 import time
 import json
+from django.urls import reverse
+
 
 # ──────────────────────────────────────────────────────────────
 # HELPERS
@@ -60,10 +63,95 @@ def _monthly_trend(base_qs, months=6):
     return labels, counts
 
 
+# ──────────────────────────────────────────────────────────────
+# NOTIFICATION HELPER
+# ──────────────────────────────────────────────────────────────
+
+def push_notification(recipient, notif_type, title, message, ticket=None):
+    """
+    Central helper to create a Notification record.
+    Skips silently if recipient is None.
+    """
+    if not recipient:
+        return
+    Notification.objects.create(
+        recipient=recipient,
+        notif_type=notif_type,
+        title=title,
+        message=message,
+        ticket=ticket,
+    )
+
+
+def _it_head_users():
+    """Returns all IT department heads."""
+    return User.objects.filter(
+        employeeprofile__department='IT',
+        employeeprofile__is_department_head=True,
+    )
+
+
+def _dept_head_of(department):
+    """Returns the dept head user for a given department code (or None)."""
+    return User.objects.filter(
+        employeeprofile__department=department,
+        employeeprofile__is_department_head=True,
+    ).first()
+
+
+# ──────────────────────────────────────────────────────────────
+# NOTIFICATION API ENDPOINTS
+# ──────────────────────────────────────────────────────────────
+
+@login_required
+def notifications_api(request):
+    """
+    GET  → return last 20 notifications as JSON
+    POST → mark all as read
+    """
+    if request.method == 'POST':
+        Notification.objects.filter(
+            recipient=request.user, is_read=False
+        ).update(is_read=True)
+        return JsonResponse({'status': 'ok'})
+
+    notifs = Notification.objects.filter(
+        recipient=request.user
+    ).select_related('ticket')[:20]
+
+    def time_ago(dt):
+        diff = timezone.now() - dt
+        s = diff.total_seconds()
+        if s < 60:
+            return 'just now'
+        elif s < 3600:
+            return f'{int(s // 60)}m ago'
+        elif s < 86400:
+            return f'{int(s // 3600)}h ago'
+        else:
+            return f'{int(s // 86400)}d ago'
+
+    data = []
+    for n in notifs:
+        data.append({
+            'id':         n.id,
+            'type':       n.notif_type,
+            'title':      n.title,
+            'message':    n.message,
+            'is_read':    n.is_read,
+            'time_ago':   time_ago(n.created_at),
+            'ticket_num': n.ticket.ticket_number if n.ticket and n.ticket.ticket_number else None,
+        })
+
+    unread = Notification.objects.filter(recipient=request.user, is_read=False).count()
+    return JsonResponse({'notifications': data, 'unread_count': unread})
+
+
+# ──────────────────────────────────────────────────────────────
+# RECURRING TASK GENERATOR (triggers PM notifications)
+# ──────────────────────────────────────────────────────────────
+
 def check_and_generate_recurring_tasks():
-    """Checks active recurring tasks and generates PM tickets if they are due.
-    Guards against duplicates: never generates if an active (OPEN/IN_PROGRESS) ticket
-    already exists for the same recurring task in the current period."""
     today = date.today()
     active_tasks = RecurringTask.objects.filter(is_active=True)
 
@@ -103,6 +191,20 @@ def check_and_generate_recurring_tasks():
             if already_active:
                 continue
 
+            # ── NEW: CALCULATE EXACT DEADLINE ──
+            ticket_due_date = today
+            if task.recurrence_type == 'DAILY':
+                ticket_due_date = today
+            elif task.recurrence_type == 'WEEKLY':
+                # Deadline is Sunday of the current week
+                ticket_due_date = today + timedelta(days=6 - today.weekday())
+            elif task.recurrence_type in ['MONTHLY', 'QUARTERLY']:
+                # Deadline is the very last day of the current month
+                last_day = calendar.monthrange(today.year, today.month)[1]
+                ticket_due_date = today.replace(day=last_day)
+            elif task.recurrence_type == 'CUSTOM' and task.custom_date_end:
+                ticket_due_date = task.custom_date_end
+
             notes = f"Auto-generated for {task.get_recurrence_type_display()} maintenance schedule."
             if task.recurrence_type == 'CUSTOM' and task.custom_date_start and task.custom_date_end:
                 notes += f" (Must be completed between {task.custom_date_start.strftime('%b %d')} and {task.custom_date_end.strftime('%b %d, %Y')})"
@@ -120,6 +222,7 @@ def check_and_generate_recurring_tasks():
                 needs_head_approval=False,
                 is_preventive_maintenance=True,
                 source_recurring_task=task,
+                due_date=ticket_due_date, # ── PASS THE DEADLINE HERE ──
                 dispatch_notes=notes
             )
             ticket.ticket_number = _generate_ticket_number()
@@ -127,6 +230,20 @@ def check_and_generate_recurring_tasks():
 
             task.last_generated = today
             task.save()
+
+            # ── NOTIFICATION: IT Staff — PM task posted ──────────
+            if task.assigned_to:
+                push_notification(
+                    recipient=task.assigned_to,
+                    notif_type='pm_announced',
+                    title='New PM Task Posted',
+                    message=(
+                        f'A new preventive maintenance task has been scheduled for you: '
+                        f'"{task.title}" ({task.get_recurrence_type_display()}).'
+                    ),
+                    ticket=ticket,
+                )
+
 
 # ──────────────────────────────────────────────────────────────
 # TRAFFIC COP & HOME DASHBOARDS
@@ -154,11 +271,11 @@ def employee_dashboard(request):
     time_filter = request.GET.get('time_filter', 'all')
     tickets = apply_time_filter(Ticket.objects.filter(requester=request.user), time_filter)
 
-    total_sent     = tickets.count()
-    total_approved = tickets.filter(approval_status='APPROVED').count()
-    total_declined = tickets.filter(approval_status='REJECTED').count()
-    total_pending  = tickets.filter(approval_status='PENDING').count()
-    total_fixed    = tickets.filter(status__in=['RESOLVED', 'CLOSED']).count()
+    total_sent      = tickets.count()
+    total_approved  = tickets.filter(approval_status='APPROVED').count()
+    total_declined  = tickets.filter(approval_status='REJECTED').count()
+    total_pending   = tickets.filter(approval_status='PENDING').count()
+    total_fixed     = tickets.filter(status__in=['RESOLVED', 'CLOSED']).count()
     total_feedbacks = tickets.filter(client_feedback_rating__isnull=False).count()
 
     priority_data = [
@@ -167,7 +284,6 @@ def employee_dashboard(request):
         tickets.filter(priority='HIGH').count(),
         tickets.filter(priority='URGENT').count(),
     ]
-
     status_data = [
         tickets.filter(status='OPEN').count(),
         tickets.filter(status='IN_PROGRESS').count(),
@@ -179,12 +295,12 @@ def employee_dashboard(request):
     monthly_labels, monthly_counts = _monthly_trend(all_my_tickets)
 
     context = {
-        'time_filter': time_filter,
-        'total_sent':      total_sent,
-        'total_approved':  total_approved,
-        'total_declined':  total_declined,
-        'total_fixed':     total_fixed,
-        'total_feedbacks': total_feedbacks,
+        'time_filter':           time_filter,
+        'total_sent':            total_sent,
+        'total_approved':        total_approved,
+        'total_declined':        total_declined,
+        'total_fixed':           total_fixed,
+        'total_feedbacks':       total_feedbacks,
         'status_chart_data':     json.dumps([total_approved, total_declined, total_pending]),
         'action_chart_data':     json.dumps([total_sent, total_fixed, total_feedbacks]),
         'priority_chart_data':   json.dumps(priority_data),
@@ -201,11 +317,11 @@ def head_dashboard_home(request):
     dept = request.user.employeeprofile.department
     tickets = apply_time_filter(Ticket.objects.filter(department=dept), time_filter)
 
-    total_sent     = tickets.count()
-    total_approved = tickets.filter(approval_status='APPROVED').count()
-    total_declined = tickets.filter(approval_status='REJECTED').count()
-    total_pending  = tickets.filter(approval_status='PENDING').count()
-    total_fixed    = tickets.filter(status__in=['RESOLVED', 'CLOSED']).count()
+    total_sent      = tickets.count()
+    total_approved  = tickets.filter(approval_status='APPROVED').count()
+    total_declined  = tickets.filter(approval_status='REJECTED').count()
+    total_pending   = tickets.filter(approval_status='PENDING').count()
+    total_fixed     = tickets.filter(status__in=['RESOLVED', 'CLOSED']).count()
     total_feedbacks = tickets.filter(client_feedback_rating__isnull=False).count()
 
     priority_data = [
@@ -214,7 +330,6 @@ def head_dashboard_home(request):
         tickets.filter(priority='HIGH').count(),
         tickets.filter(priority='URGENT').count(),
     ]
-
     status_data = [
         tickets.filter(status='OPEN').count(),
         tickets.filter(status='IN_PROGRESS').count(),
@@ -226,12 +341,12 @@ def head_dashboard_home(request):
     monthly_labels, monthly_counts = _monthly_trend(all_dept_tickets)
 
     context = {
-        'time_filter': time_filter,
-        'total_sent':      total_sent,
-        'total_approved':  total_approved,
-        'total_declined':  total_declined,
-        'total_fixed':     total_fixed,
-        'total_feedbacks': total_feedbacks,
+        'time_filter':           time_filter,
+        'total_sent':            total_sent,
+        'total_approved':        total_approved,
+        'total_declined':        total_declined,
+        'total_fixed':           total_fixed,
+        'total_feedbacks':       total_feedbacks,
         'approval_chart_data':   json.dumps([total_approved, total_declined, total_pending]),
         'priority_chart_data':   json.dumps(priority_data),
         'status_breakdown_data': json.dumps(status_data),
@@ -250,15 +365,15 @@ def it_head_dashboard_home(request):
     if dept_filter != 'all':
         tickets = tickets.filter(department=dept_filter)
 
-    total_sent     = tickets.count()
-    total_approved = tickets.filter(approval_status='APPROVED').count()
-    total_declined = tickets.filter(approval_status='REJECTED').count()
-    total_pending  = tickets.filter(approval_status='PENDING').count()
-    total_assigned = tickets.filter(assigned_to__isnull=False).count()
-    total_fixed    = tickets.filter(status__in=['RESOLVED', 'CLOSED']).count()
+    total_sent      = tickets.count()
+    total_approved  = tickets.filter(approval_status='APPROVED').count()
+    total_declined  = tickets.filter(approval_status='REJECTED').count()
+    total_pending   = tickets.filter(approval_status='PENDING').count()
+    total_assigned  = tickets.filter(assigned_to__isnull=False).count()
+    total_fixed     = tickets.filter(status__in=['RESOLVED', 'CLOSED']).count()
     total_escalated = tickets.filter(is_escalated=True).count()
 
-    dept_counts = tickets.values('department').annotate(count=Count('id'))
+    dept_counts       = tickets.values('department').annotate(count=Count('id'))
     chart_depts       = [d['department'] for d in dept_counts]
     chart_dept_counts = [d['count']      for d in dept_counts]
 
@@ -268,7 +383,6 @@ def it_head_dashboard_home(request):
         tickets.filter(status='RESOLVED').count(),
         tickets.filter(status='CLOSED').count(),
     ]
-
     priority_data = [
         tickets.filter(priority='LOW').count(),
         tickets.filter(priority='MEDIUM').count(),
@@ -289,33 +403,33 @@ def it_head_dashboard_home(request):
             Ticket.objects.filter(assigned_to=staff, client_feedback_rating__isnull=False),
             time_filter
         )
-        agg = staff_tix.aggregate(avg_rating=Avg('client_feedback_rating'), total_feedbacks=Count('id'))
+        agg  = staff_tix.aggregate(avg_rating=Avg('client_feedback_rating'), total_feedbacks=Count('id'))
         tier = staff.employeeprofile.get_it_tier_display() if hasattr(staff, 'employeeprofile') else '—'
         staff_stats.append({
-            'name':           staff.get_full_name() or staff.username,
-            'tier':           tier,
-            'assigned':       tickets.filter(assigned_to=staff).count(),
-            'resolved':       tickets.filter(assigned_to=staff, status__in=['RESOLVED', 'CLOSED']).count(),
-            'avg_rating':     round(agg['avg_rating'], 1) if agg['avg_rating'] else 0.0,
+            'name':            staff.get_full_name() or staff.username,
+            'tier':            tier,
+            'assigned':        tickets.filter(assigned_to=staff).count(),
+            'resolved':        tickets.filter(assigned_to=staff, status__in=['RESOLVED', 'CLOSED']).count(),
+            'avg_rating':      round(agg['avg_rating'], 1) if agg['avg_rating'] else 0.0,
             'total_feedbacks': agg['total_feedbacks'] or 0,
         })
     staff_stats_sorted = sorted(staff_stats, key=lambda x: x['avg_rating'], reverse=True)
 
-    staff_names    = [s['name']     for s in staff_stats_sorted]
-    staff_resolved = [s['resolved'] for s in staff_stats_sorted]
+    staff_names    = [s['name']       for s in staff_stats_sorted]
+    staff_resolved = [s['resolved']   for s in staff_stats_sorted]
     staff_ratings  = [s['avg_rating'] for s in staff_stats_sorted]
 
     context = {
-        'time_filter': time_filter,
-        'dept_filter': dept_filter,
-        'departments': [d[0] for d in DEPARTMENT_CHOICES],
-        'total_sent':      total_sent,
-        'total_approved':  total_approved,
-        'total_declined':  total_declined,
-        'total_assigned':  total_assigned,
-        'total_fixed':     total_fixed,
-        'total_escalated': total_escalated,
-        'staff_stats': staff_stats_sorted,
+        'time_filter':            time_filter,
+        'dept_filter':            dept_filter,
+        'departments':            [d[0] for d in DEPARTMENT_CHOICES],
+        'total_sent':             total_sent,
+        'total_approved':         total_approved,
+        'total_declined':         total_declined,
+        'total_assigned':         total_assigned,
+        'total_fixed':            total_fixed,
+        'total_escalated':        total_escalated,
+        'staff_stats':            staff_stats_sorted,
         'chart_depts_json':       json.dumps(chart_depts),
         'chart_dept_counts_json': json.dumps(chart_dept_counts),
         'approval_chart_data':    json.dumps([total_approved, total_declined, total_pending]),
@@ -349,7 +463,7 @@ def it_staff_dashboard_home(request):
     dept_display = dict(DEPARTMENT_CHOICES)
     most_dept = dept_display.get(most_dept_qs['department'], '—') if most_dept_qs else '—'
 
-    dept_counts = tickets.values('department').annotate(count=Count('id'))
+    dept_counts       = tickets.values('department').annotate(count=Count('id'))
     chart_depts       = [d['department'] for d in dept_counts]
     chart_dept_counts = [d['count']      for d in dept_counts]
 
@@ -372,22 +486,27 @@ def it_staff_dashboard_home(request):
         tickets.filter(priority='HIGH').count(),
         tickets.filter(priority='URGENT').count(),
     ]
-
     status_data = [total_active, total_resolved, total_open]
+
+    # Count escalated tickets for this staff member (all-time, not time-filtered)
+    total_escalated = Ticket.objects.filter(
+        assigned_to=request.user, is_escalated=True
+    ).count()
 
     all_my_tickets = Ticket.objects.filter(assigned_to=request.user)
     monthly_labels, monthly_counts = _monthly_trend(all_my_tickets)
 
     context = {
-        'time_filter':    time_filter,
-        'total_assigned': total_assigned,
-        'total_resolved': total_resolved,
-        'total_active':   total_active,
-        'most_dept':      most_dept,
-        'total_feedbacks': agg['count'] or 0,
-        'avg_rating':     round(agg['avg'], 1) if agg['avg'] else 0.0,
-        'rating_data':    rating_data,
-        'max_rating':     max_rating_count,
+        'time_filter':            time_filter,
+        'total_assigned':         total_assigned,
+        'total_resolved':         total_resolved,
+        'total_active':           total_active,
+        'total_escalated':        total_escalated,
+        'most_dept':              most_dept,
+        'total_feedbacks':        agg['count'] or 0,
+        'avg_rating':             round(agg['avg'], 1) if agg['avg'] else 0.0,
+        'rating_data':            rating_data,
+        'max_rating':             max_rating_count,
         'chart_depts_json':       json.dumps(chart_depts),
         'chart_dept_counts_json': json.dumps(chart_dept_counts),
         'priority_chart_data':    json.dumps(priority_data),
@@ -400,7 +519,7 @@ def it_staff_dashboard_home(request):
 
 
 # ──────────────────────────────────────────────────────────────
-# QUEUE PAGES (Tasks and Forms)
+# QUEUE PAGES
 # ──────────────────────────────────────────────────────────────
 
 @login_required
@@ -408,16 +527,44 @@ def clinic_portal(request):
     if request.method == 'POST' and 'submit_feedback' in request.POST:
         ticket_id = request.POST.get('ticket_id')
         ticket = get_object_or_404(Ticket, id=ticket_id, requester=request.user)
-        ticket.client_feedback_rating = request.POST.get('rating')
-        ticket.client_feedback_notes = request.POST.get('feedback_notes')
+        rating = request.POST.get('rating')
+        ticket.client_feedback_rating = rating
+        ticket.client_feedback_notes  = request.POST.get('feedback_notes')
         ticket.status = 'CLOSED'
         ticket.save()
+
+        # ── NOTIFICATION: IT Staff — feedback/rating received ──
+        if ticket.assigned_to:
+            push_notification(
+                recipient=ticket.assigned_to,
+                notif_type='feedback_received',
+                title='You Received a Rating',
+                message=(
+                    f'You received a {rating}★ rating on '
+                    f'"{ticket.title}" from {request.user.get_full_name() or request.user.username}.'
+                ),
+                ticket=ticket,
+            )
+
+        # ── NOTIFICATION: IT Head — rating info ──────────────
+        for it_head in _it_head_users():
+            push_notification(
+                recipient=it_head,
+                notif_type='rating_received',
+                title='IT Staff Received a Rating',
+                message=(
+                    f'{ticket.assigned_to.get_full_name() or ticket.assigned_to.username} '
+                    f'received {rating}★ on ticket "{ticket.title}".'
+                ),
+                ticket=ticket,
+            )
+
         messages.success(request, "Thank you for your feedback! The ticket is now closed.")
         return redirect('clinic_portal')
 
-    search_query = request.GET.get('q', '').strip()
+    search_query  = request.GET.get('q', '').strip()
     status_filter = request.GET.get('status_filter', '')
-    my_tickets = Ticket.objects.filter(requester=request.user).order_by('-created_at')
+    my_tickets    = Ticket.objects.filter(requester=request.user).order_by('-created_at')
 
     if search_query:
         my_tickets = my_tickets.filter(
@@ -427,6 +574,7 @@ def clinic_portal(request):
         )
     if status_filter:
         my_tickets = my_tickets.filter(status=status_filter)
+
     return render(request, 'tickets/clinic_portal.html', {'my_tickets': my_tickets})
 
 
@@ -436,12 +584,27 @@ def create_ticket(request):
         form = TicketForm(request.POST)
         if form.is_valid():
             ticket = form.save(commit=False)
-            ticket.requester = request.user
-            ticket.department = request.user.employeeprofile.department
-            ticket.priority = 'MEDIUM'
+            ticket.requester         = request.user
+            ticket.department        = request.user.employeeprofile.department
+            ticket.priority          = form.cleaned_data.get('priority', 'MEDIUM')
             ticket.needs_head_approval = True
-            ticket.approval_status = 'PENDING'
+            ticket.approval_status   = 'PENDING'
             ticket.save()
+
+            # ── NOTIFICATION: Dept Head — new ticket needs approval ──
+            dept_head = _dept_head_of(ticket.department)
+            if dept_head:
+                push_notification(
+                    recipient=dept_head,
+                    notif_type='needs_approval',
+                    title='Ticket Needs Your Approval',
+                    message=(
+                        f'{request.user.get_full_name() or request.user.username} submitted '
+                        f'"{ticket.title}" and it requires your approval.'
+                    ),
+                    ticket=ticket,
+                )
+
             messages.success(request, "Request submitted successfully!")
             return redirect('clinic_portal')
     else:
@@ -458,24 +621,66 @@ def head_dashboard(request):
     except Exception:
         return HttpResponseForbidden("Access Denied.")
 
-    view_mode = request.GET.get('view', 'active')
-    search_query = request.GET.get('q', '').strip()
+    view_mode     = request.GET.get('view', 'active')
+    search_query  = request.GET.get('q', '').strip()
     status_filter = request.GET.get('status_filter', '')
 
     if request.method == 'POST' and 'handle_approval' in request.POST:
         ticket_id = request.POST.get('ticket_id')
-        action = request.POST.get('action')
-        ticket = get_object_or_404(Ticket, id=ticket_id, department=profile.department)
+        action    = request.POST.get('action')
+        ticket    = get_object_or_404(Ticket, id=ticket_id, department=profile.department)
         ticket.approval_notes = request.POST.get('approval_notes', '').strip()
 
         if action == 'APPROVE':
             ticket.approval_status = 'APPROVED'
+            ticket.save()
             messages.success(request, f"Ticket '{ticket.title}' approved and sent to IT.")
+
+            # ── NOTIFICATION: Employee — ticket approved ──────────
+            push_notification(
+                recipient=ticket.requester,
+                notif_type='ticket_approved',
+                title='Your Ticket Was Approved',
+                message=(
+                    f'Your ticket "{ticket.title}" has been approved by '
+                    f'{request.user.get_full_name() or request.user.username} '
+                    f'and is now in the IT queue.'
+                ),
+                ticket=ticket,
+            )
+
+            # ── NOTIFICATION: IT Head — new ticket needs assigning ─
+            for it_head in _it_head_users():
+                push_notification(
+                    recipient=it_head,
+                    notif_type='needs_assigning',
+                    title='New Ticket Needs Assigning',
+                    message=(
+                        f'"{ticket.title}" from {ticket.get_department_display()} '
+                        f'has been approved and is waiting for an IT staff assignment.'
+                    ),
+                    ticket=ticket,
+                )
+
         elif action == 'REJECT':
             ticket.approval_status = 'REJECTED'
-            ticket.status = 'CLOSED'
+            ticket.status          = 'CLOSED'
+            ticket.save()
             messages.error(request, f"Ticket '{ticket.title}' rejected.")
-        ticket.save()
+
+            # ── NOTIFICATION: Employee — ticket rejected ──────────
+            push_notification(
+                recipient=ticket.requester,
+                notif_type='ticket_rejected',
+                title='Your Ticket Was Declined',
+                message=(
+                    f'Your ticket "{ticket.title}" was declined by '
+                    f'{request.user.get_full_name() or request.user.username}.'
+                    + (f' Note: {ticket.approval_notes}' if ticket.approval_notes else '')
+                ),
+                ticket=ticket,
+            )
+
         return redirect('head_dashboard')
 
     pending_approvals = Ticket.objects.filter(
@@ -503,7 +708,7 @@ def head_dashboard(request):
 
     ctx = {'view_mode': view_mode}
     if view_mode == 'history':
-        ctx['history_tickets'] = history_tickets
+        ctx['history_tickets']   = history_tickets
     else:
         ctx['pending_approvals'] = pending_approvals
     return render(request, 'tickets/head_dashboard.html', ctx)
@@ -519,6 +724,8 @@ def it_head_dashboard(request):
     priority_filter = request.GET.get('priority_filter', '')
 
     if request.method == 'POST':
+
+        # ── Create maintenance schedule ─────────────────────────
         if 'create_maintenance' in request.POST:
             title        = request.POST.get('title')
             description  = request.POST.get('description')
@@ -537,25 +744,26 @@ def it_head_dashboard(request):
             RecurringTask.objects.create(
                 title=title, description=description, recurrence_type=recurrence,
                 custom_date_start=custom_start, custom_date_end=custom_end,
-                assigned_to=assigned_tech, priority=priority, created_by=request.user
+                assigned_to=assigned_tech, priority=priority, created_by=request.user,
             )
             messages.success(request, f"Maintenance schedule '{title}' created successfully!")
             return redirect('/tickets/it-head/?view=maintenance')
 
-        # ── IT Head reviews and closes a resolved PM ticket ──
+        # ── PM Review ───────────────────────────────────────────
         elif 'review_pm' in request.POST:
             ticket_id  = request.POST.get('ticket_id')
             ticket     = get_object_or_404(Ticket, id=ticket_id, is_preventive_maintenance=True, status='RESOLVED')
             raw_rating = request.POST.get('pm_review_rating', '').strip()
-            ticket.pm_review_rating  = int(raw_rating) if raw_rating.isdigit() else None
-            ticket.pm_review_notes   = request.POST.get('pm_review_notes', '').strip()
-            ticket.pm_reviewed_by    = request.user
-            ticket.pm_reviewed_at    = timezone.now()
-            ticket.status            = 'CLOSED'
+            ticket.pm_review_rating = int(raw_rating) if raw_rating.isdigit() else None
+            ticket.pm_review_notes  = request.POST.get('pm_review_notes', '').strip()
+            ticket.pm_reviewed_by   = request.user
+            ticket.pm_reviewed_at   = timezone.now()
+            ticket.status           = 'CLOSED'
             ticket.save()
             messages.success(request, f"PM Ticket '{ticket.title}' reviewed and closed.")
             return redirect('/tickets/it-head/?view=pm_history')
 
+        # ── Dispatch ticket to IT staff ─────────────────────────
         elif 'ticket_id' in request.POST:
             ticket_id = request.POST.get('ticket_id')
             tech_id   = request.POST.get('tech_id')
@@ -571,8 +779,37 @@ def it_head_dashboard(request):
             ticket.save()
             tech_name = tech.get_full_name() or tech.username
             messages.success(request, f"Ticket #{ticket.ticket_number} dispatched to {tech_name}!")
+
+            # ── NOTIFICATION: IT Staff — ticket assigned ──────────
+            push_notification(
+                recipient=tech,
+                notif_type='ticket_assigned',
+                title='New Ticket Assigned to You',
+                message=(
+                    f'Ticket #{ticket.ticket_number} "{ticket.title}" '
+                    f'({ticket.get_priority_display()} priority) has been assigned to you.'
+                    + (f'\nNote: {ticket.dispatch_notes}' if ticket.dispatch_notes else '')
+                ),
+                ticket=ticket,
+            )
+
+            # ── NOTIFICATION: Dept Head — ticket dispatched ───────
+            dept_head = _dept_head_of(ticket.department)
+            if dept_head:
+                push_notification(
+                    recipient=dept_head,
+                    notif_type='ticket_dispatched',
+                    title='Ticket Assigned to IT Staff',
+                    message=(
+                        f'Ticket "{ticket.title}" from your department has been '
+                        f'assigned to {tech_name} and is now In Progress.'
+                    ),
+                    ticket=ticket,
+                )
+
             return redirect('it_head_dashboard')
 
+    # ── Querysets ───────────────────────────────────────────────
     unassigned_tickets = Ticket.objects.filter(
         status='OPEN', approval_status__in=['APPROVED', 'NOT_REQUIRED']
     ).order_by('-is_escalated', '-created_at')
@@ -593,14 +830,12 @@ def it_head_dashboard(request):
             Q(description__icontains=search_query)
         )
         unassigned_tickets = unassigned_tickets.filter(q_base)
-        history_tickets    = history_tickets.filter(
-            q_base | Q(assigned_to__username__icontains=search_query)
-        )
+        history_tickets    = history_tickets.filter(q_base | Q(assigned_to__username__icontains=search_query))
         pm_history_tickets = pm_history_tickets.filter(q_base)
 
     if status_filter:
         if view_mode == 'history':
-            history_tickets = history_tickets.filter(status=status_filter)
+            history_tickets    = history_tickets.filter(status=status_filter)
         elif view_mode == 'pm_history':
             pm_history_tickets = pm_history_tickets.filter(status=status_filter)
         else:
@@ -608,11 +843,10 @@ def it_head_dashboard(request):
 
     it_team = User.objects.filter(
         employeeprofile__department='IT',
-        employeeprofile__is_department_head=False
+        employeeprofile__is_department_head=False,
     ).select_related('employeeprofile')
 
-    active_history_list = pm_history_tickets if view_mode == 'pm_history' else history_tickets
-
+    active_history_list      = pm_history_tickets if view_mode == 'pm_history' else history_tickets
     pending_pm_reviews_count = Ticket.objects.filter(
         is_preventive_maintenance=True, status='RESOLVED'
     ).count()
@@ -655,15 +889,108 @@ def it_staff_dashboard(request):
             ticket.assigned_to         = None
             ticket.status              = 'OPEN'
             tier_label = profile.get_it_tier_display()
+            ticket.save()
             messages.warning(request, f"Ticket '{ticket.title}' escalated from {tier_label} back to IT Head.")
+
+            # ── NOTIFICATION: IT Head — ticket escalated/back in queue ─
+            for it_head in _it_head_users():
+                push_notification(
+                    recipient=it_head,
+                    notif_type='needs_assigning',
+                    title='Escalated Ticket Needs Reassigning',
+                    message=(
+                        f'Ticket "{ticket.title}" was escalated by '
+                        f'{request.user.get_full_name() or request.user.username} '
+                        f'({tier_label}) and needs to be reassigned.'
+                    ),
+                    ticket=ticket,
+                )
+
+            # ── NOTIFICATION: Tier 2 IT staff — escalated ticket ──
+            if profile.it_tier == 'TIER_1':
+                tier2_staff = User.objects.filter(
+                    employeeprofile__department='IT',
+                    employeeprofile__is_department_head=False,
+                    employeeprofile__it_tier='TIER_2',
+                )
+                for staff in tier2_staff:
+                    push_notification(
+                        recipient=staff,
+                        notif_type='ticket_escalated',
+                        title='Ticket Escalated',
+                        message=(
+                            f'Ticket "{ticket.title}" was escalated from Tier 1 '
+                            f'by {request.user.get_full_name() or request.user.username} '
+                            f'and may be assigned to you.'
+                        ),
+                        ticket=ticket,
+                    )
+
         elif action == 'RESOLVE':
-            ticket.status            = 'RESOLVED'
+            ticket.status           = 'RESOLVED'
             ticket.resolution_notes = request.POST.get('resolution_notes', 'Resolved by IT.')
+            ticket.save()
             messages.success(request, f"Ticket '{ticket.title}' marked as Resolved.")
 
-        ticket.save()
+            # ── NOTIFICATION: Employee — ticket resolved ───────────
+            push_notification(
+                recipient=ticket.requester,
+                notif_type='ticket_resolved',
+                title='Your Ticket Has Been Resolved',
+                message=(
+                    f'Your ticket "{ticket.title}" has been resolved by '
+                    f'{request.user.get_full_name() or request.user.username}. '
+                    f'Please review and close it.'
+                ),
+                ticket=ticket,
+            )
+
+            # ── NOTIFICATION: Dept Head — ticket resolved ─────────
+            dept_head = _dept_head_of(ticket.department)
+            if dept_head and dept_head != ticket.requester:
+                push_notification(
+                    recipient=dept_head,
+                    notif_type='ticket_resolved',
+                    title='Department Ticket Resolved',
+                    message=(
+                        f'Ticket "{ticket.title}" submitted by '
+                        f'{ticket.requester.get_full_name() or ticket.requester.username} '
+                        f'has been resolved.'
+                    ),
+                    ticket=ticket,
+                )
+
+            # ── NOTIFICATION: IT Head — IT staff resolved ticket ──
+            for it_head in _it_head_users():
+                push_notification(
+                    recipient=it_head,
+                    notif_type='it_resolved',
+                    title='IT Staff Resolved a Ticket',
+                    message=(
+                        f'{request.user.get_full_name() or request.user.username} resolved '
+                        f'"{ticket.title}" — awaiting client feedback.'
+                    ),
+                    ticket=ticket,
+                )
+
+            # ── NOTIFICATION: IT Head — PM task finished ──────────
+            if ticket.is_preventive_maintenance:
+                for it_head in _it_head_users():
+                    push_notification(
+                        recipient=it_head,
+                        notif_type='pm_finished',
+                        title='PM Task Completed',
+                        message=(
+                            f'{request.user.get_full_name() or request.user.username} '
+                            f'completed preventive maintenance task "{ticket.title}". '
+                            f'Please review it in the PM History tab.'
+                        ),
+                        ticket=ticket,
+                    )
+
         return redirect('it_staff_dashboard')
 
+    # ── Build context ────────────────────────────────────────────
     my_stats = Ticket.objects.filter(
         assigned_to=request.user, status='CLOSED', client_feedback_rating__isnull=False
     ).aggregate(total_closed=Count('id'), average_rating=Avg('client_feedback_rating'))
@@ -724,17 +1051,18 @@ def it_staff_dashboard(request):
         my_tasks = Ticket.objects.filter(assigned_to=request.user, status='IN_PROGRESS').order_by('-created_at')
         if priority_filter:
             my_tasks = my_tasks.filter(priority=priority_filter)
-        
-        # ── Hides PMs by default if no filter is selected ──
         if type_filter == 'pm':
             my_tasks = my_tasks.filter(is_preventive_maintenance=True)
         elif type_filter == 'standard':
             my_tasks = my_tasks.filter(is_preventive_maintenance=False)
         else:
             my_tasks = my_tasks.filter(is_preventive_maintenance=False)
-            
         return render(request, 'tickets/it_staff_dashboard.html', {**base_ctx, 'my_tasks': my_tasks})
 
+
+# ──────────────────────────────────────────────────────────────
+# SSE — REAL-TIME PAGE REFRESH
+# ──────────────────────────────────────────────────────────────
 
 def ticket_updates_sse(request):
     def event_stream():
@@ -754,6 +1082,67 @@ def ticket_updates_sse(request):
             return
 
     response = StreamingHttpResponse(event_stream(), content_type='text/event-stream')
-    response['Cache-Control'] = 'no-cache'
+    response['Cache-Control']     = 'no-cache'
     response['X-Accel-Buffering'] = 'no'
     return response
+
+@login_required
+def read_and_redirect_notification(request, notif_id):
+    """Marks a single notification as read and routes the user to the correct page."""
+    notif = get_object_or_404(Notification, id=notif_id, recipient=request.user)
+    
+    # 1. Mark as Read
+    if not notif.is_read:
+        notif.is_read = True
+        notif.save()
+
+    # 2. Security Check (Get User Profile)
+    try:
+        profile = request.user.employeeprofile
+    except EmployeeProfile.DoesNotExist:
+        return redirect('dashboard_redirect')
+
+    ntype = notif.notif_type
+    
+    # 3. Determine the specific routing tab based on the Notification Type
+    
+    # ── EMPLOYEES ──
+    if ntype in ['ticket_approved', 'ticket_rejected', 'ticket_resolved']:
+        url = reverse('clinic_portal')
+
+    # ── DEPARTMENT HEADS ──
+    elif ntype in ['needs_approval', 'ticket_dispatched']:
+        if not profile.is_department_head: 
+            return redirect('dashboard_redirect')
+            
+        url = reverse('head_dashboard')
+        if ntype == 'ticket_dispatched': 
+            url += '?view=history'
+
+    # ── IT HEAD ──
+    elif ntype in ['needs_assigning', 'pm_finished', 'it_resolved', 'rating_received']:
+        if profile.department != 'IT' or not profile.is_department_head: 
+            return redirect('dashboard_redirect')
+            
+        url = reverse('it_head_dashboard')
+        if ntype == 'pm_finished': 
+            url += '?view=maintenance_review'
+        elif ntype in ['it_resolved', 'rating_received']: 
+            url += '?view=history'
+
+    # ── IT STAFF ──
+    elif ntype in ['ticket_assigned', 'ticket_escalated', 'pm_announced', 'feedback_received']:
+        if profile.department != 'IT' or profile.is_department_head: 
+            return redirect('dashboard_redirect')
+            
+        url = reverse('it_staff_dashboard')
+        if ntype == 'pm_announced': 
+            url += '?view=maintenance'
+        elif ntype == 'feedback_received': 
+            url += '?view=history'
+
+    # ── FALLBACK ──
+    else:
+        url = reverse('dashboard_redirect')
+
+    return redirect(url)

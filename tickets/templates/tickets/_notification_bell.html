@@ -1,0 +1,374 @@
+{% load static %}
+
+<style>
+/* ── Notification Bell ────────────────────────────────────────── */
+#nb-btn {
+    position: fixed;
+    top: 16px;
+    right: 24px;
+    z-index: 1200;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #0b1d3a;
+    border: 1.5px solid rgba(0,196,184,.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(11,29,58,.25);
+    transition: background .2s, transform .2s;
+}
+#nb-btn:hover { background: #122c5c; transform: scale(1.08); }
+#nb-btn i { color: #00c4b8; font-size: 17px; }
+
+#nb-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: #dc2626;
+    color: #fff;
+    border-radius: 9px;
+    font-size: 10px;
+    font-weight: 800;
+    font-family: 'Sora', sans-serif;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+    line-height: 1;
+}
+#nb-badge.show { display: flex; }
+
+/* ── Dropdown panel ───────────────────────────────────────────── */
+#nb-panel {
+    position: fixed;
+    top: 68px;
+    right: 18px;
+    z-index: 1199;
+    width: 360px;
+    max-height: 520px;
+    background: #fff;
+    border: 1px solid #d8e4f0;
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(11,29,58,.16);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    animation: nbSlideIn .22s ease;
+}
+#nb-panel.open { display: flex; }
+
+@keyframes nbSlideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.nb-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px 12px;
+    border-bottom: 1px solid #e8f0fb;
+    flex-shrink: 0;
+}
+.nb-header-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #0b1d3a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.nb-header-title i { color: #00c4b8; }
+.nb-mark-read {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #00c4b8;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background .15s;
+}
+.nb-mark-read:hover { background: #e0faf8; }
+
+/* ── Notification list ────────────────────────────────────────── */
+#nb-list {
+    overflow-y: auto;
+    flex: 1;
+    padding: 6px 0;
+}
+#nb-list::-webkit-scrollbar { width: 4px; }
+#nb-list::-webkit-scrollbar-thumb { background: #d8e4f0; border-radius: 4px; }
+
+.nb-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px 18px;
+    transition: background .15s;
+    border-left: 3px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+.nb-item:hover { background: #f6f9fd; }
+.nb-item.unread {
+    background: #f0fffe;
+    border-left-color: #00c4b8;
+}
+.nb-item.unread:hover { background: #e5f9f8; }
+
+.nb-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+/* Icon colour map by type */
+.nb-icon.ticket_approved   { background: #ecfdf5; color: #059669; }
+.nb-icon.ticket_rejected   { background: #fef2f2; color: #dc2626; }
+.nb-icon.ticket_resolved   { background: #eff6ff; color: #2563eb; }
+.nb-icon.needs_approval    { background: #fffbeb; color: #d97706; }
+.nb-icon.ticket_dispatched { background: #eff6ff; color: #2563eb; }
+.nb-icon.needs_assigning   { background: #fffbeb; color: #d97706; }
+.nb-icon.pm_finished       { background: #e0faf8; color: #00c4b8; }
+.nb-icon.it_resolved       { background: #ecfdf5; color: #059669; }
+.nb-icon.rating_received   { background: #fffbeb; color: #d97706; }
+.nb-icon.ticket_assigned   { background: #e0e7ff; color: #4f46e5; }
+.nb-icon.pm_announced      { background: #e0faf8; color: #00c4b8; }
+.nb-icon.feedback_received { background: #fffbeb; color: #d97706; }
+.nb-icon.ticket_escalated  { background: #fef2f2; color: #dc2626; }
+
+.nb-body { flex: 1; min-width: 0; }
+.nb-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #0b1d3a;
+    line-height: 1.35;
+    margin-bottom: 3px;
+}
+.nb-msg {
+    font-size: 12px;
+    color: #5e6e8a;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.nb-time {
+    font-size: 10.5px;
+    color: #8fa0b8;
+    margin-top: 4px;
+    font-weight: 500;
+}
+.nb-ticket-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    color: #00c4b8;
+    background: rgba(0,196,184,.1);
+    border-radius: 4px;
+    padding: 1px 5px;
+    margin-right: 4px;
+}
+
+/* ── Empty state ──────────────────────────────────────────────── */
+.nb-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #8fa0b8;
+}
+.nb-empty i { font-size: 28px; margin-bottom: 10px; display: block; color: #d8e4f0; }
+.nb-empty p { font-size: 13px; }
+
+/* ── Footer ───────────────────────────────────────────────────── */
+.nb-footer {
+    padding: 10px 18px;
+    border-top: 1px solid #e8f0fb;
+    font-size: 11.5px;
+    color: #8fa0b8;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* Animated bell shake */
+@keyframes bellShake {
+    0%,100% { transform: rotate(0); }
+    15%      { transform: rotate(15deg); }
+    30%      { transform: rotate(-12deg); }
+    45%      { transform: rotate(10deg); }
+    60%      { transform: rotate(-8deg); }
+    75%      { transform: rotate(5deg); }
+}
+.bell-shake { animation: bellShake .6s ease; }
+</style>
+
+<div id="nb-btn" title="Notifications" onclick="nbToggle()">
+    <i class="fa-solid fa-bell" id="nb-bell-icon"></i>
+    <span id="nb-badge"></span>
+</div>
+
+<div id="nb-panel">
+    <div class="nb-header">
+        <div class="nb-header-title">
+            <i class="fa-solid fa-bell"></i> Notifications
+            <span id="nb-unread-label" style="font-size:11px; font-weight:600; background:#00c4b8; color:#fff; padding:2px 8px; border-radius:10px; display:none;"></span>
+        </div>
+        <button class="nb-mark-read" onclick="nbMarkAllRead()" title="Mark all as read">
+            <i class="fa-solid fa-check-double"></i> Mark all read
+        </button>
+    </div>
+    <div id="nb-list">
+        <div class="nb-empty"><i class="fa-regular fa-bell-slash"></i><p>No notifications yet</p></div>
+    </div>
+    <div class="nb-footer">Showing last 20 notifications</div>
+</div>
+
+<script>
+(function () {
+    /* ── Redirect Base URL ────────────────────────────────────── */
+    // Generates a template URL from Django, replacing the ID later in JS
+    const CLICK_BASE_URL = "{% url 'notification_click' 0 %}";
+
+    /* ── Icon map by notification type ────────────────────────── */
+    const ICONS = {
+        ticket_approved:   'fa-circle-check',
+        ticket_rejected:   'fa-circle-xmark',
+        ticket_resolved:   'fa-screwdriver-wrench',
+        needs_approval:    'fa-triangle-exclamation',
+        ticket_dispatched: 'fa-paper-plane',
+        needs_assigning:   'fa-inbox',
+        pm_finished:       'fa-calendar-check',
+        it_resolved:       'fa-circle-check',
+        rating_received:   'fa-star',
+        ticket_assigned:   'fa-user-gear',
+        pm_announced:      'fa-calendar-plus',
+        feedback_received: 'fa-comment-dots',
+        ticket_escalated:  'fa-arrow-up',
+    };
+
+    let panelOpen = false;
+    let lastUnread = 0;
+
+    /* ── Toggle open/close ─────────────────────────────────────── */
+    window.nbToggle = function () {
+        panelOpen = !panelOpen;
+        document.getElementById('nb-panel').classList.toggle('open', panelOpen);
+        if (panelOpen) nbFetch();
+    };
+
+    /* ── Close when clicking outside ──────────────────────────── */
+    document.addEventListener('click', function (e) {
+        const btn   = document.getElementById('nb-btn');
+        const panel = document.getElementById('nb-panel');
+        if (!btn.contains(e.target) && !panel.contains(e.target)) {
+            panelOpen = false;
+            panel.classList.remove('open');
+        }
+    });
+
+    /* ── Fetch notifications from API ──────────────────────────── */
+    function nbFetch() {
+        fetch("{% url 'notifications_api' %}", { credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(data => {
+                nbRender(data.notifications || []);
+                nbSetBadge(data.unread_count || 0);
+            })
+            .catch(() => {});
+    }
+
+    /* ── Render list ───────────────────────────────────────────── */
+    function nbRender(notifs) {
+        const list = document.getElementById('nb-list');
+        if (!notifs.length) {
+            list.innerHTML = '<div class="nb-empty"><i class="fa-regular fa-bell-slash"></i><p>No notifications yet</p></div>';
+            return;
+        }
+        list.innerHTML = notifs.map(n => {
+            const icon    = ICONS[n.type] || 'fa-bell';
+            const unread  = !n.is_read ? 'unread' : '';
+            const tag     = n.ticket_num ? `<span class="nb-ticket-tag">#${n.ticket_num}</span>` : '';
+            const routeUrl = CLICK_BASE_URL.replace('0', n.id);
+            
+            // Replaced <div> with <a> to make it natively clickable
+            return `
+            <a href="${routeUrl}" class="nb-item ${unread}">
+                <div class="nb-icon ${n.type}">
+                    <i class="fa-solid ${icon}"></i>
+                </div>
+                <div class="nb-body">
+                    <div class="nb-title">${tag}${escHtml(n.title)}</div>
+                    <div class="nb-msg">${escHtml(n.message)}</div>
+                    <div class="nb-time">${n.time_ago}</div>
+                </div>
+            </a>`;
+        }).join('');
+    }
+
+    /* ── Badge ─────────────────────────────────────────────────── */
+    function nbSetBadge(count) {
+        const badge = document.getElementById('nb-badge');
+        const label = document.getElementById('nb-unread-label');
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.classList.add('show');
+            label.textContent = count + ' new';
+            label.style.display = 'inline-block';
+            // Shake the bell if new notifications arrived since last check
+            if (count > lastUnread) {
+                const bellIcon = document.getElementById('nb-bell-icon');
+                bellIcon.classList.remove('bell-shake');
+                void bellIcon.offsetWidth;          // force reflow
+                bellIcon.classList.add('bell-shake');
+            }
+        } else {
+            badge.classList.remove('show');
+            label.style.display = 'none';
+        }
+        lastUnread = count;
+    }
+
+    /* ── Mark all read ─────────────────────────────────────────── */
+    window.nbMarkAllRead = function () {
+        fetch("{% url 'notifications_api' %}", {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'X-CSRFToken': getCsrf() },
+        }).then(() => {
+            nbFetch();
+        });
+    };
+
+    /* ── Helpers ───────────────────────────────────────────────── */
+    function getCsrf() {
+        const c = document.cookie.split(';').find(x => x.trim().startsWith('csrftoken='));
+        return c ? c.split('=')[1].trim() : '';
+    }
+    function escHtml(s) {
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    /* ── Poll every 20 seconds ─────────────────────────────────── */
+    nbFetch();
+    setInterval(nbFetch, 20000);
+})();
+</script>

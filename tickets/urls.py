@@ -24,4 +24,8 @@ urlpatterns = [
     path('dashboard/head/home/', views.head_dashboard_home, name='head_dashboard_home'),
     path('dashboard/it-head/home/', views.it_head_dashboard_home, name='it_head_dashboard_home'),
     path('dashboard/it-staff/home/', views.it_staff_dashboard_home, name='it_staff_dashboard_home'),
+
+     # ── Notifications API ──────────────────────────────────────
+    path('notifications/', views.notifications_api, name='notifications_api'),
+    path('notifications/<int:notif_id>/click/', views.read_and_redirect_notification, name='notification_click'),
 ]
