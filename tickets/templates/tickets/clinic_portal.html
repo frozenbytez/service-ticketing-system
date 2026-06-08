@@ -11,6 +11,160 @@
     <link rel="stylesheet" href="{% static 'tickets/css/clinic_portal.css' %}">
     <link rel="stylesheet" href="{% static 'tickets/css/sidebar.css' %}">
     <link rel="stylesheet" href="{% static 'tickets/css/dashboard.css' %}">
+    <style>
+        /* ── Needs-Feedback Banner ───────────────────────────── */
+        .feedback-alert-banner {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 14px; flex-wrap: wrap;
+            background: linear-gradient(135deg, #fff7ed, #fffbeb);
+            border: 1.5px solid #fcd34d;
+            border-left: 5px solid #f59e0b;
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            animation: fadeSlideUp 0.4s ease both;
+            box-shadow: 0 3px 12px rgba(245,158,11,0.15);
+        }
+        .feedback-alert-banner .alert-left {
+            display: flex; align-items: center; gap: 12px;
+        }
+        .feedback-alert-banner .alert-icon {
+            width: 40px; height: 40px; background: #fef3c7;
+            border: 1px solid #fcd34d; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .feedback-alert-banner .alert-icon i { font-size: 17px; color: #d97706; }
+        .feedback-alert-banner .alert-text strong {
+            display: block; font-size: 14px; font-weight: 700; color: #92400e; margin-bottom: 2px;
+        }
+        .feedback-alert-banner .alert-text span {
+            font-size: 12.5px; color: #b45309;
+        }
+        .feedback-alert-count {
+            background: #d97706; color: #fff;
+            font-size: 11px; font-weight: 800;
+            padding: 3px 10px; border-radius: 20px; letter-spacing: 0.04em;
+        }
+
+        /* ── Needs-Feedback inline pulse badge ──────────────── */
+        .badge-needs-feedback {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 5px 13px; border-radius: 20px; font-size: 11.5px;
+            font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+            background: #fff7ed; color: #d97706;
+            border: 1.5px solid #fcd34d;
+            animation: feedbackPulse 2s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+        @keyframes feedbackPulse {
+            0%, 100% { box-shadow: 0 0 6px rgba(245,158,11,0.2); }
+            50%       { box-shadow: 0 0 18px rgba(245,158,11,0.55); }
+        }
+
+        /* ── Closure Reason Strip ────────────────────────────── */
+        .closure-reason {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 14px; border-radius: var(--radius-sm);
+            font-size: 13px; font-weight: 600; margin-top: 14px;
+        }
+        .closure-reason i { font-size: 13px; flex-shrink: 0; }
+        .closure-reason.declined {
+            background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c;
+        }
+        .closure-reason.resolved-rated {
+            background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46;
+        }
+        .closure-reason.closed-system {
+            background: #f8fafc; border: 1px solid var(--border); color: var(--slate);
+        }
+        .closure-reason .reason-note {
+            font-size: 12px; font-weight: 400; color: inherit; opacity: 0.8; margin-left: 4px;
+        }
+
+        /* ── Approval-status inline indicator ───────────────── */
+        .approval-indicator {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 4px 11px; border-radius: 20px; font-size: 11px;
+            font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+            flex-shrink: 0;
+        }
+        .approval-pending  { background: #fffbeb; color: #d97706; border: 1px solid #fcd34d; }
+        .approval-approved { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+        .approval-rejected { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
+        /* ── Reopen styles (keep from original) ─────────────── */
+        .btn-reopen-toggle {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 8px 18px; background: #fff7ed; color: #b45309;
+            border: 1.5px solid #fcd34d; border-radius: var(--radius-sm);
+            font-family: 'DM Sans', sans-serif; font-size: 13px;
+            font-weight: 700; cursor: pointer; transition: var(--transition);
+        }
+        .btn-reopen-toggle:hover {
+            background: #fef3c7; border-color: #f59e0b; color: #92400e;
+            transform: translateY(-1px); box-shadow: 0 4px 12px rgba(245,158,11,0.2);
+        }
+        .btn-reopen-toggle.active { background: #fef3c7; border-color: #f59e0b; }
+        .reopen-form-panel {
+            margin-top: 12px; padding: 16px 18px;
+            background: #fff7ed; border: 1.5px solid #fcd34d;
+            border-radius: var(--radius-sm); animation: fadeSlideUp 0.22s ease both;
+        }
+        .reopen-label {
+            display: block; font-size: 11.5px; font-weight: 700; color: #92400e;
+            letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 8px;
+        }
+        .reopen-label span {
+            font-weight: 400; color: #b45309; text-transform: none;
+            letter-spacing: 0; font-size: 12px;
+        }
+        .reopen-input-row { display: flex; gap: 10px; align-items: flex-start; }
+        .reopen-textarea {
+            flex: 1; padding: 10px 13px; border: 1.5px solid #fcd34d;
+            border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif;
+            font-size: 13.5px; color: var(--text); background: #fffdf0;
+            resize: vertical; outline: none; transition: var(--transition); line-height: 1.55;
+        }
+        .reopen-textarea:focus {
+            border-color: #f59e0b; background: var(--white);
+            box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+        }
+        .reopen-textarea::placeholder { color: #b45309; opacity: 0.55; font-style: italic; }
+        .reopen-actions { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+        .btn-reopen-submit {
+            display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px;
+            background: #b45309; color: var(--white); border: none;
+            border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif;
+            font-size: 13px; font-weight: 700; cursor: pointer; transition: var(--transition);
+            white-space: nowrap;
+        }
+        .btn-reopen-submit:hover {
+            background: #92400e; transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(180,83,9,0.35);
+        }
+        .btn-reopen-cancel {
+            display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px;
+            background: transparent; color: #b45309; border: 1.5px solid #fcd34d;
+            border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif;
+            font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition);
+            white-space: nowrap;
+        }
+        .btn-reopen-cancel:hover { background: #fff7ed; border-color: #f59e0b; }
+        @media (max-width: 640px) {
+            .reopen-input-row { flex-direction: column; }
+            .reopen-actions { flex-direction: row; }
+        }
+
+        /* ── RESOLVED ticket card highlight ─────────────────── */
+        .ticket-card[data-needs-feedback="true"] {
+            border-color: #fcd34d !important;
+            background: linear-gradient(to right, #fffdf5, var(--white) 60px);
+        }
+        .ticket-card[data-needs-feedback="true"]::before {
+            background: #f59e0b !important;
+            opacity: 1 !important;
+        }
+    </style>
 </head>
 <body>
 
@@ -59,9 +213,24 @@
             <i class="fa-solid fa-layer-group"></i>
             My Support Tickets
         </h1>
-        <span class="ticket-count">Showing all active requests</span>
+        <span class="ticket-count">{{ my_tickets|length }} ticket{{ my_tickets|length|pluralize }} found</span>
     </div>
 
+    <!-- ── Needs-Feedback Alert Banner ─────────────────────── -->
+    {% if needs_feedback_count %}
+    <div class="feedback-alert-banner">
+        <div class="alert-left">
+            <div class="alert-icon"><i class="fa-solid fa-star"></i></div>
+            <div class="alert-text">
+                <strong>Your feedback is needed!</strong>
+                <span>IT has resolved {{ needs_feedback_count }} ticket{{ needs_feedback_count|pluralize }} — please rate the fix to close them.</span>
+            </div>
+        </div>
+        <span class="feedback-alert-count">{{ needs_feedback_count }} Pending</span>
+    </div>
+    {% endif %}
+
+    <!-- ── Filter Bar ───────────────────────────────────────── -->
     <div class="filter-bar">
         <form method="GET" class="search-form" id="filterForm">
             <div class="search-input-wrapper">
@@ -71,25 +240,39 @@
                        value="{{ request.GET.q }}"
                        autocomplete="off">
             </div>
+            <!-- Ticket Status -->
             <select name="status_filter" id="statusFilter">
                 <option value="">All Statuses</option>
                 <option value="OPEN"        {% if request.GET.status_filter == 'OPEN' %}selected{% endif %}>Open</option>
                 <option value="IN_PROGRESS" {% if request.GET.status_filter == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
-                <option value="RESOLVED"    {% if request.GET.status_filter == 'RESOLVED' %}selected{% endif %}>Resolved</option>
+                <option value="RESOLVED"    {% if request.GET.status_filter == 'RESOLVED' %}selected{% endif %}> Needs Feedback</option>
                 <option value="CLOSED"      {% if request.GET.status_filter == 'CLOSED' %}selected{% endif %}>Closed</option>
+            </select>
+            <!-- NEW: Approval Status Filter -->
+            <select name="approval_filter" id="approvalFilter">
+                <option value="">All Approvals</option>
+                <option value="PENDING"      {% if request.GET.approval_filter == 'PENDING' %}selected{% endif %}> Awaiting Approval</option>
+                <option value="APPROVED"     {% if request.GET.approval_filter == 'APPROVED' %}selected{% endif %}> Approved</option>
+                <option value="REJECTED"     {% if request.GET.approval_filter == 'REJECTED' %}selected{% endif %}> Declined</option>
+                <option value="NOT_REQUIRED" {% if request.GET.approval_filter == 'NOT_REQUIRED' %}selected{% endif %}> No Approval Needed</option>
             </select>
         </form>
     </div>
 
     <div class="ticket-list">
         {% for ticket in my_tickets %}
-        <div class="ticket-card" data-priority="{{ ticket.priority }}">
+        {# RESOLVED tickets (needs feedback) are sorted first by the view #}
+        <div class="ticket-card"
+             data-priority="{{ ticket.priority }}"
+             {% if ticket.status == 'RESOLVED' %}data-needs-feedback="true"{% endif %}>
+
             <div class="ticket-header">
                 <span class="ticket-title">
                     {% if ticket.ticket_number %}<span class="text-teal">#{{ ticket.ticket_number }}</span>{% endif %}
                     {{ ticket.title }}
                 </span>
                 <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    <!-- Priority badge -->
                     {% if ticket.priority == 'LOW' %}
                         <span class="priority-badge priority-low"><i class="fa-solid fa-circle-dot"></i> Low</span>
                     {% elif ticket.priority == 'MEDIUM' %}
@@ -99,19 +282,51 @@
                     {% elif ticket.priority == 'URGENT' %}
                         <span class="priority-badge priority-urgent"><i class="fa-solid fa-bolt"></i> URGENT</span>
                     {% endif %}
-                    <span class="badge badge-default">{{ ticket.get_status_display }}</span>
+
+                    <!-- Status badge — RESOLVED gets special treatment -->
+                    {% if ticket.status == 'RESOLVED' %}
+                        <span class="badge-needs-feedback"><i class="fa-solid fa-star"></i> Rate &amp; Close</span>
+                    {% else %}
+                        <span class="badge badge-default">{{ ticket.get_status_display }}</span>
+                    {% endif %}
+
+                    <!-- Approval indicator (only show when relevant) -->
+                    {% if ticket.status not in 'CLOSED,RESOLVED' or ticket.approval_status == 'PENDING' %}
+                        {% if ticket.approval_status == 'PENDING' %}
+                            <span class="approval-indicator approval-pending"><i class="fa-solid fa-clock"></i> Awaiting Approval</span>
+                        {% elif ticket.approval_status == 'APPROVED' and ticket.status == 'OPEN' %}
+                            <span class="approval-indicator approval-approved"><i class="fa-solid fa-check"></i> Approved</span>
+                        {% endif %}
+                    {% endif %}
                 </div>
             </div>
 
             <div class="ticket-meta">
                 <span><i class="fa-solid fa-building"></i> {{ ticket.client_name }}</span>
-                <span><i class="fa-regular fa-calendar"></i> {{ ticket.created_at|date:"M d, Y" }}</span>
+            
+                <!-- Submitted timestamp (always shown) -->
+                <span>
+                    <i class="fa-regular fa-calendar-plus"></i>
+                    Submitted: {{ ticket.created_at|date:"M d, Y · g:i A" }}
+                </span>
+            
+                <!-- Resolved timestamp (shown when IT has marked it resolved/closed) -->
+                {% if ticket.resolved_at %}
+                <span style="color:#059669;">
+                    <i class="fa-solid fa-circle-check"></i>
+                    Resolved: {{ ticket.resolved_at|date:"M d, Y · g:i A" }}
+                </span>
+                {% endif %}
+            
                 {% if ticket.assigned_to %}
-                <span><i class="fa-solid fa-user-gear"></i> {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}</span>
+                <span>
+                    <i class="fa-solid fa-user-gear"></i>
+                    {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}
+                </span>
                 {% endif %}
             </div>
 
-            <!-- Description: always show if IN_PROGRESS, toggleable otherwise -->
+            <!-- Description toggle -->
             {% if ticket.status == 'IN_PROGRESS' %}
             <div class="desc-body always-visible" style="margin-top: 12px;">
                 <strong style="font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--navy-mid); display:block; margin-bottom:4px;">
@@ -131,6 +346,9 @@
             </div>
             {% endif %}
 
+            <!-- ─────────────────────────────────────────────────────── -->
+            <!-- RESOLVED — show feedback form                           -->
+            <!-- ─────────────────────────────────────────────────────── -->
             {% if ticket.status == 'RESOLVED' %}
             <hr class="divider">
             <div class="feedback-box">
@@ -138,6 +356,14 @@
                     <i class="fa-solid fa-circle-info"></i>
                     IT has resolved this issue — please confirm and close the ticket.
                 </p>
+                {% if ticket.resolution_notes %}
+                <div style="background:#f0fffe; border:1px solid rgba(0,196,184,0.2); border-radius:var(--radius-sm); padding:10px 14px; font-size:13px; color:var(--slate); margin-bottom:14px;">
+                    <strong style="color:var(--navy-mid); font-size:11.5px; text-transform:uppercase; letter-spacing:.05em;">
+                        <i class="fa-solid fa-wrench" style="color:var(--teal);"></i> IT Resolution Notes
+                    </strong><br>
+                    {{ ticket.resolution_notes }}
+                </div>
+                {% endif %}
                 <form method="POST" class="feedback-form">
                     {% csrf_token %}
                     <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
@@ -157,9 +383,29 @@
                 </form>
             </div>
 
-            {% elif ticket.status == 'CLOSED' and ticket.client_feedback_rating %}
+            <!-- ─────────────────────────────────────────────────────── -->
+            <!-- CLOSED — show closure reason                            -->
+            <!-- ─────────────────────────────────────────────────────── -->
+            {% elif ticket.status == 'CLOSED' %}
             <hr class="divider">
-            <div style="background:#f8fafc; padding:14px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+
+            {% if ticket.approval_status == 'REJECTED' %}
+            <!-- Reason: Declined by Department Head -->
+            <div class="closure-reason declined">
+                <i class="fa-solid fa-ban"></i>
+                <span>Closed — Declined by Department Head</span>
+                {% if ticket.approval_notes %}
+                <span class="reason-note">· "{{ ticket.approval_notes }}"</span>
+                {% endif %}
+            </div>
+
+            {% elif ticket.client_feedback_rating %}
+            <!-- Reason: Properly resolved, employee rated it, now closed -->
+            <div class="closure-reason resolved-rated">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Closed — Resolved &amp; Rated</span>
+            </div>
+            <div style="background:#f8fafc; padding:14px; border-radius:var(--radius-sm); border:1px solid var(--border); margin-top:10px;">
                 <h5 style="margin-bottom:8px; font-size:13px; color:var(--navy);">
                     <i class="fa-solid fa-star" style="color:#d97706;"></i> My Feedback
                 </h5>
@@ -172,18 +418,98 @@
                 </p>
                 {% endif %}
             </div>
+
+            <!-- Reopen option -->
+            <div style="margin-top:14px;">
+                <button type="button" class="btn-reopen-toggle"
+                        onclick="toggleReopen(this, 'reopen-form-{{ ticket.id }}')"
+                        id="reopen-btn-{{ ticket.id }}">
+                    <i class="fa-solid fa-rotate-left"></i> Issue Not Fixed? Reopen Ticket
+                </button>
+                <div id="reopen-form-{{ ticket.id }}" class="reopen-form-panel" style="display:none;">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="reopen_ticket" value="1">
+                        <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+                        <label for="reopen-reason-{{ ticket.id }}" class="reopen-label">
+                            <i class="fa-solid fa-pen-to-square"></i> Reason for Reopening
+                            <span>— describe what's still not working</span>
+                        </label>
+                        <div class="reopen-input-row">
+                            <textarea id="reopen-reason-{{ ticket.id }}" name="reopen_reason"
+                                      class="reopen-textarea" rows="2"
+                                      placeholder="e.g. The printer still jams after the fix…"
+                                      required></textarea>
+                            <div class="reopen-actions">
+                                <button type="submit" class="btn-reopen-submit">
+                                    <i class="fa-solid fa-rotate-left"></i> Confirm Reopen
+                                </button>
+                                <button type="button" class="btn-reopen-cancel"
+                                        onclick="toggleReopen(document.getElementById('reopen-btn-{{ ticket.id }}'), 'reopen-form-{{ ticket.id }}')">
+                                    <i class="fa-solid fa-xmark"></i> Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% else %}
+            <!-- Reason: Closed without client feedback (PM or system-closed) -->
+            <div class="closure-reason closed-system">
+                <i class="fa-solid fa-lock"></i>
+                <span>Closed — No further action required</span>
+            </div>
+
+            <!-- Still allow reopen -->
+            <div style="margin-top:14px;">
+                <button type="button" class="btn-reopen-toggle"
+                        onclick="toggleReopen(this, 'reopen-form-{{ ticket.id }}')"
+                        id="reopen-btn-{{ ticket.id }}">
+                    <i class="fa-solid fa-rotate-left"></i> Issue Not Fixed? Reopen Ticket
+                </button>
+                <div id="reopen-form-{{ ticket.id }}" class="reopen-form-panel" style="display:none;">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="reopen_ticket" value="1">
+                        <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+                        <label for="reopen-reason-{{ ticket.id }}" class="reopen-label">
+                            <i class="fa-solid fa-pen-to-square"></i> Reason for Reopening
+                            <span>— describe what's still not working</span>
+                        </label>
+                        <div class="reopen-input-row">
+                            <textarea id="reopen-reason-{{ ticket.id }}" name="reopen_reason"
+                                      class="reopen-textarea" rows="2"
+                                      placeholder="e.g. The issue persists after the fix…"
+                                      required></textarea>
+                            <div class="reopen-actions">
+                                <button type="submit" class="btn-reopen-submit">
+                                    <i class="fa-solid fa-rotate-left"></i> Confirm Reopen
+                                </button>
+                                <button type="button" class="btn-reopen-cancel"
+                                        onclick="toggleReopen(document.getElementById('reopen-btn-{{ ticket.id }}'), 'reopen-form-{{ ticket.id }}')">
+                                    <i class="fa-solid fa-xmark"></i> Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
             {% endif %}
-        </div>
+            {% endif %}
+
+        </div><!-- .ticket-card -->
         {% empty %}
         <div class="empty-state">
             <div class="empty-icon"><i class="fa-solid fa-inbox"></i></div>
-            <h4>No active support requests</h4>
-            <p>All clear! Use the "+ New Request" button above if you need assistance.</p>
-            </div>
-        {% endfor %}
+            <h4>No tickets found</h4>
+            <p>Try changing your filters, or submit a new request if you need assistance.</p>
         </div>
-    </div>
+        {% endfor %}
+    </div><!-- .ticket-list -->
 </div>
+</div>
+
 <script>
 // ── Description Toggle ──────────────────────────────────────
 function toggleDesc(btn) {
@@ -195,6 +521,18 @@ function toggleDesc(btn) {
         : '<i class="fa-solid fa-chevron-down"></i> Show Description';
 }
 
+// ── Reopen Toggle ───────────────────────────────────────────
+function toggleReopen(btn, panelId) {
+    const panel = document.getElementById(panelId);
+    const isOpen = panel.style.display === 'none' || panel.style.display === '';
+    panel.style.display = isOpen ? 'block' : 'none';
+    btn.classList.toggle('active', isOpen);
+    if (isOpen) {
+        const ta = panel.querySelector('textarea');
+        if (ta) ta.focus();
+    }
+}
+
 // ── Live Search (debounce 500ms) ────────────────────────────
 const searchInput = document.getElementById('liveSearch');
 let searchTimer;
@@ -203,9 +541,10 @@ searchInput.addEventListener('input', () => {
     searchTimer = setTimeout(() => document.getElementById('filterForm').submit(), 500);
 });
 
-// ── Auto-submit on filter select change ────────────────────
-document.getElementById('statusFilter').addEventListener('change', () => {
-    document.getElementById('filterForm').submit();
+// ── Auto-submit on any filter select change ─────────────────
+['statusFilter', 'approvalFilter'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', () => document.getElementById('filterForm').submit());
 });
 
 // ── SSE Auto-Refresh ────────────────────────────────────────

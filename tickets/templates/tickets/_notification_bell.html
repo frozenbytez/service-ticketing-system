@@ -235,7 +235,11 @@
     <div id="nb-list">
         <div class="nb-empty"><i class="fa-regular fa-bell-slash"></i><p>No notifications yet</p></div>
     </div>
-    <div class="nb-footer">Showing last 20 notifications</div>
+    <div class="nb-footer">
+        <a href="{% url 'notifications_inbox' %}" style="color:#00c4b8; text-decoration:none; font-weight:600; font-size:12px; display:inline-flex; align-items:center; gap:6px; transition:opacity .15s;" onmouseenter="this.style.opacity='.75'" onmouseleave="this.style.opacity='1'">
+            <i class="fa-solid fa-inbox" style="font-size:11px;"></i> Show all notifications <i class="fa-solid fa-arrow-right" style="font-size:10px;"></i>
+        </a>
+    </div>
 </div>
 
 <script>

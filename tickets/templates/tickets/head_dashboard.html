@@ -110,8 +110,20 @@
                     </div>
                 </div>
                 <div class="approval-meta">
-                    <span><i class="fa-solid fa-user"></i> {{ ticket.requester.username }} ({{ ticket.client_name }})</span>
-                    <span><i class="fa-regular fa-calendar"></i> {{ ticket.created_at|date:"M d, Y" }}</span>
+                    <span>
+                        <i class="fa-solid fa-user"></i>
+                        {{ ticket.requester.username }} ({{ ticket.client_name }})
+                    </span>
+                    <span>
+                        <i class="fa-regular fa-calendar-plus"></i>
+                        Submitted: {{ ticket.created_at|date:"M d, Y · g:i A" }}
+                    </span>
+                    {% if ticket.resolved_at %}
+                    <span style="color:#059669;">
+                        <i class="fa-solid fa-circle-check"></i>
+                        Resolved: {{ ticket.resolved_at|date:"M d, Y · g:i A" }}
+                    </span>
+                    {% endif %}
                 </div>
 
                 <div class="desc-label"><i class="fa-solid fa-align-left"></i> Description</div>
@@ -191,8 +203,12 @@
                 <div class="approval-meta">
                     <span><i class="fa-solid fa-user"></i> {{ ticket.requester.username }}</span>
                     <span><i class="fa-solid fa-building"></i> {{ ticket.client_name }}</span>
-                    <span><i class="fa-regular fa-calendar"></i> {{ ticket.created_at|date:"M d, Y" }}</span>
+                    <span>
+                        <i class="fa-regular fa-calendar-plus"></i>
+                        Submitted: {{ ticket.created_at|date:"M d, Y · g:i A" }}
+                    </span>
                 </div>
+ 
 
                 <!-- Description: always shown in approval view -->
                 <div class="desc-label"><i class="fa-solid fa-align-left"></i> Desc</div>

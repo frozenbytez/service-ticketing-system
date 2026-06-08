@@ -1,0 +1,729 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Inbox | City Clinic</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'tickets/css/clinic_portal.css' %}">
+    <link rel="stylesheet" href="{% static 'tickets/css/sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'tickets/css/dashboard.css' %}">
+    <style>
+        /* ── Inbox Layout ──────────────────────────────────────── */
+        .inbox-container {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 40px 28px 80px;
+        }
+
+        /* ── Header ────────────────────────────────────────────── */
+        .inbox-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            padding-bottom: 22px;
+            border-bottom: 2px solid var(--border);
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .inbox-header-left { display: flex; flex-direction: column; gap: 4px; }
+        .inbox-title {
+            font-family: 'Sora', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--navy);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: -0.4px;
+        }
+        .inbox-title i { color: var(--teal); font-size: 20px; }
+        .inbox-subtitle {
+            font-size: 13px;
+            color: var(--slate);
+            font-weight: 500;
+        }
+        .inbox-subtitle strong { color: var(--teal); }
+
+        .btn-mark-all {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 18px;
+            background: var(--white);
+            color: var(--navy-mid);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+        .btn-mark-all:hover {
+            border-color: var(--teal);
+            color: var(--teal);
+            background: var(--teal-light);
+        }
+
+        /* ── Tabs + Filter Controls ────────────────────────────── */
+        .inbox-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .inbox-tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 4px;
+        }
+        .inbox-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 16px;
+            border-radius: 7px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--slate);
+            text-decoration: none;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+        .inbox-tab:hover { color: var(--navy); background: var(--white); }
+        .inbox-tab.active {
+            background: var(--white);
+            color: var(--navy);
+            box-shadow: 0 1px 4px rgba(11,29,58,0.1);
+        }
+        .tab-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            background: var(--bg);
+            color: var(--slate);
+            line-height: 1;
+        }
+        .inbox-tab.active .tab-count { background: var(--teal-dim); color: var(--teal); }
+        .tab-count.unread-badge { background: #fee2e2; color: #dc2626; }
+
+        .inbox-type-filter {
+            padding: 8px 36px 8px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            color: var(--navy);
+            background-color: var(--white);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235e6e8a' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            appearance: none;
+            cursor: pointer;
+            outline: none;
+            transition: var(--transition);
+            min-width: 190px;
+        }
+        .inbox-type-filter:focus { border-color: var(--teal); }
+
+        /* ── Date Divider ──────────────────────────────────────── */
+        .date-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0 8px;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--slate);
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+        }
+        .date-divider::before,
+        .date-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+        .date-divider:first-of-type { margin-top: 0; }
+
+        /* ── Notification Row ──────────────────────────────────── */
+        .notif-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .notif-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 16px 18px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            color: inherit;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            animation: fadeSlideUp 0.3s ease both;
+        }
+        .notif-row + .notif-row { border-top: none; border-radius: 0; }
+        .notif-row:first-child { border-radius: var(--radius-md) var(--radius-md) 0 0; }
+        .notif-row:last-child { border-radius: 0 0 var(--radius-md) var(--radius-md); }
+        .notif-row:only-child { border-radius: var(--radius-md); }
+
+        .notif-row:hover {
+            background: #f6f9fd;
+            z-index: 1;
+            box-shadow: var(--shadow-sm);
+            border-color: #c0d4e8;
+            transform: translateX(2px);
+        }
+        .notif-row.unread {
+            background: #f0fffe;
+            border-left: 3px solid var(--teal);
+        }
+        .notif-row.unread:hover { background: #e6fbf9; }
+
+        /* ── Notification Icon ─────────────────────────────────── */
+        .notif-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        /* ── Notification Content ──────────────────────────────── */
+        .notif-body { flex: 1; min-width: 0; }
+        .notif-head {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 3px;
+            flex-wrap: wrap;
+        }
+        .notif-ticket-tag {
+            display: inline-block;
+            font-size: 10.5px;
+            font-weight: 800;
+            color: var(--teal);
+            background: var(--teal-dim);
+            border-radius: 4px;
+            padding: 1px 6px;
+            letter-spacing: 0.02em;
+            flex-shrink: 0;
+        }
+        .notif-title {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13.5px;
+            color: var(--navy);
+            line-height: 1.35;
+        }
+        .notif-row.unread .notif-title { font-weight: 700; }
+        .notif-row:not(.unread) .notif-title { font-weight: 500; color: var(--navy-mid); }
+
+        .notif-msg {
+            font-size: 12.5px;
+            color: var(--slate);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+        .notif-time {
+            font-size: 11px;
+            color: var(--slate-light);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .notif-time i { font-size: 10px; }
+
+        /* ── Unread dot ────────────────────────────────────────── */
+        .notif-unread-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--teal);
+            flex-shrink: 0;
+            margin-top: 6px;
+            box-shadow: 0 0 6px rgba(0,196,184,0.5);
+        }
+
+        /* ── Empty State ───────────────────────────────────────── */
+        .inbox-empty {
+            background: var(--white);
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-md);
+            padding: 72px 32px;
+            text-align: center;
+        }
+        .inbox-empty-icon {
+            width: 72px; height: 72px;
+            border-radius: 20px;
+            background: var(--teal-dim);
+            border: 1px solid rgba(0,196,184,0.2);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+        }
+        .inbox-empty-icon i { font-size: 28px; color: var(--teal); }
+        .inbox-empty h4 {
+            font-family: 'Sora', sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--navy-mid);
+            margin-bottom: 8px;
+        }
+        .inbox-empty p { font-size: 14px; color: var(--slate-light); }
+
+        /* ── Pagination ────────────────────────────────────────── */
+        .inbox-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 28px;
+            flex-wrap: wrap;
+        }
+        .page-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+            padding: 0 10px;
+            border-radius: var(--radius-sm);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--navy-mid);
+            background: var(--white);
+            border: 1.5px solid var(--border);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        .page-btn:hover { border-color: var(--teal); color: var(--teal); }
+        .page-btn.active {
+            background: var(--navy);
+            color: var(--white);
+            border-color: var(--navy);
+        }
+        .page-btn.disabled {
+            opacity: 0.38;
+            pointer-events: none;
+        }
+        .page-info {
+            font-size: 12.5px;
+            color: var(--slate);
+            font-weight: 500;
+            padding: 0 8px;
+        }
+
+        /* ── Flash messages ────────────────────────────────────── */
+        .inbox-flash {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            animation: fadeSlideUp 0.3s ease both;
+        }
+        .inbox-flash.success {
+            background: var(--success-bg);
+            color: var(--success);
+            border: 1px solid var(--success-border);
+        }
+
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 640px) {
+            .inbox-controls { flex-direction: column; align-items: stretch; }
+            .inbox-tabs { flex-wrap: wrap; }
+            .inbox-type-filter { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══ ROLE-AWARE SIDEBAR ═══════════════════════════════════════ -->
+<aside class="sidebar">
+
+    {% if is_it_head %}
+    <!-- IT HEAD SIDEBAR -->
+    <a href="{% url 'it_head_dashboard_home' %}" class="sb-brand">
+        <div class="sb-brand-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <span class="sb-brand-text">IT Head Portal</span>
+    </a>
+    <div class="sb-user">
+        <div class="sb-avatar">{{ request.user.get_full_name|default:request.user.username|slice:":2"|upper }}</div>
+        <div class="sb-user-info">
+            <div class="sb-user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+            <div class="sb-user-role">IT Department &middot; Head</div>
+        </div>
+    </div>
+    <nav class="sb-nav">
+        <a href="{% url 'it_head_dashboard_home' %}" class="sb-item" title="Dashboard">
+            <div class="sb-icon"><i class="fa-solid fa-gauge-high"></i></div>
+            <span class="sb-label">Metrics Dashboard</span>
+        </a>
+        <a href="{% url 'it_head_dashboard' %}" class="sb-item {% if view_mode == 'active' or not view_mode %}active{% endif %}" title="Unassigned Queue">
+            <div class="sb-icon"><i class="fa-solid fa-list-check"></i></div>
+            <span class="sb-label">Unassigned Queue</span>
+        </a>
+        <a href="{% url 'it_head_dashboard' %}?view=history" class="sb-item {% if view_mode == 'history' or view_mode == 'pm_history' %}active{% endif %}" title="All Dispatched">
+            <div class="sb-icon"><i class="fa-solid fa-layer-group"></i></div>
+            <span class="sb-label">All Dispatched
+                {% if pending_pm_reviews_count > 0 %}
+                <span style="display:inline-block; margin-left:6px; background:#8b5cf6; color:#fff; border-radius:10px; font-size:10px; font-weight:700; padding:1px 7px; vertical-align:middle;">{{ pending_pm_reviews_count }}</span>
+                {% endif %}
+            </span>
+        </a>
+        <a href="{% url 'it_head_dashboard' %}?view=maintenance" class="sb-item {% if view_mode == 'maintenance' %}active{% endif %}" title="Maintenance Schedules">
+            <div class="sb-icon"><i class="fa-solid fa-calendar-check"></i></div>
+            <span class="sb-label">Routine Maintenance</span>
+        </a>
+    </nav>
+
+    {% elif is_dept_head %}
+    <!-- DEPT HEAD SIDEBAR -->
+    <a href="{% url 'head_dashboard_home' %}" class="sb-brand">
+        <div class="sb-brand-icon"><i class="fa-solid fa-briefcase"></i></div>
+        <span class="sb-brand-text">Manager Portal</span>
+    </a>
+    <div class="sb-user">
+        <div class="sb-avatar">{{ request.user.get_full_name|default:request.user.username|slice:":2"|upper }}</div>
+        <div class="sb-user-info">
+            <div class="sb-user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+            <div class="sb-user-role">{{ profile.get_department_display }} &middot; Head</div>
+        </div>
+    </div>
+    <nav class="sb-nav">
+        <a href="{% url 'head_dashboard_home' %}" class="sb-item" title="Dashboard">
+            <div class="sb-icon"><i class="fa-solid fa-gauge-high"></i></div>
+            <span class="sb-label">Dashboard</span>
+        </a>
+        <a href="{% url 'head_dashboard' %}" class="sb-item {% if view_mode == 'active' or not view_mode %}active{% endif %}" title="Pending Approvals">
+            <div class="sb-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <span class="sb-label">Pending Approvals</span>
+        </a>
+        <a href="{% url 'head_dashboard' %}?view=history" class="sb-item {% if view_mode == 'history' %}active{% endif %}" title="All Dept Tickets">
+            <div class="sb-icon"><i class="fa-solid fa-layer-group"></i></div>
+            <span class="sb-label">All Dept Tickets</span>
+        </a>
+    </nav>
+
+    {% elif is_it_staff %}
+    <!-- IT STAFF SIDEBAR -->
+    <a href="{% url 'it_staff_dashboard_home' %}" class="sb-brand">
+        <div class="sb-brand-icon"><i class="fa-solid fa-headset"></i></div>
+        <span class="sb-brand-text">IT Staff Portal</span>
+    </a>
+    <div class="sb-user">
+        <div class="sb-avatar">{{ request.user.get_full_name|default:request.user.username|slice:":2"|upper }}</div>
+        <div class="sb-user-info">
+            <div class="sb-user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+            <div class="sb-user-role">IT &middot; {{ profile.get_it_tier_display }}</div>
+        </div>
+    </div>
+    <nav class="sb-nav">
+        <a href="{% url 'it_staff_dashboard_home' %}" class="sb-item" title="Dashboard">
+            <div class="sb-icon"><i class="fa-solid fa-gauge-high"></i></div>
+            <span class="sb-label">My Performance</span>
+        </a>
+        <a href="{% url 'it_staff_dashboard' %}" class="sb-item {% if view_mode == 'active' or not view_mode %}active{% endif %}" title="Active Tasks">
+            <div class="sb-icon"><i class="fa-solid fa-bolt"></i></div>
+            <span class="sb-label">Active Tasks</span>
+        </a>
+        <a href="{% url 'it_staff_dashboard' %}?view=history" class="sb-item {% if view_mode == 'history' %}active{% endif %}" title="Resolved Tickets">
+            <div class="sb-icon"><i class="fa-solid fa-folder-open"></i></div>
+            <span class="sb-label">Resolved Tickets</span>
+        </a>
+        <a href="{% url 'it_staff_dashboard' %}?view=maintenance" class="sb-item {% if view_mode == 'maintenance' %}active{% endif %}" title="Routine Maintenance">
+            <div class="sb-icon"><i class="fa-solid fa-calendar-check"></i></div>
+            <span class="sb-label">Routine Maintenance</span>
+        </a>
+    </nav>
+
+    {% else %}
+    <!-- EMPLOYEE SIDEBAR -->
+    <a href="{% url 'employee_dashboard' %}" class="sb-brand">
+        <div class="sb-brand-icon"><i class="fa-solid fa-hospital"></i></div>
+        <span class="sb-brand-text">City Clinic IT</span>
+    </a>
+    <div class="sb-user">
+        <div class="sb-avatar">{{ request.user.get_full_name|default:request.user.username|slice:":2"|upper }}</div>
+        <div class="sb-user-info">
+            <div class="sb-user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+            <div class="sb-user-role">{% if profile %}{{ profile.get_department_display }}{% endif %}</div>
+        </div>
+    </div>
+    <nav class="sb-nav">
+        <a href="{% url 'employee_dashboard' %}" class="sb-item" title="Dashboard">
+            <div class="sb-icon"><i class="fa-solid fa-gauge-high"></i></div>
+            <span class="sb-label">Dashboard</span>
+        </a>
+        <a href="{% url 'clinic_portal' %}" class="sb-item {% if request.resolver_match.url_name == 'clinic_portal' %}active{% endif %}" title="My Tickets">
+            <div class="sb-icon"><i class="fa-solid fa-ticket"></i></div>
+            <span class="sb-label">My Tickets</span>
+        </a>
+        <a href="{% url 'create_ticket' %}" class="sb-item {% if request.resolver_match.url_name == 'create_ticket' %}active{% endif %}" title="New Request">
+            <div class="sb-icon"><i class="fa-solid fa-circle-plus"></i></div>
+            <span class="sb-label">New Request</span>
+        </a>
+    </nav>
+    {% endif %}
+
+    <!-- SHARED LOGOUT FOOTER -->
+    <div class="sb-footer">
+        <form action="{% url 'logout' %}" method="post" style="margin:0;">
+            {% csrf_token %}
+            <button type="submit" class="sb-logout-btn" title="Logout">
+                <div class="sb-logout-icon"><i class="fa-solid fa-right-from-bracket"></i></div>
+                <span class="sb-logout-label">Logout</span>
+            </button>
+        </form>
+    </div>
+</aside>
+<!-- ════════════════════════════════════════════════════════════ -->
+
+<div class="page-wrapper">
+<div class="inbox-container">
+
+    <!-- Flash messages -->
+    {% if messages %}
+    {% for msg in messages %}
+    <div class="inbox-flash success">
+        <i class="fa-solid fa-circle-check"></i> {{ msg }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <!-- ── Page Header ── -->
+    <div class="inbox-header">
+        <div class="inbox-header-left">
+            <h1 class="inbox-title">
+                <i class="fa-solid fa-inbox"></i> Notification Inbox
+            </h1>
+            <p class="inbox-subtitle">
+                {% if unread_count > 0 %}
+                    <strong>{{ unread_count }} unread</strong> &nbsp;·&nbsp; {{ all_count }} total
+                {% else %}
+                    All caught up &nbsp;·&nbsp; {{ all_count }} total notification{{ all_count|pluralize }}
+                {% endif %}
+            </p>
+        </div>
+        {% if unread_count > 0 %}
+        <form method="POST">
+            {% csrf_token %}
+            <button type="submit" name="mark_all_read" class="btn-mark-all">
+                <i class="fa-solid fa-check-double"></i> Mark all as read
+            </button>
+        </form>
+        {% endif %}
+    </div>
+
+    <!-- ── Controls: Tabs + Type Filter ── -->
+    <div class="inbox-controls">
+        <div class="inbox-tabs">
+            <a href="?filter=all{% if type_filter %}&type={{ type_filter }}{% endif %}"
+               class="inbox-tab {% if filter_type == 'all' %}active{% endif %}">
+                All
+                <span class="tab-count">{{ all_count }}</span>
+            </a>
+            <a href="?filter=unread{% if type_filter %}&type={{ type_filter }}{% endif %}"
+               class="inbox-tab {% if filter_type == 'unread' %}active{% endif %}">
+                Unread
+                {% if unread_count > 0 %}
+                <span class="tab-count unread-badge">{{ unread_count }}</span>
+                {% else %}
+                <span class="tab-count">0</span>
+                {% endif %}
+            </a>
+            <a href="?filter=read{% if type_filter %}&type={{ type_filter }}{% endif %}"
+               class="inbox-tab {% if filter_type == 'read' %}active{% endif %}">
+                Read
+                <span class="tab-count">{{ read_count }}</span>
+            </a>
+        </div>
+
+        <select class="inbox-type-filter" id="typeFilter"
+                onchange="applyTypeFilter(this.value)">
+            <option value="">All notification types</option>
+            {% for type_code, type_label in notif_types %}
+            <option value="{{ type_code }}"
+                    {% if type_filter == type_code %}selected{% endif %}>
+                {{ type_label }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- ── Notification List ── -->
+    {% if page_obj.object_list %}
+
+        {% regroup page_obj by date_group as notif_groups %}
+
+        {% for group in notif_groups %}
+        <div class="date-divider">{{ group.grouper }}</div>
+
+        <div class="notif-list">
+            {% for notif in group.list %}
+            <a href="{% url 'notification_click' notif.id %}"
+               class="notif-row {% if not notif.is_read %}unread{% endif %}"
+               style="animation-delay: {{ forloop.counter0 }}0ms;">
+
+                <!-- Icon -->
+                <div class="notif-icon"
+                     style="background:{{ notif.icon_bg }}; color:{{ notif.icon_color }};">
+                    <i class="fa-solid {{ notif.icon_class }}"></i>
+                </div>
+
+                <!-- Body -->
+                <div class="notif-body">
+                    <div class="notif-head">
+                        {% if notif.ticket and notif.ticket.ticket_number %}
+                        <span class="notif-ticket-tag">#{{ notif.ticket.ticket_number }}</span>
+                        {% endif %}
+                        <span class="notif-title">{{ notif.title }}</span>
+                    </div>
+                    <div class="notif-msg">{{ notif.message }}</div>
+                    <div class="notif-time">
+                        <i class="fa-regular fa-clock"></i>
+                        {{ notif.created_at|date:"M d, Y" }} &nbsp;·&nbsp; {{ notif.created_at|date:"g:i A" }}
+                    </div>
+                </div>
+
+                <!-- Unread indicator -->
+                {% if not notif.is_read %}
+                <div class="notif-unread-dot"></div>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="inbox-empty">
+        <div class="inbox-empty-icon">
+            {% if filter_type == 'unread' %}
+            <i class="fa-solid fa-circle-check"></i>
+            {% else %}
+            <i class="fa-regular fa-bell-slash"></i>
+            {% endif %}
+        </div>
+        {% if filter_type == 'unread' %}
+        <h4>You're all caught up!</h4>
+        <p>No unread notifications. Check back later.</p>
+        {% elif filter_type == 'read' %}
+        <h4>No read notifications yet</h4>
+        <p>Notifications you've opened will appear here.</p>
+        {% elif type_filter %}
+        <h4>No notifications of this type</h4>
+        <p>Try a different filter or check all notifications.</p>
+        {% else %}
+        <h4>Your inbox is empty</h4>
+        <p>Notifications will appear here as activity happens.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- ── Pagination ── -->
+    {% if page_obj.has_other_pages %}
+    <div class="inbox-pagination">
+        <!-- Prev -->
+        {% if page_obj.has_previous %}
+        <a href="?{{ base_qs_str }}{% if base_qs_str %}&{% endif %}page={{ page_obj.previous_page_number }}"
+           class="page-btn" title="Previous page">
+            <i class="fa-solid fa-chevron-left" style="font-size:12px;"></i>
+        </a>
+        {% else %}
+        <span class="page-btn disabled">
+            <i class="fa-solid fa-chevron-left" style="font-size:12px;"></i>
+        </span>
+        {% endif %}
+
+        <!-- Page numbers -->
+        {% for i in page_obj.paginator.page_range %}
+            {% if page_obj.number == i %}
+            <span class="page-btn active">{{ i }}</span>
+            {% elif i == 1 or i == page_obj.paginator.num_pages or i >= page_obj.number|add:"-2" and i <= page_obj.number|add:"2" %}
+            <a href="?{{ base_qs_str }}{% if base_qs_str %}&{% endif %}page={{ i }}"
+               class="page-btn">{{ i }}</a>
+            {% elif i == page_obj.number|add:"-3" or i == page_obj.number|add:"3" %}
+            <span class="page-info">…</span>
+            {% endif %}
+        {% endfor %}
+
+        <!-- Next -->
+        {% if page_obj.has_next %}
+        <a href="?{{ base_qs_str }}{% if base_qs_str %}&{% endif %}page={{ page_obj.next_page_number }}"
+           class="page-btn" title="Next page">
+            <i class="fa-solid fa-chevron-right" style="font-size:12px;"></i>
+        </a>
+        {% else %}
+        <span class="page-btn disabled">
+            <i class="fa-solid fa-chevron-right" style="font-size:12px;"></i>
+        </span>
+        {% endif %}
+    </div>
+
+    <p style="text-align:center; margin-top:10px; font-size:12px; color:var(--slate-light);">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        &nbsp;·&nbsp; {{ page_obj.paginator.count }} notifications total
+    </p>
+    {% endif %}
+
+</div><!-- /inbox-container -->
+</div><!-- /page-wrapper -->
+
+<script>
+function applyTypeFilter(value) {
+    const url = new URL(window.location.href);
+    if (value) {
+        url.searchParams.set('type', value);
+    } else {
+        url.searchParams.delete('type');
+    }
+    url.searchParams.delete('page'); // reset to page 1 on filter change
+    window.location.href = url.toString();
+}
+</script>
+
+{% include 'tickets/_notification_bell.html' %}
+</body>
+</html>

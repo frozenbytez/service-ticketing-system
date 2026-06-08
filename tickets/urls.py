@@ -28,4 +28,5 @@ urlpatterns = [
      # ── Notifications API ──────────────────────────────────────
     path('notifications/', views.notifications_api, name='notifications_api'),
     path('notifications/<int:notif_id>/click/', views.read_and_redirect_notification, name='notification_click'),
+    path('notifications/inbox/', views.notifications_inbox, name='notifications_inbox'),
 ]

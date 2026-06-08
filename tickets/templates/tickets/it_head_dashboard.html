@@ -80,17 +80,19 @@
         </div>
 
         <div class="dispatch-card" style="margin-bottom: 24px; border: 1px solid var(--teal);">
-            <h3 style="font-family: 'Sora', sans-serif; font-size: 15px; color: var(--navy); margin-bottom: 16px;">
+            <h3 id="formTitle" style="font-family: 'Sora', sans-serif; font-size: 15px; color: var(--navy); margin-bottom: 16px;">
                 <i class="fa-solid fa-plus-circle" style="color: var(--teal);"></i> Create New Maintenance Task
             </h3>
-            <form method="POST" style="display: flex; flex-direction: column; gap: 16px;">
+            <form method="POST" id="pmForm" style="display: flex; flex-direction: column; gap: 16px;">
                 {% csrf_token %}
-                <input type="hidden" name="create_maintenance" value="true">
+                
+                <input type="hidden" name="action_type" id="formActionType" value="create_maintenance">
+                <input type="hidden" name="task_id" id="editTaskId" value="">
                 
                 <div style="display: flex; gap: 16px; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 200px;">
                         <label style="font-size:11px; font-weight:700; color:var(--slate); text-transform:uppercase;">Task Title</label>
-                        <input type="text" name="title" required placeholder="e.g. Server Room Cleaning" style="width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 6px;">
+                        <input type="text" name="title" id="pmTitle" required placeholder="e.g. Server Room Cleaning" style="width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 6px;">
                     </div>
                     <div style="flex: 1; min-width: 200px;">
                         <label style="font-size:11px; font-weight:700; color:var(--slate); text-transform:uppercase;">Recurrence Rule</label>
@@ -117,13 +119,13 @@
 
                 <div>
                     <label style="font-size:11px; font-weight:700; color:var(--slate); text-transform:uppercase;">Maintenance Instructions</label>
-                    <textarea name="description" required rows="2" placeholder="Steps to perform..." style="width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 6px; resize: vertical;"></textarea>
+                    <textarea name="description" id="pmDesc" required rows="2" placeholder="Steps to perform..." style="width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 6px; resize: vertical;"></textarea>
                 </div>
 
                 <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 150px;">
                         <label style="font-size:11px; font-weight:700; color:var(--slate); text-transform:uppercase;">Default Assignee</label>
-                        <select name="tech_id" style="width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 6px;">
+                        <select name="tech_id" id="pmTech" style="width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 6px;">
                             <option value="">— Unassigned (Drops into Queue) —</option>
                             {% for tech in it_team %}
                                 <option value="{{ tech.id }}">{{ tech.get_full_name|default:tech.username }}</option>
@@ -132,14 +134,17 @@
                     </div>
                     <div style="flex: 1; min-width: 150px;">
                         <label style="font-size:11px; font-weight:700; color:var(--slate); text-transform:uppercase;">Priority</label>
-                        <select name="priority" style="width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 6px;">
+                        <select name="priority" id="pmPriority" style="width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 6px;">
                             <option value="LOW">Low</option>
                             <option value="MEDIUM" selected>Medium</option>
                             <option value="HIGH">High</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="padding: 10px 24px; white-space: nowrap;">
+                    <button type="submit" id="submitBtnText" class="btn btn-primary" style="padding: 10px 24px; white-space: nowrap;">
                         <i class="fa-solid fa-clock-rotate-left"></i> Save Schedule
+                    </button>
+                    <button type="button" id="cancelEditBtn" onclick="cancelEdit()" style="display:none; background: #f8fafc; color: var(--slate); border: 1px solid var(--border); padding: 10px 24px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                        Cancel
                     </button>
                 </div>
             </form>
@@ -148,34 +153,37 @@
         <div class="grid">
             {% for task in maintenance_tasks %}
             <div class="dispatch-card" style="border-left: 4px solid #8b5cf6; margin-bottom:0;">
-                <div class="card-header">
-                    <span class="card-title">{{ task.title }}</span>
-                    <span class="status-chip" style="background: #ede9fe; color: #6d28d9;">
-                        <i class="fa-solid fa-rotate"></i> {{ task.get_recurrence_type_display }}
-                    </span>
-                </div>
-                <div class="card-meta" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                    {% if ticket.is_preventive_maintenance %}
-                        <span style="color: #6d28d9; font-weight: 600; background: #ede9fe; padding: 4px 10px; border-radius: 6px; font-size: 12px;">
-                            <i class="fa-solid fa-rotate"></i> {{ ticket.source_recurring_task.get_recurrence_type_display|default:"Scheduled PM" }}
+                
+                <div class="card-header" style="align-items: flex-start;">
+                    <div>
+                        <span class="card-title" style="display: block; margin-bottom: 8px;">{{ task.title }}</span>
+                        <span class="status-chip" style="background: #ede9fe; color: #6d28d9;">
+                            <i class="fa-solid fa-rotate"></i> {{ task.get_recurrence_type_display }}
                         </span>
-                        {% if ticket.due_date %}
-                        <span style="color: #b45309; font-weight: 700; background: #fffbeb; padding: 4px 10px; border-radius: 6px; font-size: 12px; border: 1px solid #fcd34d;">
-                            <i class="fa-regular fa-calendar-xmark"></i> Due: {{ ticket.due_date|date:"M d, Y" }}
+                        <span style="font-size: 11px; font-weight: 700; color: #059669; background: #ecfdf5; padding: 4px 10px; border-radius: 20px; border: 1px solid #a7f3d0; margin-left: 6px; display: inline-block;">
+                            <i class="fa-solid fa-calendar-day"></i> Next Trigger: {{ task.next_due_display }}
                         </span>
-                        {% endif %}
-                    {% else %}
-                        <span><i class="fa-solid fa-building"></i> {{ ticket.get_department_display }}</span>
-                        <span><i class="fa-solid fa-user"></i> {{ ticket.client_name }}</span>
-                    {% endif %}
+                    </div>
                     
-                    <span style="margin-left: auto;"><i class="fa-solid fa-user-gear"></i> 
-                        {% if ticket.assigned_to %}
-                            {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}
-                        {% else %}
-                            Unassigned
-                        {% endif %}
-                    </span>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" onclick="editTask('{{ task.id }}', '{{ task.title|escapejs }}', '{{ task.description|escapejs }}', '{{ task.recurrence_type }}', '{{ task.assigned_to.id|default:"" }}', '{{ task.priority }}', '{{ task.custom_date_start|date:"Y-m-d"|default:"" }}', '{{ task.custom_date_end|date:"Y-m-d"|default:"" }}')" style="background: #f0f9ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700; text-transform: uppercase; transition: all 0.2s ease;" title="Edit Schedule">
+                            <i class="fa-solid fa-pen"></i> Edit
+                        </button>
+                        
+                        <form method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to delete this maintenance schedule? Future tickets will no longer be generated.');">
+                            {% csrf_token %}
+                            <input type="hidden" name="delete_maintenance" value="true">
+                            <input type="hidden" name="task_id" value="{{ task.id }}">
+                            <button type="submit" style="background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700; text-transform: uppercase; transition: all 0.2s ease;" title="Permanently Remove Schedule">
+                                <i class="fa-solid fa-trash-can"></i> Remove
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="card-meta" style="margin-top: 12px;">
+                    <span><i class="fa-solid fa-user-gear"></i> Defaults to: {{ task.assigned_to.get_full_name|default:"Unassigned" }}</span>
+                    <span><i class="fa-regular fa-clock"></i> Last Generated: {{ task.last_generated|default:"Never" }}</span>
                 </div>
                 <div class="desc-body" style="display:block; margin-top: 10px; font-size: 13px;">{{ task.description }}</div>
             </div>
@@ -234,7 +242,6 @@
         </div>
 
         <div class="history-grid">
-            <div class="history-grid">
             {% for ticket in history_tickets %}
             <div class="dispatch-card" data-priority="{{ ticket.priority }}" style="margin-bottom: 0; {% if ticket.is_preventive_maintenance %}border-left: 4px solid #8b5cf6;{% endif %}">
                 <div class="card-header">
@@ -253,12 +260,25 @@
                     </div>
                 </div>
                 
-                <div class="card-meta">
-                    {% if not ticket.is_preventive_maintenance %}
-                    <span><i class="fa-solid fa-building"></i> {{ ticket.get_department_display }}</span>
-                    <span><i class="fa-solid fa-user"></i> {{ ticket.client_name }}</span>
+                <div class="card-meta" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    {% if ticket.is_preventive_maintenance %}
+                        <span style="color: #6d28d9; font-weight: 600; background: #ede9fe; padding: 4px 10px; border-radius: 6px; font-size: 12px;">
+                            <i class="fa-solid fa-rotate"></i> {{ ticket.source_recurring_task.get_recurrence_type_display|default:"Scheduled PM" }}
+                        </span>
+                        <span style="color: #0f766e; font-weight: 700; background: #dcfce7; padding: 4px 10px; border-radius: 6px; font-size: 12px; border: 1px solid #86efac;">
+                            <i class="fa-solid fa-calendar-day"></i> Started: {{ ticket.created_at|date:"M d, Y" }}
+                        </span>
+                        {% if ticket.due_date %}
+                        <span style="color: #b45309; font-weight: 700; background: #fffbeb; padding: 4px 10px; border-radius: 6px; font-size: 12px; border: 1px solid #fcd34d;">
+                            <i class="fa-solid fa-flag-checkered"></i> Deadline: {{ ticket.due_date|date:"M d, Y" }}
+                        </span>
+                        {% endif %}
+                    {% else %}
+                        <span><i class="fa-solid fa-building"></i> {{ ticket.get_department_display }}</span>
+                        <span><i class="fa-solid fa-user"></i> {{ ticket.client_name }}</span>
                     {% endif %}
-                    <span><i class="fa-solid fa-user-gear"></i> 
+                    
+                    <span style="margin-left: auto;"><i class="fa-solid fa-user-gear"></i> 
                         {% if ticket.assigned_to %}
                             {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}
                         {% else %}
@@ -290,6 +310,18 @@
                         <i class="fa-solid fa-file-lines"></i> IT Staff Resolution Notes:
                     </strong>
                     <p style="margin: 4px 0 0 0; color: #166534; font-size: 13.5px;">{{ ticket.resolution_notes }}</p>
+                </div>
+                {% endif %}
+
+                {# ── Employee Feedback Display ── #}
+                {% if not ticket.is_preventive_maintenance and ticket.client_feedback_rating %}
+                <div style="margin-top: 12px; padding: 10px 14px; background: #f8fafc; border-left: 3px solid #3b82f6; border-radius: 4px;">
+                    <strong style="font-size: 11px; text-transform: uppercase; color: #1e3a8a; display:flex; align-items:center; gap:5px;">
+                        <i class="fa-solid fa-star" style="color: #d97706;"></i> Client Feedback: {{ ticket.client_feedback_rating }} / 5
+                    </strong>
+                    {% if ticket.client_feedback_notes %}
+                    <p style="margin: 4px 0 0 0; color: #1e3a8a; font-size: 13.5px; font-style: italic;">"{{ ticket.client_feedback_notes }}"</p>
+                    {% endif %}
                 </div>
                 {% endif %}
 
@@ -365,7 +397,6 @@
             </div>
             {% endfor %}
         </div>
-        </div>
 
     {% else %}
         <div class="section-header">
@@ -399,6 +430,11 @@
                 <div class="card-header">
                     <span class="card-title">{{ ticket.title }}</span>
                     <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                    {% if ticket.reopen_reason %}
+                        <span style="display:inline-flex; align-items:center; gap:5px; padding:4px 11px; background:#fff7ed; color:#b45309; border:1.5px solid #fcd34d; border-radius:20px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.05em;">
+                            <i class="fa-solid fa-rotate-left"></i> Reopened{% if ticket.reopen_count > 1 %} ×{{ ticket.reopen_count }}{% endif %}
+                        </span>
+                    {% endif %}
                     {% if ticket.is_preventive_maintenance %}
                         <span class="priority-badge" style="background:#ede9fe; color:#6d28d9; border:1px solid #c4b5fd;">
                             <i class="fa-solid fa-screwdriver-wrench"></i> PM Task
@@ -420,10 +456,21 @@
                     </div>
                 </div>
 
-                <div class="card-meta">
-                    <span><i class="fa-solid fa-building"></i> {{ ticket.get_department_display }}</span>
-                    <span><i class="fa-solid fa-user"></i> {{ ticket.client_name }}</span>
-                    {% if ticket.ticket_number %}<span><i class="fa-solid fa-hashtag"></i> #{{ ticket.ticket_number }}</span>{% endif %}
+                <div class="card-meta" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    {% if ticket.is_preventive_maintenance %}
+                        <span style="color: #0f766e; font-weight: 700; background: #dcfce7; padding: 4px 10px; border-radius: 6px; font-size: 12px; border: 1px solid #86efac;">
+                            <i class="fa-solid fa-calendar-day"></i> Started: {{ ticket.created_at|date:"M d, Y" }}
+                        </span>
+                        {% if ticket.due_date %}
+                        <span style="color: #b45309; font-weight: 700; background: #fffbeb; padding: 4px 10px; border-radius: 6px; font-size: 12px; border: 1px solid #fcd34d;">
+                            <i class="fa-solid fa-flag-checkered"></i> Deadline: {{ ticket.due_date|date:"M d, Y" }}
+                        </span>
+                        {% endif %}
+                    {% else %}
+                        <span><i class="fa-solid fa-building"></i> {{ ticket.get_department_display }}</span>
+                        <span><i class="fa-solid fa-user"></i> {{ ticket.client_name }}</span>
+                    {% endif %}
+                    {% if ticket.ticket_number %}<span style="margin-left: auto;"><i class="fa-solid fa-hashtag"></i> #{{ ticket.ticket_number }}</span>{% endif %}
                 </div>
 
                 <button class="btn-desc-toggle" onclick="toggleDesc(this)">
@@ -436,6 +483,20 @@
                     <div style="margin-top: 12px; padding: 10px 14px; background: #f8fafc; border-left: 3px solid var(--teal); border-radius: 4px;">
                         <strong style="font-size: 11px; text-transform: uppercase; color: var(--navy);"><i class="fa-solid fa-user-tie"></i> Dept Head Notes:</strong>
                         <p style="margin: 4px 0 0 0; color: var(--slate); font-size: 13.5px;">{{ ticket.approval_notes }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if ticket.reopen_reason %}
+                    <div style="margin-top: 12px; padding: 10px 14px; background: #fff7ed; border-left: 3px solid #f59e0b; border-radius: 4px;">
+                        <strong style="font-size: 11px; text-transform: uppercase; color: #92400e; display:flex; align-items:center; gap:6px;">
+                            <i class="fa-solid fa-rotate-left"></i> Employee's Reason for Reopening:
+                        </strong>
+                        <p style="margin: 4px 0 0 0; color: #92400e; font-size: 13.5px;">{{ ticket.reopen_reason }}</p>
+                        {% if ticket.reopened_at %}
+                        <p style="margin: 4px 0 0 0; color: #b45309; font-size: 11.5px;">
+                            <i class="fa-regular fa-clock"></i> {{ ticket.reopened_at|date:"M d, Y · g:i A" }}
+                        </p>
+                        {% endif %}
                     </div>
                     {% endif %}
                 </div>
@@ -464,7 +525,15 @@
                             <select name="tech_id" required>
                                 <option value="" disabled selected>— Select IT Staff —</option>
                                 {% for tech in it_team %}
-                                    <option value="{{ tech.id }}">{{ tech.get_full_name|default:tech.username }} {% if tech.employeeprofile.it_tier == 'TIER_2' %} [Tier 2]{% else %} [Tier 1]{% endif %}</option>
+                                    {% if ticket.is_escalated and ticket.escalated_from_tier == 'TIER_1' and tech.employeeprofile.it_tier == 'TIER_1' %}
+                                        <option value="{{ tech.id }}" disabled>
+                                            {{ tech.get_full_name|default:tech.username }} [Tier 1] — Unavailable (Escalated to Tier 2)
+                                        </option>
+                                    {% else %}
+                                        <option value="{{ tech.id }}">
+                                            {{ tech.get_full_name|default:tech.username }} {% if tech.employeeprofile.it_tier == 'TIER_2' %} [Tier 2]{% else %} [Tier 1]{% endif %}
+                                        </option>
+                                    {% endif %}
                                 {% endfor %}
                             </select>
                         </div>
@@ -488,7 +557,7 @@
 </div>
 
 <script>
-// Point 2: Date Validation JS!
+// Date Validation JS!
 const customStart = document.getElementById('customStart');
 const customEnd = document.getElementById('customEnd');
 if (customStart && customEnd) {
@@ -531,6 +600,57 @@ evtSource.onmessage = function(event) {
     if (data.refresh_required) window.location.reload();
 };
 window.addEventListener('beforeunload', () => evtSource.close());
+
+function editTask(id, title, desc, recurrence, tech_id, priority, start, end) {
+    // Scroll smoothly to the form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // ── Set action to EDIT ──
+    document.getElementById('formActionType').value = 'edit_maintenance';
+    document.getElementById('editTaskId').value = id;
+    
+    // Change UI Text
+    document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-pen-to-square" style="color: var(--teal);"></i> Edit Maintenance Task';
+    document.getElementById('submitBtnText').innerHTML = '<i class="fa-solid fa-save"></i> Update Schedule';
+    document.getElementById('cancelEditBtn').style.display = 'inline-block';
+
+    // Populate Fields
+    document.getElementById('pmTitle').value = title;
+    document.getElementById('pmDesc').value = desc;
+    document.getElementById('recurrenceType').value = recurrence;
+    document.getElementById('pmTech').value = tech_id;
+    document.getElementById('pmPriority').value = priority;
+
+    if (recurrence === 'CUSTOM') {
+        document.getElementById('customDateRow').style.display = 'flex';
+        document.getElementById('customStart').value = start;
+        document.getElementById('customEnd').value = end;
+    } else {
+        document.getElementById('customDateRow').style.display = 'none';
+        document.getElementById('customStart').value = '';
+        document.getElementById('customEnd').value = '';
+    }
+}
+
+function cancelEdit() {
+    // ── Set action back to CREATE ──
+    document.getElementById('formActionType').value = 'create_maintenance';
+    document.getElementById('editTaskId').value = '';
+    
+    document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-plus-circle" style="color: var(--teal);"></i> Create New Maintenance Task';
+    document.getElementById('submitBtnText').innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i> Save Schedule';
+    document.getElementById('cancelEditBtn').style.display = 'none';
+
+    document.getElementById('pmForm').reset();
+    document.getElementById('customDateRow').style.display = 'none';
+}
+
+// Wipe out any cached browser states upon reload
+document.addEventListener("DOMContentLoaded", function() {
+    if(document.getElementById('pmForm')) {
+        cancelEdit();
+    }
+});
 </script>
 {% include 'tickets/_notification_bell.html' %}
 </body>

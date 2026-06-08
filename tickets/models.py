@@ -148,6 +148,22 @@ class Ticket(models.Model):
     )
     pm_reviewed_at = models.DateTimeField(null=True, blank=True, verbose_name="Reviewed At")
 
+    # --- REOPEN ---
+    reopen_reason = models.TextField(null=True, blank=True, verbose_name="Reason for Reopening")
+    reopened_at   = models.DateTimeField(null=True, blank=True, verbose_name="Reopened At")
+    reopen_count  = models.PositiveIntegerField(default=0, verbose_name="Times Reopened")
+
+    resolved_at = models.DateTimeField(
+    null=True, blank=True, verbose_name="Resolved At"
+    )
+    escalated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='escalated_tickets',
+        verbose_name="Escalated By",    
+    )
     # --- TIMESTAMPS ---
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -186,6 +202,43 @@ class RecurringTask(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.get_recurrence_type_display()})"
+    
+    @property
+    def next_due_display(self):
+        """Calculates and displays when this PM will generate its next ticket."""
+        from datetime import date, timedelta
+        
+        if not self.last_generated:
+            return "Due Now (Next refresh)"
+            
+        today = date.today()
+        
+        if self.recurrence_type == 'DAILY':
+            if self.last_generated < today: return "Due Now"
+            return "Tomorrow"
+            
+        elif self.recurrence_type == 'WEEKLY':
+            start_of_this_week = today - timedelta(days=today.weekday())
+            if self.last_generated < start_of_this_week: return "Due Now"
+            next_monday = start_of_this_week + timedelta(days=7)
+            return next_monday.strftime('%b %d, %Y')
+            
+        elif self.recurrence_type == 'MONTHLY':
+            start_of_this_month = today.replace(day=1)
+            if self.last_generated < start_of_this_month: return "Due Now"
+            if today.month == 12:
+                next_month = date(today.year + 1, 1, 1)
+            else:
+                next_month = date(today.year, today.month + 1, 1)
+            return next_month.strftime('%b %d, %Y')
+            
+        elif self.recurrence_type == 'QUARTERLY':
+            return "Last week of the Quarter"
+            
+        elif self.recurrence_type == 'CUSTOM':
+            return "One-time schedule"
+            
+        return "Unknown"
 
 class Notification(models.Model):
     NOTIF_TYPE_CHOICES = [
@@ -198,6 +251,7 @@ class Notification(models.Model):
         ('ticket_dispatched', 'Ticket Dispatched'),
         # IT Head
         ('needs_assigning',   'Ticket Needs Assigning'),
+        ('ticket_reopened',   'Ticket Reopened by Employee'),
         ('pm_finished',       'PM Task Finished'),
         ('it_resolved',       'IT Staff Resolved Ticket'),
         ('rating_received',   'IT Staff Got Rated'),
