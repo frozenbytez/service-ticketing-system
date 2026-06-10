@@ -143,16 +143,25 @@
                         <i class="fa-regular fa-calendar-plus" style="color:var(--slate-light);"></i>
                         Submitted: {{ ticket.created_at|date:"M d, Y · g:i A" }}
                     </span>
+                    {% if ticket.started_at %}
+                    <span style="color:#2563eb; font-weight:600;">
+                        <i class="fa-solid fa-play"></i>
+                        Started: {{ ticket.started_at|date:"M d, Y · g:i A" }}
+                    </span>
+                    {% endif %}
                     {% if ticket.resolved_at %}
                     <span style="color:#059669; font-weight:600;">
-                        <i class="fa-solid fa-circle-check"></i>
-                        Resolved: {{ ticket.resolved_at|date:"M d, Y · g:i A" }}
+                        <i class="fa-solid fa-flag-checkered"></i>
+                        Finished: {{ ticket.resolved_at|date:"M d, Y · g:i A" }}
                     </span>
                     {% endif %}
                 </div>
 
                 <div class="history-meta" style="display: flex; gap: 12px; font-size: 13px; color: #5e6e8a; margin-bottom: 16px; flex-wrap: wrap; align-items: center;">
                     {% if ticket.is_preventive_maintenance %}
+                        <span style="color: #6d28d9; font-weight: 600; background: #ede9fe; padding: 4px 10px; border-radius: 6px; font-size: 12px; border: 1px solid #c4b5fd;">
+                            <i class="fa-regular fa-clock"></i> {{ ticket.scheduled_start_time|time:"g:i A"|default:"8:00 AM" }} - {{ ticket.scheduled_end_time|time:"g:i A"|default:"5:00 PM" }}
+                        </span>
                         <span style="color: #0f766e; font-weight: 700; background: #dcfce7; padding: 4px 10px; border-radius: 6px; font-size: 12px; border: 1px solid #86efac;">
                             <i class="fa-solid fa-calendar-day"></i> Started: {{ ticket.created_at|date:"M d, Y" }}
                         </span>
@@ -243,6 +252,7 @@
                 </div>
                 <div style="display: flex; gap: 16px; font-size: 13px; color: #5e6e8a; margin-bottom: 12px; flex-wrap: wrap;">
                     <span><i class="fa-solid fa-user-gear"></i> Default Assignee: {{ task.assigned_to.get_full_name|default:"Unassigned" }}</span>
+                    <span><i class="fa-regular fa-clock"></i> Schedule: {{ task.start_time|time:"g:i A"|default:"8:00 AM" }} - {{ task.end_time|time:"g:i A"|default:"5:00 PM" }}</span>
                     {% if task.recurrence_type == 'CUSTOM' %}
                         <span><i class="fa-regular fa-calendar"></i> {{ task.custom_date_start }} to {{ task.custom_date_end }}</span>
                     {% endif %}
@@ -261,6 +271,7 @@
                 <h4>No master schedules configured</h4>
             </div>
             {% endfor %}
+            
         </div>
 
     {% else %}
@@ -323,9 +334,16 @@
                     {% if ticket.is_escalated %}
                     <span class="escalated-chip"><i class="fa-solid fa-arrow-up-right-dots"></i> Escalated</span>
                     {% endif %}
-                    <span class="status-chip">
-                        <i class="fa-solid fa-spinner fa-spin"></i> In Progress
+                    
+                    {% if ticket.started_at %}
+                    <span class="status-chip" style="background: #dbeafe; color: #1e40af;">
+                        <i class="fa-solid fa-person-digging"></i> Working (Started {{ ticket.started_at|time:"g:i A" }})
                     </span>
+                    {% else %}
+                    <span class="status-chip" style="background: #f1f5f9; color: #475569;">
+                        <i class="fa-solid fa-pause"></i> Pending Start
+                    </span>
+                    {% endif %}
                 </div>
             </div>
 
@@ -333,6 +351,9 @@
                 {% if ticket.is_preventive_maintenance %}
                     <span style="color: #6d28d9; font-weight: 600; background: #ede9fe; padding: 4px 10px; border-radius: 6px; font-size: 12px;">
                         <i class="fa-solid fa-rotate"></i> {{ ticket.source_recurring_task.get_recurrence_type_display|default:"Scheduled PM" }}
+                    </span>
+                    <span style="color: #6d28d9; font-weight: 600; background: #ede9fe; padding: 4px 10px; border-radius: 6px; font-size: 12px; border: 1px solid #c4b5fd;">
+                        <i class="fa-regular fa-clock"></i> {{ ticket.scheduled_start_time|time:"g:i A"|default:"8:00 AM" }} - {{ ticket.scheduled_end_time|time:"g:i A"|default:"5:00 PM" }}
                     </span>
                     <span style="color: #0f766e; font-weight: 700; background: #dcfce7; padding: 4px 10px; border-radius: 6px; font-size: 12px; border: 1px solid #86efac;">
                         <i class="fa-solid fa-calendar-day"></i> Started: {{ ticket.created_at|date:"M d, Y" }}
@@ -378,6 +399,21 @@
                 {% endif %}
             </div>
 
+            {% if not ticket.started_at %}
+            <div style="background: #f8fafc; border: 1px dashed var(--border); padding: 24px; text-align: center; border-radius: var(--radius-sm); margin-bottom: 16px;">
+                <p style="font-size: 13.5px; font-weight: 600; color: var(--navy); margin-bottom: 12px;">
+                    <i class="fa-solid fa-stopwatch" style="color: var(--teal); font-size: 18px; margin-bottom: 8px; display: block;"></i>
+                    You must start this task to begin tracking your time.
+                </p>
+                <form method="POST" style="margin: 0;">
+                    {% csrf_token %}
+                    <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+                    <button type="submit" name="action" value="START" class="btn-primary" style="background: #0ea5e9; border: none; padding: 12px 26px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; color: white; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);">
+                        <i class="fa-solid fa-play"></i> Start Working on Task
+                    </button>
+                </form>
+            </div>
+            {% else %}
             <form method="POST">
                 {% csrf_token %}
                 <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
@@ -396,7 +432,7 @@
 
                 <div class="action-row">
                     <button type="submit" name="action" value="RESOLVE" class="btn-resolve">
-                        <i class="fa-solid fa-circle-check"></i> Mark as Resolved
+                        <i class="fa-solid fa-circle-check"></i> Mark as Finished
                     </button>
                     {% if not ticket.is_preventive_maintenance %}
                     <button type="submit" name="action" value="ESCALATE" class="btn-escalate" formnovalidate>
@@ -407,10 +443,11 @@
                 {% if ticket.is_preventive_maintenance %}
                 <p style="margin: 8px 0 0 0; font-size: 12px; color: #8b5cf6; display:flex; align-items:center; gap:5px;">
                     <i class="fa-solid fa-circle-info"></i>
-                    Resolving a PM task sends it to the IT Head for review before it is fully closed.
+                    Finishing a PM task sends it to the IT Head for review before it is fully closed.
                 </p>
                 {% endif %}
             </form>
+            {% endif %}
         </div>
         {% empty %}
         <div class="empty-state">

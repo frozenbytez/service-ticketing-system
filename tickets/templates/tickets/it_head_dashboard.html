@@ -117,6 +117,17 @@
                     </div>
                 </div>
 
+                <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px;">
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="font-size:11px; font-weight:700; color:var(--slate); text-transform:uppercase;">Start Time (Optional)</label>
+                        <input type="time" name="start_time" id="pmStartTime" style="width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 6px;">
+                    </div>
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="font-size:11px; font-weight:700; color:var(--slate); text-transform:uppercase;">End Time (Optional)</label>
+                        <input type="time" name="end_time" id="pmEndTime" style="width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 6px;">
+                    </div>
+                </div>
+
                 <div>
                     <label style="font-size:11px; font-weight:700; color:var(--slate); text-transform:uppercase;">Maintenance Instructions</label>
                     <textarea name="description" id="pmDesc" required rows="2" placeholder="Steps to perform..." style="width: 100%; padding: 10px; border: 1.5px solid var(--border); border-radius: 6px; resize: vertical;"></textarea>
@@ -166,7 +177,7 @@
                     </div>
                     
                     <div style="display: flex; gap: 8px;">
-                        <button type="button" onclick="editTask('{{ task.id }}', '{{ task.title|escapejs }}', '{{ task.description|escapejs }}', '{{ task.recurrence_type }}', '{{ task.assigned_to.id|default:"" }}', '{{ task.priority }}', '{{ task.custom_date_start|date:"Y-m-d"|default:"" }}', '{{ task.custom_date_end|date:"Y-m-d"|default:"" }}')" style="background: #f0f9ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700; text-transform: uppercase; transition: all 0.2s ease;" title="Edit Schedule">
+                        <button type="button" onclick="editTask('{{ task.id }}', '{{ task.title|escapejs }}', '{{ task.description|escapejs }}', '{{ task.recurrence_type }}', '{{ task.assigned_to.id|default:"" }}', '{{ task.priority }}', '{{ task.custom_date_start|date:"Y-m-d"|default:"" }}', '{{ task.custom_date_end|date:"Y-m-d"|default:"" }}', '{{ task.start_time|time:"H:i"|default:"" }}', '{{ task.end_time|time:"H:i"|default:"" }}')" style="background: #f0f9ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700; text-transform: uppercase; transition: all 0.2s ease;" title="Edit Schedule">
                             <i class="fa-solid fa-pen"></i> Edit
                         </button>
                         
@@ -183,7 +194,14 @@
                 
                 <div class="card-meta" style="margin-top: 12px;">
                     <span><i class="fa-solid fa-user-gear"></i> Defaults to: {{ task.assigned_to.get_full_name|default:"Unassigned" }}</span>
-                    <span><i class="fa-regular fa-clock"></i> Last Generated: {{ task.last_generated|default:"Never" }}</span>
+                    <span style="color: #6d28d9; font-weight: 600; background: #ede9fe; padding: 4px 10px; border-radius: 6px; font-size: 12px; border: 1px solid #c4b5fd;">
+                        <i class="fa-regular fa-clock"></i> 
+                        {% if ticket %}
+                            {{ ticket.scheduled_start_time|time:"g:i A"|default:"8:00 AM" }} - {{ ticket.scheduled_end_time|time:"g:i A"|default:"5:00 PM" }}
+                        {% else %}
+                            {{ task.start_time|time:"g:i A"|default:"8:00 AM" }} - {{ task.end_time|time:"g:i A"|default:"5:00 PM" }}
+                        {% endif %}
+                    </span>
                 </div>
                 <div class="desc-body" style="display:block; margin-top: 10px; font-size: 13px;">{{ task.description }}</div>
             </div>
@@ -266,7 +284,7 @@
                             <i class="fa-solid fa-rotate"></i> {{ ticket.source_recurring_task.get_recurrence_type_display|default:"Scheduled PM" }}
                         </span>
                         <span style="color: #0f766e; font-weight: 700; background: #dcfce7; padding: 4px 10px; border-radius: 6px; font-size: 12px; border: 1px solid #86efac;">
-                            <i class="fa-solid fa-calendar-day"></i> Started: {{ ticket.created_at|date:"M d, Y" }}
+                            <i class="fa-solid fa-calendar-plus"></i> Generated: {{ ticket.created_at|date:"M d, Y" }}
                         </span>
                         {% if ticket.due_date %}
                         <span style="color: #b45309; font-weight: 700; background: #fffbeb; padding: 4px 10px; border-radius: 6px; font-size: 12px; border: 1px solid #fcd34d;">
@@ -276,6 +294,7 @@
                     {% else %}
                         <span><i class="fa-solid fa-building"></i> {{ ticket.get_department_display }}</span>
                         <span><i class="fa-solid fa-user"></i> {{ ticket.client_name }}</span>
+                        <span><i class="fa-regular fa-calendar-plus"></i> {{ ticket.created_at|date:"M d, Y" }}</span>
                     {% endif %}
                     
                     <span style="margin-left: auto;"><i class="fa-solid fa-user-gear"></i> 
@@ -285,6 +304,16 @@
                             Unassigned
                         {% endif %}
                     </span>
+                    
+                    {% if ticket.started_at and not ticket.resolved_at %}
+                    <span style="width: 100%; color: #2563eb; font-size: 12px; font-weight: 600; background: #eff6ff; padding: 6px 12px; border-radius: 6px; border: 1px solid #bfdbfe; margin-top: 4px;">
+                        <i class="fa-solid fa-person-digging"></i> IT is currently working on this (Started: {{ ticket.started_at|time:"g:i A" }})
+                    </span>
+                    {% elif ticket.started_at and ticket.resolved_at %}
+                    <span style="width: 100%; color: #2563eb; font-size: 12px; font-weight: 600; background: #eff6ff; padding: 6px 12px; border-radius: 6px; border: 1px solid #bfdbfe; margin-top: 4px;">
+                        <i class="fa-solid fa-stopwatch"></i> Time Tracked: Started {{ ticket.started_at|date:"M d, g:i A" }} &rarr; Finished {{ ticket.resolved_at|date:"M d, g:i A" }}
+                    </span>
+                    {% endif %}
                 </div>
 
                 <div style="margin-bottom: 10px;">
@@ -621,6 +650,9 @@ function editTask(id, title, desc, recurrence, tech_id, priority, start, end) {
     document.getElementById('pmTech').value = tech_id;
     document.getElementById('pmPriority').value = priority;
 
+    document.getElementById('pmStartTime').value = startTime || '';
+    document.getElementById('pmEndTime').value = endTime || '';
+
     if (recurrence === 'CUSTOM') {
         document.getElementById('customDateRow').style.display = 'flex';
         document.getElementById('customStart').value = start;
@@ -643,6 +675,10 @@ function cancelEdit() {
 
     document.getElementById('pmForm').reset();
     document.getElementById('customDateRow').style.display = 'none';
+
+    document.getElementById('pmStartTime').value = '';
+    document.getElementById('pmEndTime').value = '';
+
 }
 
 // Wipe out any cached browser states upon reload
@@ -651,6 +687,8 @@ document.addEventListener("DOMContentLoaded", function() {
         cancelEdit();
     }
 });
+
+
 </script>
 {% include 'tickets/_notification_bell.html' %}
 </body>

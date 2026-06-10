@@ -41,6 +41,10 @@
             <div class="sb-icon"><i class="fa-solid fa-layer-group"></i></div>
             <span class="sb-label">All Dept Tickets</span>
         </a>
+        <a href="{% url 'head_create_ticket' %}" class="sb-item" title="New Request">
+            <div class="sb-icon"><i class="fa-solid fa-circle-plus"></i></div>
+            <span class="sb-label">New Request</span>
+        </a>
     </nav>
     <div class="sb-footer">
         <form action="{% url 'logout' %}" method="post" style="margin: 0;">

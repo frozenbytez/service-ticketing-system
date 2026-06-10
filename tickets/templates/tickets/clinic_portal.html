@@ -301,20 +301,25 @@
                 </div>
             </div>
 
-            <div class="ticket-meta">
+            <div class="ticket-meta" style="flex-wrap: wrap;">
                 <span><i class="fa-solid fa-building"></i> {{ ticket.client_name }}</span>
             
-                <!-- Submitted timestamp (always shown) -->
                 <span>
                     <i class="fa-regular fa-calendar-plus"></i>
                     Submitted: {{ ticket.created_at|date:"M d, Y · g:i A" }}
                 </span>
             
-                <!-- Resolved timestamp (shown when IT has marked it resolved/closed) -->
+                {% if ticket.started_at %}
+                <span style="color:#2563eb; font-weight: 600;">
+                    <i class="fa-solid fa-play"></i>
+                    Started: {{ ticket.started_at|date:"M d, Y · g:i A" }}
+                </span>
+                {% endif %}
+
                 {% if ticket.resolved_at %}
-                <span style="color:#059669;">
-                    <i class="fa-solid fa-circle-check"></i>
-                    Resolved: {{ ticket.resolved_at|date:"M d, Y · g:i A" }}
+                <span style="color:#059669; font-weight: 600;">
+                    <i class="fa-solid fa-flag-checkered"></i>
+                    Finished: {{ ticket.resolved_at|date:"M d, Y · g:i A" }}
                 </span>
                 {% endif %}
             
@@ -325,6 +330,14 @@
                 </span>
                 {% endif %}
             </div>
+
+            {% if ticket.started_at and ticket.resolved_at %}
+            <div style="margin-top: 10px; margin-bottom: 6px;">
+                <span style="display: block; width: 100%; color: #2563eb; font-size: 12px; font-weight: 600; background: #eff6ff; padding: 6px 12px; border-radius: 6px; border: 1px solid #bfdbfe;">
+                    <i class="fa-solid fa-stopwatch"></i> Time Tracked: Started {{ ticket.started_at|date:"M d, g:i A" }} &rarr; Finished {{ ticket.resolved_at|date:"M d, g:i A" }}
+                </span>
+            </div>
+            {% endif %}
 
             <!-- Description toggle -->
             {% if ticket.status == 'IN_PROGRESS' %}

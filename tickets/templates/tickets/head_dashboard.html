@@ -40,6 +40,10 @@
             <div class="sb-icon"><i class="fa-solid fa-layer-group"></i></div>
             <span class="sb-label">All Dept Tickets</span>
         </a>
+        <a href="{% url 'head_create_ticket' %}" class="sb-item" title="New Request">
+            <div class="sb-icon"><i class="fa-solid fa-circle-plus"></i></div>
+            <span class="sb-label">New Request</span>
+        </a>
     </nav>
     <div class="sb-footer">
         <form action="{% url 'logout' %}" method="post" style="margin: 0;">
@@ -109,7 +113,7 @@
                         <span class="status-pill status-default">{{ ticket.get_status_display }}</span>
                     </div>
                 </div>
-                <div class="approval-meta">
+                <div class="approval-meta" style="flex-wrap: wrap;">
                     <span>
                         <i class="fa-solid fa-user"></i>
                         {{ ticket.requester.username }} ({{ ticket.client_name }})
@@ -118,13 +122,29 @@
                         <i class="fa-regular fa-calendar-plus"></i>
                         Submitted: {{ ticket.created_at|date:"M d, Y · g:i A" }}
                     </span>
+                    
+                    {% if ticket.started_at %}
+                    <span style="color:#2563eb; font-weight: 600;">
+                        <i class="fa-solid fa-play"></i>
+                        Started: {{ ticket.started_at|date:"M d, Y · g:i A" }}
+                    </span>
+                    {% endif %}
+
                     {% if ticket.resolved_at %}
-                    <span style="color:#059669;">
-                        <i class="fa-solid fa-circle-check"></i>
-                        Resolved: {{ ticket.resolved_at|date:"M d, Y · g:i A" }}
+                    <span style="color:#059669; font-weight: 600;">
+                        <i class="fa-solid fa-flag-checkered"></i>
+                        Finished: {{ ticket.resolved_at|date:"M d, Y · g:i A" }}
                     </span>
                     {% endif %}
                 </div>
+                
+                {% if ticket.started_at and ticket.resolved_at %}
+                <div style="margin-top: 8px; margin-bottom: 12px;">
+                    <span style="display: block; width: 100%; color: #2563eb; font-size: 12px; font-weight: 600; background: #eff6ff; padding: 6px 12px; border-radius: 6px; border: 1px solid #bfdbfe;">
+                        <i class="fa-solid fa-stopwatch"></i> Time Tracked: Started {{ ticket.started_at|date:"M d, g:i A" }} &rarr; Finished {{ ticket.resolved_at|date:"M d, g:i A" }}
+                    </span>
+                </div>
+                {% endif %}
 
                 <div class="desc-label"><i class="fa-solid fa-align-left"></i> Description</div>
                 <div class="approval-desc" style="margin-bottom:14px;">{{ ticket.description }}</div>

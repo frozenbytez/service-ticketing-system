@@ -209,6 +209,7 @@ def check_and_generate_recurring_tasks():
             if task.recurrence_type == 'CUSTOM' and task.custom_date_start and task.custom_date_end:
                 notes += f" (Must be completed between {task.custom_date_start.strftime('%b %d')} and {task.custom_date_end.strftime('%b %d, %Y')})"
 
+            # Locate the Ticket.objects.create(...) block and add the time fields:
             ticket = Ticket.objects.create(
                 title=f"[PM] {task.title}",
                 description=task.description,
@@ -222,7 +223,12 @@ def check_and_generate_recurring_tasks():
                 needs_head_approval=False,
                 is_preventive_maintenance=True,
                 source_recurring_task=task,
-                due_date=ticket_due_date, # ── PASS THE DEADLINE HERE ──
+                due_date=ticket_due_date,
+                
+                # ---> ADD THESE TWO LINES <---
+                scheduled_start_time=task.start_time or '08:00',
+                scheduled_end_time=task.end_time or '17:00',
+                
                 dispatch_notes=notes
             )
             ticket.ticket_number = _generate_ticket_number()
@@ -665,11 +671,13 @@ def create_ticket(request):
         form = TicketForm(request.POST)
         if form.is_valid():
             ticket = form.save(commit=False)
+            ticket.category          = request.POST.get('category', 'OTHER')   # ← ADD
             ticket.requester         = request.user
             ticket.department        = request.user.employeeprofile.department
             ticket.priority          = form.cleaned_data.get('priority', 'MEDIUM')
             ticket.needs_head_approval = True
             ticket.approval_status   = 'PENDING'
+            ticket.ticket_number     = _generate_ticket_number()
             ticket.save()
 
             # ── NOTIFICATION: Dept Head — new ticket needs approval ──
@@ -815,6 +823,10 @@ def it_head_dashboard(request):
             priority     = request.POST.get('priority', 'MEDIUM')
             custom_start = request.POST.get('custom_date_start') or None
             custom_end   = request.POST.get('custom_date_end') or None
+            
+            # ---> 1. DEFINE THE VARIABLES HERE <---
+            start_time   = request.POST.get('start_time') or '08:00'
+            end_time     = request.POST.get('end_time') or '17:00'
 
             if recurrence == 'CUSTOM' and custom_start and custom_end:
                 if custom_start > custom_end:
@@ -822,9 +834,12 @@ def it_head_dashboard(request):
                     return redirect('/tickets/it-head/?view=maintenance')
 
             assigned_tech = User.objects.filter(id=tech_id).first() if tech_id else None
+            
+            # ---> 2. PASS THE VARIABLES TO THE DATABASE <---
             RecurringTask.objects.create(
                 title=title, description=description, recurrence_type=recurrence,
                 custom_date_start=custom_start, custom_date_end=custom_end,
+                start_time=start_time, end_time=end_time, 
                 assigned_to=assigned_tech, priority=priority, created_by=request.user
             )
             messages.success(request, f"Maintenance schedule '{title}' created successfully!")
@@ -846,6 +861,7 @@ def it_head_dashboard(request):
             custom_start = request.POST.get('custom_date_start') or None
             custom_end = request.POST.get('custom_date_end') or None
             
+            
             if task.recurrence_type == 'CUSTOM' and custom_start and custom_end:
                 if custom_start > custom_end:
                     messages.error(request, "Validation Error: Custom Start Date cannot be after End Date.")
@@ -853,6 +869,8 @@ def it_head_dashboard(request):
                     
             task.custom_date_start = custom_start
             task.custom_date_end = custom_end
+            task.start_time = request.POST.get('start_time') or '08:00'
+            task.end_time = request.POST.get('end_time') or '17:00'
             task.save()
             
             messages.success(request, f"Maintenance schedule '{task.title}' updated successfully!")
@@ -1019,117 +1037,130 @@ def it_staff_dashboard(request):
     type_filter     = request.GET.get('type_filter', '')
 
     if request.method == 'POST':
-        ticket_id = request.POST.get('ticket_id')
-        action    = request.POST.get('action')
-        ticket    = get_object_or_404(Ticket, id=ticket_id, assigned_to=request.user)
+            ticket_id = request.POST.get('ticket_id')
+            action    = request.POST.get('action')
+            ticket    = get_object_or_404(Ticket, id=ticket_id, assigned_to=request.user)
 
-        if action == 'ESCALATE':
-            ticket.is_escalated        = True
-            ticket.escalated_from_tier = profile.it_tier
-            ticket.escalated_by        = request.user         
-            ticket.assigned_to         = None
-            ticket.status              = 'OPEN'
-            tier_label = profile.get_it_tier_display()
-            ticket.save()
-            messages.warning(request, f"Ticket '{ticket.title}' escalated from {tier_label} back to IT Head.")
+            if action == 'ESCALATE':
+                ticket.is_escalated        = True
+                ticket.escalated_from_tier = profile.it_tier
+                ticket.escalated_by        = request.user         
+                ticket.assigned_to         = None
+                ticket.status              = 'OPEN'
+                tier_label = profile.get_it_tier_display()
+                ticket.save()
+                messages.warning(request, f"Ticket '{ticket.title}' escalated from {tier_label} back to IT Head.")
 
-            # ── NOTIFICATION: IT Head — ticket escalated/back in queue ─
-            for it_head in _it_head_users():
-                push_notification(
-                    recipient=it_head,
-                    notif_type='needs_assigning',
-                    title='Escalated Ticket Needs Reassigning',
-                    message=(
-                        f'Ticket "{ticket.title}" was escalated by '
-                        f'{request.user.get_full_name() or request.user.username} '
-                        f'({tier_label}) and needs to be reassigned.'
-                    ),
-                    ticket=ticket,
-                )
-
-            # ── NOTIFICATION: Tier 2 IT staff — escalated ticket ──
-            if profile.it_tier == 'TIER_1':
-                tier2_staff = User.objects.filter(
-                    employeeprofile__department='IT',
-                    employeeprofile__is_department_head=False,
-                    employeeprofile__it_tier='TIER_2',
-                )
-                for staff in tier2_staff:
+                # ── NOTIFICATION: IT Head — ticket escalated/back in queue ─
+                for it_head in _it_head_users():
                     push_notification(
-                        recipient=staff,
-                        notif_type='ticket_escalated',
-                        title='Ticket Escalated',
+                        recipient=it_head,
+                        notif_type='needs_assigning',
+                        title='Escalated Ticket Needs Reassigning',
                         message=(
-                            f'Ticket "{ticket.title}" was escalated from Tier 1 '
-                            f'by {request.user.get_full_name() or request.user.username} '
-                            f'and may be assigned to you.'
+                            f'Ticket "{ticket.title}" was escalated by '
+                            f'{request.user.get_full_name() or request.user.username} '
+                            f'({tier_label}) and needs to be reassigned.'
                         ),
                         ticket=ticket,
                     )
 
+                # ── NOTIFICATION: Tier 2 IT staff — escalated ticket ──
+                if profile.it_tier == 'TIER_1':
+                    tier2_staff = User.objects.filter(
+                        employeeprofile__department='IT',
+                        employeeprofile__is_department_head=False,
+                        employeeprofile__it_tier='TIER_2',
+                    )
+                    for staff in tier2_staff:
+                        push_notification(
+                            recipient=staff,
+                            notif_type='ticket_escalated',
+                            title='Ticket Escalated',
+                            message=(
+                                f'Ticket "{ticket.title}" was escalated from Tier 1 '
+                                f'by {request.user.get_full_name() or request.user.username} '
+                                f'and may be assigned to you.'
+                            ),
+                            ticket=ticket,
+                        )
+
+            # ---> NEW: Clean START action <---
+            elif action == 'START':
+                ticket.started_at = timezone.now()
+                ticket.save()
+                messages.success(request, f"Started working on '{ticket.title}'. Time tracking has begun.")
+
+            # ---> REPAIRED: RESOLVE action with safely indented notifications <---
             elif action == 'RESOLVE':
                 ticket.status           = 'RESOLVED'
                 ticket.resolved_at      = timezone.now()          
                 ticket.resolution_notes = request.POST.get('resolution_notes', 'Resolved by IT.')
+                
+                # Fallback: if they somehow bypassed the start button, set start to now
+                if not ticket.started_at:
+                    ticket.started_at = ticket.resolved_at
+                    
                 ticket.save()
+                messages.success(request, f"Ticket '{ticket.title}' marked as resolved.")
 
-            # ── NOTIFICATION: Employee — ticket resolved ───────────
-            push_notification(
-                recipient=ticket.requester,
-                notif_type='ticket_resolved',
-                title='Your Ticket Has Been Resolved',
-                message=(
-                    f'Your ticket "{ticket.title}" has been resolved by '
-                    f'{request.user.get_full_name() or request.user.username}. '
-                    f'Please review and close it.'
-                ),
-                ticket=ticket,
-            )
-
-            # ── NOTIFICATION: Dept Head — ticket resolved ─────────
-            dept_head = _dept_head_of(ticket.department)
-            if dept_head and dept_head != ticket.requester:
+                # ── NOTIFICATION: Employee — ticket resolved ───────────
                 push_notification(
-                    recipient=dept_head,
+                    recipient=ticket.requester,
                     notif_type='ticket_resolved',
-                    title='Department Ticket Resolved',
+                    title='Your Ticket Has Been Resolved',
                     message=(
-                        f'Ticket "{ticket.title}" submitted by '
-                        f'{ticket.requester.get_full_name() or ticket.requester.username} '
-                        f'has been resolved.'
+                        f'Your ticket "{ticket.title}" has been resolved by '
+                        f'{request.user.get_full_name() or request.user.username}. '
+                        f'Please review and close it.'
                     ),
                     ticket=ticket,
                 )
 
-            # ── NOTIFICATION: IT Head — IT staff resolved ticket ──
-            for it_head in _it_head_users():
-                push_notification(
-                    recipient=it_head,
-                    notif_type='it_resolved',
-                    title='IT Staff Resolved a Ticket',
-                    message=(
-                        f'{request.user.get_full_name() or request.user.username} resolved '
-                        f'"{ticket.title}" — awaiting client feedback.'
-                    ),
-                    ticket=ticket,
-                )
-
-            # ── NOTIFICATION: IT Head — PM task finished ──────────
-            if ticket.is_preventive_maintenance:
-                for it_head in _it_head_users():
+                # ── NOTIFICATION: Dept Head — ticket resolved ─────────
+                dept_head = _dept_head_of(ticket.department)
+                if dept_head and dept_head != ticket.requester:
                     push_notification(
-                        recipient=it_head,
-                        notif_type='pm_finished',
-                        title='PM Task Completed',
+                        recipient=dept_head,
+                        notif_type='ticket_resolved',
+                        title='Department Ticket Resolved',
                         message=(
-                            f'{request.user.get_full_name() or request.user.username} '
-                            f'completed preventive maintenance task "{ticket.title}". '
-                            f'Please review it in the PM History tab.'
+                            f'Ticket "{ticket.title}" submitted by '
+                            f'{ticket.requester.get_full_name() or ticket.requester.username} '
+                            f'has been resolved.'
                         ),
                         ticket=ticket,
                     )
 
-        return redirect('it_staff_dashboard')
+                # ── NOTIFICATION: IT Head — IT staff resolved ticket ──
+                for it_head in _it_head_users():
+                    push_notification(
+                        recipient=it_head,
+                        notif_type='it_resolved',
+                        title='IT Staff Resolved a Ticket',
+                        message=(
+                            f'{request.user.get_full_name() or request.user.username} resolved '
+                            f'"{ticket.title}" — awaiting client feedback.'
+                        ),
+                        ticket=ticket,
+                    )
+
+                # ── NOTIFICATION: IT Head — PM task finished ──────────
+                if ticket.is_preventive_maintenance:
+                    for it_head in _it_head_users():
+                        push_notification(
+                            recipient=it_head,
+                            notif_type='pm_finished',
+                            title='PM Task Completed',
+                            message=(
+                                f'{request.user.get_full_name() or request.user.username} '
+                                f'completed preventive maintenance task "{ticket.title}". '
+                                f'Please review it in the PM History tab.'
+                            ),
+                            ticket=ticket,
+                        )
+
+            return redirect('it_staff_dashboard')
 
     # ── Build context ────────────────────────────────────────────
     my_stats = Ticket.objects.filter(
@@ -1443,3 +1474,59 @@ def read_and_redirect_notification(request, notif_id):
         url = reverse('clinic_portal')
  
     return redirect(url)
+
+@login_required
+def head_create_ticket(request):
+    """
+    Department Heads submit tickets that bypass the approval stage entirely.
+    The ticket is created with needs_head_approval=False and
+    approval_status='NOT_REQUIRED', then IT Heads are notified immediately
+    so they can assign it to an IT staff member.
+    """
+    try:
+        profile = request.user.employeeprofile
+        if not profile.is_department_head or profile.department == 'IT':
+            return HttpResponseForbidden("Only non-IT department heads may use this form.")
+    except EmployeeProfile.DoesNotExist:
+        return HttpResponseForbidden("Profile not found.")
+ 
+    if request.method == 'POST':
+        form = TicketForm(request.POST)
+        if form.is_valid():
+            ticket = form.save(commit=False)
+            ticket.category            = request.POST.get('category', 'OTHER')
+            ticket.requester           = request.user
+            ticket.department          = profile.department
+            ticket.priority            = form.cleaned_data.get('priority', 'MEDIUM')
+            # ── KEY DIFFERENCE: skip approval, send straight to IT ──
+            ticket.needs_head_approval = False
+            ticket.approval_status     = 'NOT_REQUIRED'
+            ticket.ticket_number       = _generate_ticket_number()
+            ticket.save()
+ 
+            # Notify every IT Head so they can assign the ticket
+            for it_head in _it_head_users():
+                push_notification(
+                    recipient=it_head,
+                    notif_type='needs_assigning',
+                    title='New Ticket — Needs Assignment',
+                    message=(
+                        f'{request.user.get_full_name() or request.user.username} '
+                        f'({profile.get_department_display()} Head) submitted '
+                        f'"{ticket.title}" and it is ready to be assigned to IT staff.'
+                    ),
+                    ticket=ticket,
+                )
+ 
+            messages.success(
+                request,
+                "Your request has been submitted and sent directly to the IT team for assignment."
+            )
+            return redirect('head_dashboard')
+ 
+    else:
+        form = TicketForm(initial={
+            'client_name': request.user.get_full_name() or request.user.username,
+        })
+ 
+    return render(request, 'tickets/head_create_ticket.html', {'form': form})
