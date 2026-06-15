@@ -186,24 +186,10 @@
         }
         .info-banner i { color: var(--p-medium); margin-top: 2px; flex-shrink: 0; }
         .info-banner strong { font-weight: 700; }
-
-        /* Priority indicator in select */
-        .priority-hint {
-            font-size: 11.5px;
-            color: var(--slate);
-            margin-top: 6px;
-            display: flex;
-            gap: 14px;
-        }
-        .priority-hint span { display: flex; align-items: center; gap: 4px; }
-        .hint-dot {
-            width: 8px; height: 8px; border-radius: 50%;
-        }
     </style>
 </head>
 <body>
 
-<!-- ══ EMPLOYEE SIDEBAR ════════════════════════════════════════ -->
 <aside class="sidebar">
     <a href="{% url 'employee_dashboard' %}" class="sb-brand">
         <div class="sb-brand-icon"><i class="fa-solid fa-hospital"></i></div>
@@ -241,18 +227,15 @@
     </div>
 </aside>
 
-<!-- ══ MAIN CONTENT ════════════════════════════════════════════ -->
 <div class="page-wrapper">
 <div class="container">
 
-    <!-- Breadcrumb -->
     <div class="breadcrumb">
         <a href="{% url 'clinic_portal' %}"><i class="fa-solid fa-ticket"></i> My Tickets</a>
         <span class="breadcrumb-sep">/</span>
         <span>New Request</span>
     </div>
 
-    <!-- Form Card -->
     <div class="form-card">
         <div class="form-card-header">
             <h2><i class="fa-solid fa-circle-plus"></i> Submit an IT Request</h2>
@@ -272,7 +255,6 @@
             </div>
             {% endif %}
 
-            <!-- How it works banner -->
             <div class="info-banner">
                 <i class="fa-solid fa-circle-info"></i>
                 <div>
@@ -283,7 +265,8 @@
             <form method="POST" id="ticketForm">
                 {% csrf_token %}
 
-                <!-- ── STEP 1: Category Picker ─────────────────── -->
+                <input type="hidden" name="priority" value="MEDIUM">
+
                 <div class="cat-section">
                     <div class="cat-section-label">
                         <i class="fa-solid fa-tag"></i>
@@ -291,60 +274,24 @@
                         <span class="cat-required-note">* Required</span>
                     </div>
                     <div class="cat-grid" id="catGrid">
-                        <div class="cat-card" data-value="HARDWARE">
-                            <div class="cat-icon-wrap"><i class="fa-solid fa-desktop"></i></div>
-                            <span class="cat-label">Hardware Issue</span>
+                        {% for cat in categories %}
+                        <div class="cat-card" data-value="{{ cat.key }}">
+                            <div class="cat-icon-wrap"><i class="{{ cat.icon }}"></i></div>
+                            <span class="cat-label">{{ cat.label }}</span>
                         </div>
-                        <div class="cat-card" data-value="SOFTWARE">
-                            <div class="cat-icon-wrap"><i class="fa-solid fa-window-restore"></i></div>
-                            <span class="cat-label">Software / App</span>
-                        </div>
-                        <div class="cat-card" data-value="NETWORK">
-                            <div class="cat-icon-wrap"><i class="fa-solid fa-wifi"></i></div>
-                            <span class="cat-label">Network & Connectivity</span>
-                        </div>
-                        <div class="cat-card" data-value="ACCOUNT">
-                            <div class="cat-icon-wrap"><i class="fa-solid fa-user-lock"></i></div>
-                            <span class="cat-label">Account & Access</span>
-                        </div>
-                        <div class="cat-card" data-value="EMAIL">
-                            <div class="cat-icon-wrap"><i class="fa-solid fa-envelope"></i></div>
-                            <span class="cat-label">Email & Communication</span>
-                        </div>
-                        <div class="cat-card" data-value="DATA">
-                            <div class="cat-icon-wrap"><i class="fa-solid fa-database"></i></div>
-                            <span class="cat-label">Data & Backup</span>
-                        </div>
-                        <div class="cat-card" data-value="PERFORMANCE">
-                            <div class="cat-icon-wrap"><i class="fa-solid fa-gauge-high"></i></div>
-                            <span class="cat-label">System Performance</span>
-                        </div>
-                        <div class="cat-card" data-value="NEW_EQUIPMENT">
-                            <div class="cat-icon-wrap"><i class="fa-solid fa-box-open"></i></div>
-                            <span class="cat-label">New Equipment Request</span>
-                        </div>
-                        <div class="cat-card" data-value="INSTALLATION">
-                            <div class="cat-icon-wrap"><i class="fa-solid fa-download"></i></div>
-                            <span class="cat-label">Installation / Setup</span>
-                        </div>
-                        <div class="cat-card" data-value="SECURITY">
-                            <div class="cat-icon-wrap"><i class="fa-solid fa-shield-halved"></i></div>
-                            <span class="cat-label">Security Concern</span>
-                        </div>
-                        <div class="cat-card" data-value="OTHER">
-                            <div class="cat-icon-wrap"><i class="fa-solid fa-ellipsis"></i></div>
-                            <span class="cat-label">Other</span>
-                        </div>
+                        {% empty %}
+                        <p style="color:var(--slate); font-size:13px; grid-column:1/-1;">
+                            No categories available. Please contact your IT Head.
+                        </p>
+                        {% endfor %}
                     </div>
                     <div class="cat-error-msg" id="catErrorMsg">
                         <i class="fa-solid fa-circle-exclamation"></i>
                         Please select a request category before submitting.
                     </div>
-                    <!-- Hidden input carries the chosen value to the server -->
                     <input type="hidden" name="category" id="categoryInput" value="">
                 </div>
 
-                <!-- ── STEP 2: Details ──────────────────────────── -->
                 <div class="form-section">
 
                     <div class="form-group">
@@ -383,25 +330,8 @@
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="id_priority">Priority Level <span style="color:var(--danger)">*</span></label>
-                        <select name="priority" id="id_priority" required>
-                            <option value="LOW"    {% if form.priority.value == 'LOW'    %}selected{% endif %}>🟢 Low — No urgent impact</option>
-                            <option value="MEDIUM" {% if form.priority.value == 'MEDIUM' or not form.priority.value %}selected{% endif %}>🔵 Medium — Normal operations affected</option>
-                            <option value="HIGH"   {% if form.priority.value == 'HIGH'   %}selected{% endif %}>🟡 High — Significant impact</option>
-                            <option value="URGENT" {% if form.priority.value == 'URGENT' %}selected{% endif %}>🔴 Urgent — Critical / Work stopped</option>
-                        </select>
-                        <div class="priority-hint">
-                            <span><span class="hint-dot" style="background:#059669"></span>Low: cosmetic</span>
-                            <span><span class="hint-dot" style="background:#2563eb"></span>Medium: slowed down</span>
-                            <span><span class="hint-dot" style="background:#d97706"></span>High: blocked</span>
-                            <span><span class="hint-dot" style="background:#dc2626"></span>Urgent: complete stop</span>
-                        </div>
-                    </div>
-
                 </div>
 
-                <!-- ── Actions ─────────────────────────────────── -->
                 <div class="button-group">
                     <button type="submit" class="btn-submit" id="submitBtn">
                         <i class="fa-solid fa-paper-plane"></i> Submit Request

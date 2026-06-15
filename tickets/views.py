@@ -6,7 +6,7 @@ from django.db.models import Count, Avg, Q, Case, When, IntegerField, Value
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 from .forms import TicketForm
-from .models import Ticket, EmployeeProfile, DEPARTMENT_CHOICES, RecurringTask, Notification
+from .models import Ticket, EmployeeProfile, DEPARTMENT_CHOICES, RecurringTask, Notification, TicketCategory
 from django.utils import timezone
 from datetime import timedelta, datetime, date
 import calendar
@@ -698,7 +698,8 @@ def create_ticket(request):
             return redirect('clinic_portal')
     else:
         form = TicketForm(initial={'client_name': request.user.get_full_name() or request.user.username})
-    return render(request, 'tickets/create_ticket.html', {'form': form})
+    categories = TicketCategory.objects.filter(is_active=True).order_by('sort_order', 'label')
+    return render(request, 'tickets/create_ticket.html', {'form': form, 'categories': categories})
 
 
 @login_required
@@ -915,6 +916,52 @@ def it_head_dashboard(request):
             messages.success(request, f"PM Ticket '{ticket.title}' reviewed and closed.")
             return redirect('/tickets/it-head/?view=pm_history')
 
+        # ── Category CRUD ───────────────────────────────────────
+        elif action_type == 'create_category':
+            key   = request.POST.get('cat_key', '').strip().upper().replace(' ', '_')
+            label = request.POST.get('cat_label', '').strip()
+            icon  = request.POST.get('cat_icon', 'fa-solid fa-tag').strip()
+            sort_order = int(request.POST.get('cat_sort_order', 0) or 0)
+            if key and label:
+                if TicketCategory.objects.filter(key=key).exists():
+                    messages.error(request, f"A category with key '{key}' already exists.")
+                else:
+                    TicketCategory.objects.create(key=key, label=label, icon=icon, sort_order=sort_order)
+                    messages.success(request, f"Category '{label}' created successfully!")
+            else:
+                messages.error(request, "Category key and label are required.")
+            return redirect('/tickets/it-head/?view=categories')
+
+        elif action_type == 'edit_category':
+            cat_id = request.POST.get('cat_id')
+            cat    = get_object_or_404(TicketCategory, id=cat_id)
+            new_key = request.POST.get('cat_key', '').strip().upper().replace(' ', '_')
+            if new_key and new_key != cat.key and TicketCategory.objects.filter(key=new_key).exists():
+                messages.error(request, f"A category with key '{new_key}' already exists.")
+                return redirect('/tickets/it-head/?view=categories')
+            cat.key        = new_key or cat.key
+            cat.label      = request.POST.get('cat_label', cat.label).strip()
+            cat.icon       = request.POST.get('cat_icon', cat.icon).strip() or 'fa-solid fa-tag'
+            cat.sort_order = int(request.POST.get('cat_sort_order', cat.sort_order) or 0)
+            cat.save()
+            messages.success(request, f"Category '{cat.label}' updated successfully!")
+            return redirect('/tickets/it-head/?view=categories')
+
+        elif action_type == 'toggle_category':
+            cat = get_object_or_404(TicketCategory, id=request.POST.get('cat_id'))
+            cat.is_active = not cat.is_active
+            cat.save()
+            state = "activated" if cat.is_active else "deactivated"
+            messages.success(request, f"Category '{cat.label}' {state}.")
+            return redirect('/tickets/it-head/?view=categories')
+
+        elif action_type == 'delete_category':
+            cat = get_object_or_404(TicketCategory, id=request.POST.get('cat_id'))
+            label = cat.label
+            cat.delete()
+            messages.success(request, f"Category '{label}' deleted.")
+            return redirect('/tickets/it-head/?view=categories')
+
         # ── Dispatch ticket to IT staff ─────────────────────────
         elif 'ticket_id' in request.POST:
             ticket_id = request.POST.get('ticket_id')
@@ -1018,6 +1065,7 @@ def it_head_dashboard(request):
         'priority_filter':          priority_filter,
         'escalation_count':         _escalation_count(),
         'pending_pm_reviews_count': pending_pm_reviews_count,
+        'all_categories':           TicketCategory.objects.all().order_by('sort_order', 'label'),
     }
     return render(request, 'tickets/it_head_dashboard.html', context)
 
@@ -1497,7 +1545,7 @@ def head_create_ticket(request):
             ticket.category            = request.POST.get('category', 'OTHER')
             ticket.requester           = request.user
             ticket.department          = profile.department
-            ticket.priority            = form.cleaned_data.get('priority', 'MEDIUM')
+            ticket.priority            = 'MEDIUM'  # Default; IT Head triages priority after assignment
             # ── KEY DIFFERENCE: skip approval, send straight to IT ──
             ticket.needs_head_approval = False
             ticket.approval_status     = 'NOT_REQUIRED'
@@ -1529,4 +1577,5 @@ def head_create_ticket(request):
             'client_name': request.user.get_full_name() or request.user.username,
         })
  
-    return render(request, 'tickets/head_create_ticket.html', {'form': form})
+    categories = TicketCategory.objects.filter(is_active=True).order_by('sort_order', 'label')
+    return render(request, 'tickets/head_create_ticket.html', {'form': form, 'categories': categories})

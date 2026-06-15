@@ -288,7 +288,33 @@ class RecurringTask(models.Model):
         return "Unknown"
 
 
-# 5. NOTIFICATIONS
+# 5. TICKET CATEGORIES (managed by IT Head, shown on submission forms)
+class TicketCategory(models.Model):
+    key = models.CharField(
+        max_length=30, unique=True,
+        verbose_name="Category Key",
+        help_text="Uppercase slug, e.g. HARDWARE. Must be unique."
+    )
+    label = models.CharField(max_length=100, verbose_name="Display Label")
+    icon  = models.CharField(
+        max_length=80, default='fa-solid fa-tag',
+        verbose_name="Font Awesome Icon Classes",
+        help_text="Space-separated FA classes, e.g. fa-solid fa-desktop"
+    )
+    is_active  = models.BooleanField(default=True, verbose_name="Active (visible on forms)")
+    sort_order = models.PositiveIntegerField(default=0, verbose_name="Sort Order")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['sort_order', 'label']
+        verbose_name        = "Ticket Category"
+        verbose_name_plural = "Ticket Categories"
+
+    def __str__(self):
+        return f"{self.label} ({self.key})"
+
+
+# 6. NOTIFICATIONS
 class Notification(models.Model):
     NOTIF_TYPE_CHOICES = [
         # Employee

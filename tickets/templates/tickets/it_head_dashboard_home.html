@@ -104,6 +104,10 @@
             <div class="sb-icon"><i class="fa-solid fa-calendar-check"></i></div>
             <span class="sb-label">Routine Maintenance</span>
         </a>
+        <a href="{% url 'it_head_dashboard' %}?view=categories" class="sb-item {% if view_mode == 'categories' %}active{% endif %}" title="Manage Categories">
+            <div class="sb-icon"><i class="fa-solid fa-tags"></i></div>
+            <span class="sb-label">Ticket Categories</span>
+        </a>
     </nav>
     <div class="sb-footer">
         <form action="{% url 'logout' %}" method="post" style="margin:0;">

@@ -47,6 +47,10 @@
             <div class="sb-icon"><i class="fa-solid fa-calendar-check"></i></div>
             <span class="sb-label">Routine Maintenance</span>
         </a>
+        <a href="{% url 'it_head_dashboard' %}?view=categories" class="sb-item {% if view_mode == 'categories' %}active{% endif %}" title="Manage Categories">
+            <div class="sb-icon"><i class="fa-solid fa-tags"></i></div>
+            <span class="sb-label">Ticket Categories</span>
+        </a>
     </nav>
     <div class="sb-footer">
         <form action="{% url 'logout' %}" method="post" style="margin: 0;">
@@ -427,6 +431,315 @@
             {% endfor %}
         </div>
 
+    {% elif view_mode == 'categories' %}
+    <style>
+        .cat-crud-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+        .cat-crud-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 18px 20px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: var(--transition);
+            animation: fadeSlideUp 0.35s ease both;
+        }
+        .cat-crud-card:hover { box-shadow: var(--shadow-md); border-color: #c0d4e8; }
+        .cat-crud-card.inactive { opacity: 0.55; }
+        .cat-crud-card-top {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .cat-crud-icon {
+            width: 44px; height: 44px;
+            border-radius: 10px;
+            background: var(--teal-dim);
+            border: 1px solid rgba(0,196,184,0.25);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; color: var(--teal); flex-shrink: 0;
+        }
+        .cat-crud-info { flex: 1; min-width: 0; }
+        .cat-crud-label {
+            font-family: 'Sora', sans-serif;
+            font-size: 15px; font-weight: 700; color: var(--navy);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .cat-crud-key {
+            font-size: 11px; font-weight: 700; color: var(--slate);
+            letter-spacing: 0.07em; text-transform: uppercase; margin-top: 2px;
+        }
+        .cat-crud-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .btn-cat-edit {
+            flex: 1; display: inline-flex; align-items: center; justify-content: center;
+            gap: 5px; padding: 7px 12px;
+            background: #eff6ff; color: #2563eb;
+            border: 1px solid #bfdbfe; border-radius: 6px;
+            font-size: 12px; font-weight: 700; cursor: pointer; transition: var(--transition);
+        }
+        .btn-cat-edit:hover { background: #2563eb; color: #fff; }
+        .btn-cat-toggle-on {
+            flex: 1; display: inline-flex; align-items: center; justify-content: center;
+            gap: 5px; padding: 7px 12px;
+            background: #ecfdf5; color: #059669;
+            border: 1px solid #a7f3d0; border-radius: 6px;
+            font-size: 12px; font-weight: 700; cursor: pointer; transition: var(--transition);
+        }
+        .btn-cat-toggle-on:hover { background: #059669; color: #fff; }
+        .btn-cat-toggle-off {
+            flex: 1; display: inline-flex; align-items: center; justify-content: center;
+            gap: 5px; padding: 7px 12px;
+            background: #fffbeb; color: #d97706;
+            border: 1px solid #fcd34d; border-radius: 6px;
+            font-size: 12px; font-weight: 700; cursor: pointer; transition: var(--transition);
+        }
+        .btn-cat-toggle-off:hover { background: #d97706; color: #fff; }
+        .btn-cat-delete {
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 5px; padding: 7px 12px;
+            background: #fef2f2; color: #dc2626;
+            border: 1px solid #fecaca; border-radius: 6px;
+            font-size: 12px; font-weight: 700; cursor: pointer; transition: var(--transition);
+        }
+        .btn-cat-delete:hover { background: #dc2626; color: #fff; }
+
+        /* Edit modal */
+        .cat-modal-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(6,15,30,0.55);
+            z-index: 9000;
+            align-items: center; justify-content: center;
+        }
+        .cat-modal-overlay.open { display: flex; }
+        .cat-modal {
+            background: var(--white);
+            border-radius: var(--radius-md);
+            padding: 28px 32px;
+            width: 100%; max-width: 460px;
+            box-shadow: 0 20px 60px rgba(6,15,30,0.3);
+            animation: fadeSlideUp 0.25s ease both;
+        }
+        .cat-modal h3 {
+            font-family: 'Sora', sans-serif;
+            font-size: 17px; font-weight: 700; color: var(--navy);
+            margin-bottom: 20px;
+            display: flex; align-items: center; gap: 9px;
+        }
+        .cat-modal h3 i { color: var(--teal); }
+        .cat-modal-field { margin-bottom: 16px; }
+        .cat-modal-field label {
+            display: block; font-size: 11px; font-weight: 700;
+            color: var(--navy-mid); letter-spacing: 0.08em;
+            text-transform: uppercase; margin-bottom: 6px;
+        }
+        .cat-modal-field input {
+            width: 100%; padding: 10px 13px;
+            border: 1.5px solid var(--border); border-radius: 6px;
+            font-family: 'DM Sans', sans-serif; font-size: 14px;
+            outline: none; transition: var(--transition);
+        }
+        .cat-modal-field input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(0,196,184,0.12); }
+        .cat-modal-field small {
+            display: block; margin-top: 4px; font-size: 11px; color: var(--slate-light);
+        }
+        .cat-modal-actions { display: flex; gap: 10px; margin-top: 22px; }
+        .cat-icon-preview {
+            display: inline-flex; align-items: center; gap: 8px;
+            margin-top: 6px; font-size: 22px; color: var(--teal);
+        }
+        .icon-help-link {
+            font-size: 11.5px; color: var(--teal); text-decoration: none; font-weight: 600;
+        }
+        .icon-help-link:hover { text-decoration: underline; }
+        .active-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em;
+            text-transform: uppercase; padding: 2px 9px; border-radius: 20px;
+        }
+        .active-badge.on  { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+        .active-badge.off { background: #fffbeb; color: #d97706; border: 1px solid #fcd34d; }
+    </style>
+
+    <div class="section-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <h2 class="section-title">
+            <i class="fa-solid fa-tags"></i> Ticket Categories
+        </h2>
+        <button onclick="openCreateModal()" class="btn btn-primary" style="padding:9px 20px;">
+            <i class="fa-solid fa-plus"></i> Add Category
+        </button>
+    </div>
+
+    <p style="color:var(--slate); font-size:13.5px; margin-bottom:8px;">
+        These categories appear on ticket submission forms. Deactivated categories are hidden from employees and department heads but are preserved on existing tickets.
+    </p>
+
+    {% if all_categories %}
+    <div class="cat-crud-grid">
+        {% for cat in all_categories %}
+        <div class="cat-crud-card {% if not cat.is_active %}inactive{% endif %}">
+            <div class="cat-crud-card-top">
+                <div class="cat-crud-icon">
+                    <i class="{{ cat.icon }}"></i>
+                </div>
+                <div class="cat-crud-info">
+                    <div class="cat-crud-label">{{ cat.label }}</div>
+                    <div class="cat-crud-key">
+                        KEY: {{ cat.key }} &nbsp;·&nbsp; ORDER: {{ cat.sort_order }}
+                        &nbsp;·&nbsp;
+                        {% if cat.is_active %}
+                            <span class="active-badge on"><i class="fa-solid fa-circle-dot"></i> Active</span>
+                        {% else %}
+                            <span class="active-badge off"><i class="fa-solid fa-circle-xmark"></i> Hidden</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="cat-crud-actions">
+                <button class="btn-cat-edit"
+                    onclick="openEditModal('{{ cat.id }}','{{ cat.key }}','{{ cat.label|escapejs }}','{{ cat.icon|escapejs }}','{{ cat.sort_order }}')">
+                    <i class="fa-solid fa-pen"></i> Edit
+                </button>
+                <form method="POST" style="flex:1; margin:0;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action_type" value="toggle_category">
+                    <input type="hidden" name="cat_id" value="{{ cat.id }}">
+                    {% if cat.is_active %}
+                    <button type="submit" class="btn-cat-toggle-off" style="width:100%;"
+                        title="Hide from submission forms">
+                        <i class="fa-solid fa-eye-slash"></i> Deactivate
+                    </button>
+                    {% else %}
+                    <button type="submit" class="btn-cat-toggle-on" style="width:100%;"
+                        title="Show on submission forms">
+                        <i class="fa-solid fa-eye"></i> Activate
+                    </button>
+                    {% endif %}
+                </form>
+                <form method="POST" style="margin:0;"
+                    onsubmit="return confirm('Delete category \'{{ cat.label|escapejs }}\'? Existing tickets using this category will keep their value but it won\'t appear on future forms.')">
+                    {% csrf_token %}
+                    <input type="hidden" name="action_type" value="delete_category">
+                    <input type="hidden" name="cat_id" value="{{ cat.id }}">
+                    <button type="submit" class="btn-cat-delete"><i class="fa-solid fa-trash-can"></i></button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="margin-top:24px;">
+        <div class="empty-icon"><i class="fa-solid fa-tags"></i></div>
+        <h4>No categories yet</h4>
+        <p>Click <strong>Add Category</strong> above to create your first ticket category.</p>
+    </div>
+    {% endif %}
+
+    <div class="cat-modal-overlay" id="createModal">
+        <div class="cat-modal">
+            <h3><i class="fa-solid fa-plus-circle"></i> New Category</h3>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action_type" value="create_category">
+                <div class="cat-modal-field">
+                    <label>Category Key <span style="color:var(--danger)">*</span></label>
+                    <input type="text" name="cat_key" placeholder="e.g. HARDWARE" required
+                        pattern="[A-Za-z0-9_]+" title="Letters, numbers, and underscores only"
+                        oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9_]/g,'')">
+                    <small>Unique identifier — uppercase, no spaces. Used internally on tickets.</small>
+                </div>
+                <div class="cat-modal-field">
+                    <label>Display Label <span style="color:var(--danger)">*</span></label>
+                    <input type="text" name="cat_label" placeholder="e.g. Hardware Issue" required maxlength="100">
+                </div>
+                <div class="cat-modal-field">
+                    <label>Font Awesome Icon Classes</label>
+                    <input type="text" name="cat_icon" id="createIconInput"
+                        placeholder="fa-solid fa-desktop" value="fa-solid fa-tag"
+                        oninput="document.getElementById('createIconPreview').className = this.value">
+                    <div class="cat-icon-preview">
+                        <i id="createIconPreview" class="fa-solid fa-tag"></i>
+                        <a href="https://fontawesome.com/icons" target="_blank" class="icon-help-link">
+                            Browse FA Icons →
+                        </a>
+                    </div>
+                    <small>e.g. fa-solid fa-desktop · fa-solid fa-wifi · fa-solid fa-shield-halved</small>
+                </div>
+                <div class="cat-modal-field">
+                    <label>Sort Order</label>
+                    <input type="number" name="cat_sort_order" value="0" min="0" placeholder="0">
+                    <small>Lower numbers appear first. Use 0 for default order.</small>
+                </div>
+                <div class="cat-modal-actions">
+                    <button type="submit" class="btn btn-primary" style="flex:1; padding:11px;">
+                        <i class="fa-solid fa-check"></i> Create Category
+                    </button>
+                    <button type="button" onclick="closeModal('createModal')"
+                        style="padding:11px 20px; background:var(--bg); border:1.5px solid var(--border); border-radius:6px; cursor:pointer; font-weight:600; color:var(--slate);">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="cat-modal-overlay" id="editModal">
+        <div class="cat-modal">
+            <h3><i class="fa-solid fa-pen-to-square"></i> Edit Category</h3>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action_type" value="edit_category">
+                <input type="hidden" name="cat_id" id="editCatId">
+                <div class="cat-modal-field">
+                    <label>Category Key <span style="color:var(--danger)">*</span></label>
+                    <input type="text" name="cat_key" id="editCatKey" required
+                        pattern="[A-Za-z0-9_]+" title="Letters, numbers, and underscores only"
+                        oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9_]/g,'')">
+                    <small>⚠ Changing the key won't update the value on existing tickets.</small>
+                </div>
+                <div class="cat-modal-field">
+                    <label>Display Label <span style="color:var(--danger)">*</span></label>
+                    <input type="text" name="cat_label" id="editCatLabel" required maxlength="100">
+                </div>
+                <div class="cat-modal-field">
+                    <label>Font Awesome Icon Classes</label>
+                    <input type="text" name="cat_icon" id="editCatIcon"
+                        oninput="document.getElementById('editIconPreview').className = this.value">
+                    <div class="cat-icon-preview">
+                        <i id="editIconPreview" class="fa-solid fa-tag"></i>
+                        <a href="https://fontawesome.com/icons" target="_blank" class="icon-help-link">
+                            Browse FA Icons →
+                        </a>
+                    </div>
+                </div>
+                <div class="cat-modal-field">
+                    <label>Sort Order</label>
+                    <input type="number" name="cat_sort_order" id="editCatOrder" min="0">
+                </div>
+                <div class="cat-modal-actions">
+                    <button type="submit" class="btn btn-primary" style="flex:1; padding:11px;">
+                        <i class="fa-solid fa-save"></i> Save Changes
+                    </button>
+                    <button type="button" onclick="closeModal('editModal')"
+                        style="padding:11px 20px; background:var(--bg); border:1.5px solid var(--border); border-radius:6px; cursor:pointer; font-weight:600; color:var(--slate);">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     {% else %}
         <div class="section-header">
             <h2 class="section-title">
@@ -580,7 +893,6 @@
             </div>
             {% endfor %}
         </div>
-
     {% endif %}
 </div>
 </div>
@@ -630,7 +942,7 @@ evtSource.onmessage = function(event) {
 };
 window.addEventListener('beforeunload', () => evtSource.close());
 
-function editTask(id, title, desc, recurrence, tech_id, priority, start, end) {
+function editTask(id, title, desc, recurrence, tech_id, priority, start, end, startTime, endTime) {
     // Scroll smoothly to the form
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -681,7 +993,30 @@ function cancelEdit() {
 
 }
 
-// Wipe out any cached browser states upon reload
+function openCreateModal() {
+    document.getElementById('createModal').classList.add('open');
+}
+function openEditModal(id, key, label, icon, sortOrder) {
+    document.getElementById('editCatId').value    = id;
+    document.getElementById('editCatKey').value   = key;
+    document.getElementById('editCatLabel').value = label;
+    document.getElementById('editCatIcon').value  = icon;
+    document.getElementById('editCatOrder').value = sortOrder;
+    const prev = document.getElementById('editIconPreview');
+    if (prev) prev.className = icon;
+    document.getElementById('editModal').classList.add('open');
+}
+function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+}
+// Close modals on overlay click
+document.querySelectorAll('.cat-modal-overlay').forEach(function(overlay) {
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) overlay.classList.remove('open');
+    });
+});
+
+
 document.addEventListener("DOMContentLoaded", function() {
     if(document.getElementById('pmForm')) {
         cancelEdit();
