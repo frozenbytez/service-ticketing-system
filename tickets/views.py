@@ -209,7 +209,6 @@ def check_and_generate_recurring_tasks():
             if task.recurrence_type == 'CUSTOM' and task.custom_date_start and task.custom_date_end:
                 notes += f" (Must be completed between {task.custom_date_start.strftime('%b %d')} and {task.custom_date_end.strftime('%b %d, %Y')})"
 
-            # Locate the Ticket.objects.create(...) block and add the time fields:
             ticket = Ticket.objects.create(
                 title=f"[PM] {task.title}",
                 description=task.description,
@@ -224,11 +223,8 @@ def check_and_generate_recurring_tasks():
                 is_preventive_maintenance=True,
                 source_recurring_task=task,
                 due_date=ticket_due_date,
-                
-                # ---> ADD THESE TWO LINES <---
                 scheduled_start_time=task.start_time or '08:00',
                 scheduled_end_time=task.end_time or '17:00',
-                
                 dispatch_notes=notes
             )
             ticket.ticket_number = _generate_ticket_number()
@@ -715,70 +711,173 @@ def head_dashboard(request):
     search_query  = request.GET.get('q', '').strip()
     status_filter = request.GET.get('status_filter', '')
 
-    if request.method == 'POST' and 'handle_approval' in request.POST:
-        ticket_id = request.POST.get('ticket_id')
-        action    = request.POST.get('action')
-        ticket    = get_object_or_404(Ticket, id=ticket_id, department=profile.department)
-        ticket.approval_notes = request.POST.get('approval_notes', '').strip()
-
-        if action == 'APPROVE':
-            ticket.approval_status = 'APPROVED'
+    if request.method == 'POST':
+        
+        # ── Handle Feedback (for tickets submitted by the Dept Head) ──
+        if 'submit_feedback' in request.POST:
+            ticket_id = request.POST.get('ticket_id')
+            rating    = request.POST.get('rating')
+            notes     = request.POST.get('feedback_notes', '').strip()
+            ticket    = get_object_or_404(Ticket, id=ticket_id, requester=request.user, status='RESOLVED')
+    
+            try:
+                rating = int(rating)
+                if not 1 <= rating <= 5:
+                    raise ValueError
+            except (TypeError, ValueError):
+                messages.error(request, "Please select a valid rating between 1 and 5.")
+                return redirect(reverse('head_dashboard') + '?view=history')
+    
+            ticket.client_feedback_rating = rating
+            ticket.client_feedback_notes  = notes
+            ticket.status                 = 'CLOSED'
             ticket.save()
-            messages.success(request, f"Ticket '{ticket.title}' approved and sent to IT.")
-
-            # ── NOTIFICATION: Employee — ticket approved ──────────
-            push_notification(
-                recipient=ticket.requester,
-                notif_type='ticket_approved',
-                title='Your Ticket Was Approved',
-                message=(
-                    f'Your ticket "{ticket.title}" has been approved by '
-                    f'{request.user.get_full_name() or request.user.username} '
-                    f'and is now in the IT queue.'
-                ),
-                ticket=ticket,
-            )
-
-            # ── NOTIFICATION: IT Head — new ticket needs assigning ─
+    
+            if ticket.assigned_to:
+                push_notification(
+                    recipient=ticket.assigned_to,
+                    notif_type='feedback_received',
+                    title='You Received a Rating',
+                    message=(
+                        f'You received a {rating}★ rating on '
+                        f'"{ticket.title}" from {request.user.get_full_name() or request.user.username}.'
+                    ),
+                    ticket=ticket,
+                )
+    
             for it_head in _it_head_users():
                 push_notification(
                     recipient=it_head,
-                    notif_type='needs_assigning',
-                    title='New Ticket Needs Assigning',
+                    notif_type='rating_received',
+                    title='IT Staff Received a Rating',
                     message=(
-                        f'"{ticket.title}" from {ticket.get_department_display()} '
-                        f'has been approved and is waiting for an IT staff assignment.'
+                        f'{ticket.assigned_to.get_full_name() or ticket.assigned_to.username} '
+                        f'received {rating}★ on ticket "{ticket.title}".'
+                    ),
+                    ticket=ticket,
+                )
+    
+            messages.success(request, "Thank you for your feedback! The ticket is now closed.")
+            return redirect(reverse('head_dashboard') + '?view=history')
+        
+        # ── Handle Reopen (for tickets submitted by the Dept Head) ──
+        elif 'reopen_ticket' in request.POST:
+            ticket_id     = request.POST.get('ticket_id')
+            reopen_reason = request.POST.get('reopen_reason', '').strip()
+            ticket        = get_object_or_404(Ticket, id=ticket_id, requester=request.user, status='CLOSED')
+    
+            if not reopen_reason:
+                messages.error(request, "Please provide a reason for reopening before submitting.")
+                return redirect(reverse('head_dashboard') + '?view=history')
+    
+            ticket.status               = 'OPEN'
+            ticket.assigned_to          = None
+            ticket.approval_status      = 'NOT_REQUIRED' if not ticket.needs_head_approval else 'APPROVED'
+            ticket.is_escalated         = False
+            ticket.escalated_from_tier  = None
+            ticket.resolution_notes     = None
+            ticket.client_feedback_rating = None
+            ticket.client_feedback_notes  = None
+            ticket.reopen_reason        = reopen_reason
+            ticket.reopened_at          = timezone.now()
+            ticket.reopen_count         = (ticket.reopen_count or 0) + 1
+            ticket.save()
+    
+            for it_head in _it_head_users():
+                push_notification(
+                    recipient=it_head,
+                    notif_type='ticket_reopened',
+                    title='Ticket Reopened — Needs Reassignment',
+                    message=(
+                        f'Ticket #{ticket.ticket_number or ticket.id} "{ticket.title}" was reopened by '
+                        f'{request.user.get_full_name() or request.user.username}. '
+                        f'Reason: {reopen_reason}'
+                    ),
+                    ticket=ticket,
+                )
+    
+            messages.success(request, f"Ticket '{ticket.title}' has been reopened and sent back to IT.")
+            return redirect(reverse('head_dashboard') + '?view=history')
+
+        # ── Handle Approval (for tickets submitted by employees) ──
+        elif 'handle_approval' in request.POST:
+            ticket_id = request.POST.get('ticket_id')
+            action    = request.POST.get('action')
+            ticket    = get_object_or_404(Ticket, id=ticket_id, department=profile.department)
+            ticket.approval_notes = request.POST.get('approval_notes', '').strip()
+
+            if action == 'APPROVE':
+                ticket.approval_status = 'APPROVED'
+                ticket.save()
+                messages.success(request, f"Ticket '{ticket.title}' approved and sent to IT.")
+
+                # ── NOTIFICATION: Employee — ticket approved ──────────
+                push_notification(
+                    recipient=ticket.requester,
+                    notif_type='ticket_approved',
+                    title='Your Ticket Was Approved',
+                    message=(
+                        f'Your ticket "{ticket.title}" has been approved by '
+                        f'{request.user.get_full_name() or request.user.username} '
+                        f'and is now in the IT queue.'
                     ),
                     ticket=ticket,
                 )
 
-        elif action == 'REJECT':
-            ticket.approval_status = 'REJECTED'
-            ticket.status          = 'CLOSED'
-            ticket.save()
-            messages.error(request, f"Ticket '{ticket.title}' rejected.")
+                # ── NOTIFICATION: IT Head — new ticket needs assigning ─
+                for it_head in _it_head_users():
+                    push_notification(
+                        recipient=it_head,
+                        notif_type='needs_assigning',
+                        title='New Ticket Needs Assigning',
+                        message=(
+                            f'"{ticket.title}" from {ticket.get_department_display()} '
+                            f'has been approved and is waiting for an IT staff assignment.'
+                        ),
+                        ticket=ticket,
+                    )
 
-            # ── NOTIFICATION: Employee — ticket rejected ──────────
-            push_notification(
-                recipient=ticket.requester,
-                notif_type='ticket_rejected',
-                title='Your Ticket Was Declined',
-                message=(
-                    f'Your ticket "{ticket.title}" was declined by '
-                    f'{request.user.get_full_name() or request.user.username}.'
-                    + (f' Note: {ticket.approval_notes}' if ticket.approval_notes else '')
-                ),
-                ticket=ticket,
-            )
+            elif action == 'REJECT':
+                ticket.approval_status = 'REJECTED'
+                ticket.status          = 'CLOSED'
+                ticket.save()
+                messages.error(request, f"Ticket '{ticket.title}' rejected.")
 
-        return redirect('head_dashboard')
+                # ── NOTIFICATION: Employee — ticket rejected ──────────
+                push_notification(
+                    recipient=ticket.requester,
+                    notif_type='ticket_rejected',
+                    title='Your Ticket Was Declined',
+                    message=(
+                        f'Your ticket "{ticket.title}" was declined by '
+                        f'{request.user.get_full_name() or request.user.username}.'
+                        + (f' Note: {ticket.approval_notes}' if ticket.approval_notes else '')
+                    ),
+                    ticket=ticket,
+                )
 
+            return redirect('head_dashboard')
+
+    # Pending Approvals Queue
     pending_approvals = Ticket.objects.filter(
         department=profile.department, approval_status='PENDING'
     ).order_by('-created_at')
+
+    # History Queue: Sort so the Dept Head's own RESOLVED tickets float to the very top
     history_tickets = Ticket.objects.filter(
         department=profile.department
-    ).exclude(approval_status='PENDING').order_by('-updated_at')
+    ).exclude(approval_status='PENDING').annotate(
+        sort_order=Case(
+            When(status='RESOLVED', requester=request.user, then=Value(0)),
+            default=Value(1),
+            output_field=IntegerField(),
+        )
+    ).order_by('sort_order', '-updated_at')
+
+    # Count how many tickets the Dept Head needs to review
+    needs_feedback_count = Ticket.objects.filter(
+        requester=request.user, status='RESOLVED'
+    ).count()
 
     if search_query:
         q = (
@@ -796,11 +895,16 @@ def head_dashboard(request):
         else:
             pending_approvals = pending_approvals.filter(status=status_filter)
 
-    ctx = {'view_mode': view_mode}
+    ctx = {
+        'view_mode': view_mode,
+        'needs_feedback_count': needs_feedback_count,
+    }
+    
     if view_mode == 'history':
         ctx['history_tickets']   = history_tickets
     else:
         ctx['pending_approvals'] = pending_approvals
+        
     return render(request, 'tickets/head_dashboard.html', ctx)
 
 
@@ -877,29 +981,13 @@ def it_head_dashboard(request):
             messages.success(request, f"Maintenance schedule '{task.title}' updated successfully!")
             return redirect('/tickets/it-head/?view=maintenance')
 
-        # ... keep delete_maintenance and review_pm exactly as they are below ...
-
-            # ── NEW: Remove a PM Schedule ──
+        # ── NEW: Remove a PM Schedule ──
         elif 'delete_maintenance' in request.POST:
             task_id = request.POST.get('task_id')
             task = get_object_or_404(RecurringTask, id=task_id)
             task_title = task.title
             task.delete()
             messages.success(request, f"Maintenance schedule '{task_title}' has been successfully removed.")
-            return redirect('/tickets/it-head/?view=maintenance')
-
-            if recurrence == 'CUSTOM' and custom_start and custom_end:
-                if custom_start > custom_end:
-                    messages.error(request, "Validation Error: Custom Start Date cannot be after End Date.")
-                    return redirect('/tickets/it-head/?view=maintenance')
-
-            assigned_tech = User.objects.filter(id=tech_id).first() if tech_id else None
-            RecurringTask.objects.create(
-                title=title, description=description, recurrence_type=recurrence,
-                custom_date_start=custom_start, custom_date_end=custom_end,
-                assigned_to=assigned_tech, priority=priority, created_by=request.user,
-            )
-            messages.success(request, f"Maintenance schedule '{title}' created successfully!")
             return redirect('/tickets/it-head/?view=maintenance')
 
         # ── PM Review ───────────────────────────────────────────
@@ -935,11 +1023,8 @@ def it_head_dashboard(request):
         elif action_type == 'edit_category':
             cat_id = request.POST.get('cat_id')
             cat    = get_object_or_404(TicketCategory, id=cat_id)
-            new_key = request.POST.get('cat_key', '').strip().upper().replace(' ', '_')
-            if new_key and new_key != cat.key and TicketCategory.objects.filter(key=new_key).exists():
-                messages.error(request, f"A category with key '{new_key}' already exists.")
-                return redirect('/tickets/it-head/?view=categories')
-            cat.key        = new_key or cat.key
+            
+            # Key modification has been removed to preserve data integrity
             cat.label      = request.POST.get('cat_label', cat.label).strip()
             cat.icon       = request.POST.get('cat_icon', cat.icon).strip() or 'fa-solid fa-tag'
             cat.sort_order = int(request.POST.get('cat_sort_order', cat.sort_order) or 0)
@@ -1133,13 +1218,11 @@ def it_staff_dashboard(request):
                             ticket=ticket,
                         )
 
-            # ---> NEW: Clean START action <---
             elif action == 'START':
                 ticket.started_at = timezone.now()
                 ticket.save()
                 messages.success(request, f"Started working on '{ticket.title}'. Time tracking has begun.")
 
-            # ---> REPAIRED: RESOLVE action with safely indented notifications <---
             elif action == 'RESOLVE':
                 ticket.status           = 'RESOLVED'
                 ticket.resolved_at      = timezone.now()          
@@ -1480,8 +1563,6 @@ def read_and_redirect_notification(request, notif_id):
     # Anything else → regular employee
  
     # ── IT HEAD ─────────────────────────────────────────────────
-    # IT Heads are routed to their portal for EVERY notification,
-    # even if the notif_type is one that also goes to employees/dept heads.
     if is_it_head:
         if ntype == 'pm_finished':
             url = reverse('it_head_dashboard') + '?view=maintenance_review'
@@ -1490,19 +1571,15 @@ def read_and_redirect_notification(request, notif_id):
         elif ntype in ('needs_assigning', 'ticket_reopened', 'ticket_escalated'):
             url = reverse('it_head_dashboard')
         else:
-            # Any other notif an IT Head might receive → home dashboard
             url = reverse('it_head_dashboard_home')
  
     # ── DEPT HEAD (non-IT) ───────────────────────────────────────
-    # Dept Heads are routed to their manager portal for every notif,
-    # including ticket_resolved (which used to send them to clinic_portal).
     elif is_dept_head:
         if ntype == 'needs_approval':
-            url = reverse('head_dashboard')                      # Pending Approvals tab
+            url = reverse('head_dashboard')                     
         elif ntype in ('ticket_dispatched', 'ticket_resolved'):
-            url = reverse('head_dashboard') + '?view=history'   # All Dept Tickets tab
+            url = reverse('head_dashboard') + '?view=history'   
         else:
-            # Any unexpected notif type → their home overview
             url = reverse('head_dashboard_home')
  
     # ── IT STAFF ────────────────────────────────────────────────
@@ -1512,13 +1589,12 @@ def read_and_redirect_notification(request, notif_id):
         elif ntype in ('feedback_received',):
             url = reverse('it_staff_dashboard') + '?view=history'
         elif ntype in ('ticket_assigned', 'ticket_escalated'):
-            url = reverse('it_staff_dashboard')                  # Active Tasks tab
+            url = reverse('it_staff_dashboard')                  
         else:
             url = reverse('it_staff_dashboard_home')
  
     # ── REGULAR EMPLOYEE ─────────────────────────────────────────
     else:
-        # ticket_approved, ticket_rejected, ticket_resolved → My Tickets
         url = reverse('clinic_portal')
  
     return redirect(url)
@@ -1527,9 +1603,6 @@ def read_and_redirect_notification(request, notif_id):
 def head_create_ticket(request):
     """
     Department Heads submit tickets that bypass the approval stage entirely.
-    The ticket is created with needs_head_approval=False and
-    approval_status='NOT_REQUIRED', then IT Heads are notified immediately
-    so they can assign it to an IT staff member.
     """
     try:
         profile = request.user.employeeprofile
@@ -1545,14 +1618,12 @@ def head_create_ticket(request):
             ticket.category            = request.POST.get('category', 'OTHER')
             ticket.requester           = request.user
             ticket.department          = profile.department
-            ticket.priority            = 'MEDIUM'  # Default; IT Head triages priority after assignment
-            # ── KEY DIFFERENCE: skip approval, send straight to IT ──
+            ticket.priority            = 'MEDIUM'
             ticket.needs_head_approval = False
             ticket.approval_status     = 'NOT_REQUIRED'
             ticket.ticket_number       = _generate_ticket_number()
             ticket.save()
  
-            # Notify every IT Head so they can assign the ticket
             for it_head in _it_head_users():
                 push_notification(
                     recipient=it_head,
