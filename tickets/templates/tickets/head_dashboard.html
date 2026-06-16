@@ -242,6 +242,20 @@
                     <option value="HIGH"   {% if request.GET.priority_filter == 'HIGH' %}selected{% endif %}>🟡 High</option>
                     <option value="URGENT" {% if request.GET.priority_filter == 'URGENT' %}selected{% endif %}>🔴 Urgent</option>
                 </select>
+                <select name="category_filter" id="categoryFilter">
+                    <option value="">All Categories</option>
+                    {% for category in filter_categories %}
+                    <option value="{{ category.key }}" {% if request.GET.category_filter == category.key %}selected{% endif %}>{{ category.label }}</option>
+                    {% endfor %}
+                </select>
+                <a href="{% url 'export_tickets_csv' %}?{{ request.GET.urlencode }}"
+                   style="display:inline-flex;align-items:center;gap:6px;padding:9px 15px;background:#ecfdf5;color:#059669;border:1.5px solid #a7f3d0;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;">
+                    <i class="fa-solid fa-file-excel"></i> CSV
+                </a>
+                <a href="{% url 'export_tickets_pdf' %}?{{ request.GET.urlencode }}"
+                   style="display:inline-flex;align-items:center;gap:6px;padding:9px 15px;background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;">
+                    <i class="fa-solid fa-file-pdf"></i> PDF
+                </a>
             </form>
         </div>
 
@@ -276,6 +290,7 @@
                         <i class="fa-solid fa-user"></i>
                         {{ ticket.requester.username }} ({{ ticket.client_name }})
                     </span>
+                    <span><i class="{{ ticket.category_icon }}"></i> {{ ticket.category_label }}</span>
                     <span>
                         <i class="fa-regular fa-calendar-plus"></i>
                         Submitted: {{ ticket.created_at|date:"M d, Y · g:i A" }}
@@ -498,6 +513,12 @@
                     <option value="HIGH"   {% if request.GET.priority_filter == 'HIGH' %}selected{% endif %}>🟡 High</option>
                     <option value="URGENT" {% if request.GET.priority_filter == 'URGENT' %}selected{% endif %}>🔴 Urgent</option>
                 </select>
+                <select name="category_filter" id="categoryFilter">
+                    <option value="">All Categories</option>
+                    {% for category in filter_categories %}
+                    <option value="{{ category.key }}" {% if request.GET.category_filter == category.key %}selected{% endif %}>{{ category.label }}</option>
+                    {% endfor %}
+                </select>
             </form>
         </div>
 
@@ -586,7 +607,7 @@ if (liveSearch) {
 }
 
 // ── Auto-submit on any filter change ───────────────────────
-['statusFilter','priorityFilter'].forEach(id => {
+['statusFilter','priorityFilter','categoryFilter'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('change', () => document.getElementById('filterForm').submit());
 });

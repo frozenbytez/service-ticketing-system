@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tickets Report — City Clinic IT</title>
+<style>
+  @page {
+    size: A4 landscape;
+    margin: 1.8cm 1.5cm 1.5cm 1.5cm;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 9.5px;
+    color: #0f1f3d;
+    line-height: 1.4;
+  }
+
+  /* ── Report Header ── */
+  .rpt-header {
+    border-bottom: 3px solid #00c4b8;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+  }
+  .rpt-header-inner {
+    display: block;
+  }
+  .rpt-logo-row {
+    display: block;
+    margin-bottom: 4px;
+  }
+  .rpt-clinic-name {
+    font-size: 17px;
+    font-weight: bold;
+    color: #0b1d3a;
+    letter-spacing: -0.3px;
+  }
+  .rpt-teal { color: #00c4b8; }
+  .rpt-report-type {
+    font-size: 11px;
+    color: #5e6e8a;
+    margin-top: 3px;
+    font-weight: 600;
+  }
+  .rpt-meta {
+    font-size: 8px;
+    color: #8fa0b8;
+    margin-top: 4px;
+  }
+
+  /* ── Summary Box ── */
+  .rpt-summary {
+    background: #f2f6fb;
+    border: 1px solid #d8e4f0;
+    border-left: 4px solid #00c4b8;
+    padding: 7px 12px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    font-size: 9px;
+    color: #5e6e8a;
+  }
+  .rpt-summary strong { color: #0b1d3a; }
+  .rpt-count-big {
+    font-size: 22px;
+    font-weight: 900;
+    color: #0b1d3a;
+    vertical-align: middle;
+    margin-right: 4px;
+  }
+
+  /* ── Main Table ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    page-break-inside: auto;
+  }
+  thead { display: table-header-group; }
+  tbody tr { page-break-inside: avoid; }
+
+  th {
+    background-color: #0b1d3a;
+    color: #ffffff;
+    padding: 7px 8px;
+    text-align: left;
+    font-size: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #e8eef5;
+    font-size: 8.5px;
+    vertical-align: top;
+  }
+
+  tr:nth-child(even) td { background-color: #f7fafd; }
+  tr:last-child td { border-bottom: none; }
+
+  /* ── Priority Badges ── */
+  .badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-size: 7.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .p-low      { background: #ecfdf5; color: #059669; }
+  .p-medium   { background: #eff6ff; color: #2563eb; }
+  .p-high     { background: #fffbeb; color: #d97706; }
+  .p-urgent   { background: #fef2f2; color: #dc2626; }
+
+  .s-open     { background: #fffbeb; color: #b45309; }
+  .s-progress { background: #eff6ff; color: #2563eb; }
+  .s-resolved { background: #ecfdf5; color: #059669; }
+  .s-closed   { background: #f1f5f9; color: #5e6e8a; }
+
+  /* ── Sub text ── */
+  .sub { font-size: 7.5px; color: #8fa0b8; display: block; margin-top: 1px; }
+
+  /* ── Empty state ── */
+  .empty-row td {
+    text-align: center;
+    padding: 28px;
+    color: #8fa0b8;
+    font-style: italic;
+  }
+
+  /* ── Footer ── */
+  .rpt-footer {
+    margin-top: 14px;
+    font-size: 7.5px;
+    color: #8fa0b8;
+    text-align: center;
+    border-top: 1px solid #d8e4f0;
+    padding-top: 7px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ Confidential Banner (replaces @top-center — not supported by xhtml2pdf) ══ -->
+<div style="text-align:center; font-size:8px; color:#8fa0b8; margin-bottom:6px;">
+  City Clinic IT Support System — Confidential
+</div>
+
+<!-- ══ Header ══ -->
+<div class="rpt-header">
+  <div class="rpt-logo-row">
+    <span class="rpt-clinic-name">City Clinic <span class="rpt-teal">IT</span> Support System</span>
+  </div>
+  <div class="rpt-report-type">{{ role_label }}</div>
+  <div class="rpt-meta">
+    Exported by: {{ user.get_full_name|default:user.username }}
+    &nbsp;&bull;&nbsp;
+    Date: {{ export_date }}
+  </div>
+</div>
+
+<!-- ══ Summary ══ -->
+<div class="rpt-summary">
+  <span class="rpt-count-big">{{ total }}</span>
+  <strong>ticket{{ total|pluralize }}</strong> in this export
+  &nbsp;&bull;&nbsp;
+  Filters reflect the active dashboard view at time of export.
+</div>
+
+<!-- ══ Data Table ══ -->
+<table>
+  <thead>
+    <tr>
+      <th style="width:7%">Ticket #</th>
+      <th style="width:20%">Title</th>
+      <th style="width:9%">Category</th>
+      <th style="width:8%">Department</th>
+      <th style="width:11%">Requester</th>
+      <th style="width:8%">Status</th>
+      <th style="width:7%">Priority</th>
+      <th style="width:9%">Approval</th>
+      <th style="width:9%">Assigned Tech</th>
+      <th style="width:6%">Created</th>
+      <th style="width:6%">Resolved</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for t in tickets %}
+    <tr>
+      <td><strong>{{ t.ticket_number|default:"—" }}</strong></td>
+
+      <td>
+        {{ t.title|truncatechars:55 }}
+        {% if t.is_preventive_maintenance %}
+          <span class="sub">⚙ Preventive Maintenance</span>
+        {% endif %}
+      </td>
+
+      <td>{{ t.get_category_display }}</td>
+
+      <td>{{ t.get_department_display }}</td>
+
+      <td>
+        {{ t.requester.get_full_name|default:t.requester.username }}
+        <span class="sub">{{ t.client_name }}</span>
+      </td>
+
+      <td>
+        {% if t.status == 'OPEN' %}<span class="badge s-open">Open</span>
+        {% elif t.status == 'IN_PROGRESS' %}<span class="badge s-progress">In Progress</span>
+        {% elif t.status == 'RESOLVED' %}<span class="badge s-resolved">Resolved</span>
+        {% elif t.status == 'CLOSED' %}<span class="badge s-closed">Closed</span>
+        {% endif %}
+      </td>
+
+      <td>
+        {% if t.priority == 'LOW' %}<span class="badge p-low">Low</span>
+        {% elif t.priority == 'MEDIUM' %}<span class="badge p-medium">Medium</span>
+        {% elif t.priority == 'HIGH' %}<span class="badge p-high">High</span>
+        {% elif t.priority == 'URGENT' %}<span class="badge p-urgent">Urgent</span>
+        {% endif %}
+      </td>
+
+      <td>{{ t.get_approval_status_display }}</td>
+
+      <td>
+        {% if t.assigned_to %}
+          {{ t.assigned_to.get_full_name|default:t.assigned_to.username }}
+        {% else %}
+          <span style="color:#8fa0b8;">Unassigned</span>
+        {% endif %}
+      </td>
+
+      <td>{{ t.created_at|date:"M d, Y" }}</td>
+
+      <td>
+        {% if t.resolved_at %}{{ t.resolved_at|date:"M d, Y" }}
+        {% else %}<span style="color:#8fa0b8;">—</span>{% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr class="empty-row">
+      <td colspan="11">No tickets found for the selected filters.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- ══ Footer ══ -->
+<div class="rpt-footer">
+  City Clinic IT Support System &nbsp;&bull;&nbsp; Confidential &nbsp;&bull;&nbsp;
+  This report was generated on {{ export_date }} by {{ user.get_full_name|default:user.username }}.
+</div>
+
+</body>
+</html>

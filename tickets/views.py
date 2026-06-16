@@ -51,6 +51,286 @@ def _escalation_count():
     return Ticket.objects.filter(status='OPEN', is_escalated=True).count()
 
 
+def _ticket_category_options():
+    categories = TicketCategory.objects.filter(is_active=True).order_by('sort_order', 'label')
+    options = [
+        {'key': cat.key, 'label': cat.label, 'icon': cat.icon}
+        for cat in categories
+    ]
+    fallback = {
+        key: {'key': key, 'label': label, 'icon': 'fa-solid fa-tag'}
+        for key, label in Ticket._meta.get_field('category').choices
+    }
+    if not options:
+        options = list(fallback.values())
+    elif not any(option['key'] == 'OTHER' for option in options):
+        options.append(fallback['OTHER'])
+    return options
+
+
+# ──────────────────────────────────────────────────────────────
+# EXPORT HELPERS
+# ──────────────────────────────────────────────────────────────
+
+def _get_export_queryset(request):
+    """
+    Returns a role-scoped, GET-filter-applied queryset for CSV/PDF exports.
+    Role logic mirrors the individual dashboard views:
+      • IT Head / superuser → all tickets system-wide
+      • IT Staff            → tickets assigned to them
+      • Dept Head           → all tickets in their department
+      • Employee            → tickets they submitted
+    """
+    profile = getattr(request.user, 'employeeprofile', None)
+
+    if request.user.is_superuser or (
+        profile and profile.department == 'IT' and profile.is_department_head
+    ):
+        qs = Ticket.objects.all()
+    elif profile and profile.department == 'IT' and not profile.is_department_head:
+        qs = Ticket.objects.filter(assigned_to=request.user)
+    elif profile and profile.is_department_head:
+        qs = Ticket.objects.filter(department=profile.department)
+    else:
+        qs = Ticket.objects.filter(requester=request.user)
+
+    # --- Apply GET filters so the export matches what is on screen ---
+    time_filter     = request.GET.get('time_filter', '')
+    status_filter   = request.GET.get('status_filter', '')
+    priority_filter = request.GET.get('priority_filter', '')
+    category_filter = request.GET.get('category_filter', '')
+    dept_filter     = request.GET.get('dept_filter', '')
+    q               = request.GET.get('q', '').strip()
+
+    if time_filter:
+        qs = apply_time_filter(qs, time_filter)
+    if status_filter:
+        qs = qs.filter(status=status_filter)
+    if priority_filter:
+        qs = qs.filter(priority=priority_filter)
+    if category_filter:
+        qs = qs.filter(category=category_filter)
+    if dept_filter and dept_filter != 'all':
+        qs = qs.filter(department=dept_filter)
+    if q:
+        qs = qs.filter(
+            Q(title__icontains=q) |
+            Q(client_name__icontains=q) |
+            Q(ticket_number__icontains=q)
+        )
+
+    return qs.select_related('requester', 'assigned_to').order_by('-created_at')
+
+
+def _export_role_label(request):
+    """Human-readable label for the report header."""
+    profile = getattr(request.user, 'employeeprofile', None)
+    name    = request.user.get_full_name() or request.user.username
+    if request.user.is_superuser or (
+        profile and profile.department == 'IT' and profile.is_department_head
+    ):
+        return 'IT Head — System-Wide Report'
+    elif profile and profile.department == 'IT' and not profile.is_department_head:
+        return f'IT Staff Report — {name}'
+    elif profile and profile.is_department_head:
+        return f'{profile.get_department_display()} Department Report'
+    return f'My Tickets — {name}'
+
+
+@login_required
+def export_tickets_csv(request):
+    """
+    Exports tickets as a formatted Excel (.xlsx) workbook.
+    Includes a styled title block, frozen/bold header row, alternating row
+    colours, auto-fitted column widths, and an Excel Table for easy filtering.
+    """
+    from io import BytesIO
+    from django.http import HttpResponse as HR
+    import openpyxl
+    from openpyxl.styles import (
+        Font, PatternFill, Alignment, Border, Side, GradientFill
+    )
+    from openpyxl.utils import get_column_letter
+    from openpyxl.worksheet.table import Table, TableStyleInfo
+
+    qs       = _get_export_queryset(request)
+    filename = f"tickets_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Tickets Report"
+
+    # ── Colour palette ────────────────────────────────────────────
+    NAVY        = "0B1D3A"
+    TEAL        = "00C4B8"
+    WHITE       = "FFFFFF"
+    LIGHT_GREY  = "F7FAFD"
+    MID_GREY    = "E8EEF5"
+    TEXT_DARK   = "0F1F3D"
+    TEXT_MUTED  = "8FA0B8"
+
+    # ── Helper: thin border ───────────────────────────────────────
+    thin = Side(style='thin', color=MID_GREY)
+    cell_border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    # ── Row 1: Report title ───────────────────────────────────────
+    COLUMNS = [
+        'Ticket #', 'Title', 'Category', 'Department',
+        'Requester', 'Client Name', 'Status', 'Priority',
+        'Approval Status', 'Assigned Tech',
+        'Created Date', 'Resolved Date', 'Resolution Notes',
+    ]
+    num_cols = len(COLUMNS)
+    last_col = get_column_letter(num_cols)
+
+    ws.merge_cells(f'A1:{last_col}1')
+    title_cell = ws['A1']
+    title_cell.value       = "City Clinic IT Support System — Tickets Report"
+    title_cell.font        = Font(name='Calibri', bold=True, size=14, color=WHITE)
+    title_cell.fill        = PatternFill("solid", fgColor=NAVY)
+    title_cell.alignment   = Alignment(horizontal='center', vertical='center')
+    ws.row_dimensions[1].height = 28
+
+    # ── Row 2: Export meta (role label + date) ────────────────────
+    ws.merge_cells(f'A2:{last_col}2')
+    meta_cell = ws['A2']
+    role_label  = _export_role_label(request)
+    export_date = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+    meta_cell.value     = f"{role_label}   ·   Exported: {export_date}   ·   Exported by: {request.user.get_full_name() or request.user.username}"
+    meta_cell.font      = Font(name='Calibri', size=9, color=TEXT_MUTED, italic=True)
+    meta_cell.fill      = PatternFill("solid", fgColor="EBF1F8")
+    meta_cell.alignment = Alignment(horizontal='center', vertical='center')
+    ws.row_dimensions[2].height = 18
+
+    # ── Row 3: blank spacer ───────────────────────────────────────
+    ws.row_dimensions[3].height = 6
+
+    # ── Row 4: Column headers ─────────────────────────────────────
+    HEADER_ROW = 4
+    for col_idx, header in enumerate(COLUMNS, start=1):
+        cell = ws.cell(row=HEADER_ROW, column=col_idx, value=header)
+        cell.font      = Font(name='Calibri', bold=True, size=10, color=WHITE)
+        cell.fill      = PatternFill("solid", fgColor=TEAL)
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        cell.border    = cell_border
+    ws.row_dimensions[HEADER_ROW].height = 22
+
+    # ── Data rows ─────────────────────────────────────────────────
+    row_num = HEADER_ROW + 1
+    for idx, t in enumerate(qs):
+        bg = LIGHT_GREY if idx % 2 == 0 else WHITE
+        fill = PatternFill("solid", fgColor=bg)
+
+        row_data = [
+            t.ticket_number or '—',
+            t.title,
+            t.get_category_display(),
+            t.get_department_display(),
+            t.requester.get_full_name() or t.requester.username,
+            t.client_name,
+            t.get_status_display(),
+            t.get_priority_display(),
+            t.get_approval_status_display(),
+            (t.assigned_to.get_full_name() or t.assigned_to.username) if t.assigned_to else '—',
+            t.created_at.strftime('%Y-%m-%d %H:%M') if t.created_at else '',
+            t.resolved_at.strftime('%Y-%m-%d %H:%M') if t.resolved_at else '',
+            t.resolution_notes or '',
+        ]
+
+        for col_idx, value in enumerate(row_data, start=1):
+            cell = ws.cell(row=row_num, column=col_idx, value=value)
+            cell.font      = Font(name='Calibri', size=9, color=TEXT_DARK)
+            cell.fill      = fill
+            cell.border    = cell_border
+            cell.alignment = Alignment(vertical='center', wrap_text=(col_idx == num_cols))
+        ws.row_dimensions[row_num].height = 16
+        row_num += 1
+
+    # ── Excel Table (enables built-in filter dropdowns) ───────────
+    last_data_row = row_num - 1
+    if last_data_row >= HEADER_ROW:
+        table_ref = f"A{HEADER_ROW}:{last_col}{last_data_row}"
+        tbl = Table(displayName="TicketsTable", ref=table_ref)
+        tbl.tableStyleInfo = TableStyleInfo(
+            name="TableStyleMedium2",
+            showFirstColumn=False,
+            showLastColumn=False,
+            showRowStripes=True,
+            showColumnStripes=False,
+        )
+        ws.add_table(tbl)
+
+    # ── Auto-fit column widths ────────────────────────────────────
+    COL_MIN = {1: 12, 2: 35, 3: 18, 4: 18, 5: 20, 6: 20,
+               7: 16, 8: 12, 9: 22, 10: 20, 11: 18, 12: 18, 13: 40}
+    COL_MAX = {2: 50, 13: 60}
+
+    for col_idx in range(1, num_cols + 1):
+        col_letter = get_column_letter(col_idx)
+        # Measure widest cell in column
+        max_len = max(
+            (len(str(ws.cell(row=r, column=col_idx).value or ''))
+             for r in range(HEADER_ROW, row_num)),
+            default=0,
+        )
+        width = max(COL_MIN.get(col_idx, 14), min(max_len + 4, COL_MAX.get(col_idx, 30)))
+        ws.column_dimensions[col_letter].width = width
+
+    # ── Freeze panes below header ─────────────────────────────────
+    ws.freeze_panes = f"A{HEADER_ROW + 1}"
+
+    # ── Stream response ───────────────────────────────────────────
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+
+    response = HR(
+        buffer.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+@login_required
+def export_tickets_pdf(request):
+    from io import BytesIO
+    from django.http import HttpResponse as HR
+    from django.template.loader import render_to_string
+
+    try:
+        from xhtml2pdf import pisa
+    except ImportError:
+        messages.error(
+            request,
+            'PDF export requires xhtml2pdf. Run: pip install xhtml2pdf'
+        )
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+
+    qs    = _get_export_queryset(request)
+    total = qs.count()
+
+    html = render_to_string('tickets/export_pdf.html', {
+        'tickets':     qs,
+        'total':       total,
+        'export_date': datetime.now().strftime('%B %d, %Y at %I:%M %p'),
+        'role_label':  _export_role_label(request),
+        'user':        request.user,
+    }, request=request)
+
+    buffer      = BytesIO()
+    pisa_status = pisa.CreatePDF(html, dest=buffer, encoding='utf-8')
+
+    if pisa_status.err:
+        return HR('An error occurred while generating the PDF.', status=500)
+
+    buffer.seek(0)
+    filename = f"tickets_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+    response = HR(buffer.read(), content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
 def _monthly_trend(base_qs, months=6):
     """Returns (labels, counts) for the last N months."""
     now = timezone.now()
@@ -623,6 +903,7 @@ def clinic_portal(request):
     # ── Filters ───────────────────────────────────────────────────
     search_query    = request.GET.get('q', '').strip()
     status_filter   = request.GET.get('status_filter', '')
+    category_filter = request.GET.get('category_filter', '')
     approval_filter = request.GET.get('approval_filter', '')   # ← NEW
  
     # ── Query: RESOLVED tickets sort to top so employee sees
@@ -649,6 +930,8 @@ def clinic_portal(request):
         my_tickets = my_tickets.filter(status=status_filter)
     if approval_filter:                                        # ← NEW
         my_tickets = my_tickets.filter(approval_status=approval_filter)
+    if category_filter:
+        my_tickets = my_tickets.filter(category=category_filter)
  
     # Count of tickets pending feedback (for the banner) ← NEW
     needs_feedback_count = Ticket.objects.filter(
@@ -657,6 +940,7 @@ def clinic_portal(request):
  
     return render(request, 'tickets/clinic_portal.html', {
         'my_tickets':           my_tickets,
+        'filter_categories':     _ticket_category_options(),
         'needs_feedback_count': needs_feedback_count,         # ← NEW
     })
 
@@ -694,7 +978,7 @@ def create_ticket(request):
             return redirect('clinic_portal')
     else:
         form = TicketForm(initial={'client_name': request.user.get_full_name() or request.user.username})
-    categories = TicketCategory.objects.filter(is_active=True).order_by('sort_order', 'label')
+    categories = _ticket_category_options()
     return render(request, 'tickets/create_ticket.html', {'form': form, 'categories': categories})
 
 
@@ -710,6 +994,8 @@ def head_dashboard(request):
     view_mode     = request.GET.get('view', 'active')
     search_query  = request.GET.get('q', '').strip()
     status_filter = request.GET.get('status_filter', '')
+    priority_filter = request.GET.get('priority_filter', '')
+    category_filter = request.GET.get('category_filter', '')
 
     if request.method == 'POST':
         
@@ -895,9 +1181,20 @@ def head_dashboard(request):
         else:
             pending_approvals = pending_approvals.filter(status=status_filter)
 
+    if priority_filter:
+        pending_approvals = pending_approvals.filter(priority=priority_filter)
+        history_tickets   = history_tickets.filter(priority=priority_filter)
+
+    if category_filter:
+        pending_approvals = pending_approvals.filter(category=category_filter)
+        history_tickets   = history_tickets.filter(category=category_filter)
+
     ctx = {
         'view_mode': view_mode,
         'needs_feedback_count': needs_feedback_count,
+        'filter_categories': _ticket_category_options(),
+        'priority_filter': priority_filter,
+        'category_filter': category_filter,
     }
     
     if view_mode == 'history':
@@ -916,6 +1213,7 @@ def it_head_dashboard(request):
     search_query    = request.GET.get('q', '').strip()
     status_filter   = request.GET.get('status_filter', '')
     priority_filter = request.GET.get('priority_filter', '')
+    category_filter = request.GET.get('category_filter', '')
 
     if request.method == 'POST':
         action_type = request.POST.get('action_type')
@@ -1112,6 +1410,11 @@ def it_head_dashboard(request):
         history_tickets    = history_tickets.filter(priority=priority_filter)
         pm_history_tickets = pm_history_tickets.filter(priority=priority_filter)
 
+    if category_filter:
+        unassigned_tickets = unassigned_tickets.filter(category=category_filter)
+        history_tickets    = history_tickets.filter(category=category_filter)
+        pm_history_tickets = pm_history_tickets.filter(category=category_filter)
+
     if search_query:
         q_base = (
             Q(title__icontains=search_query) |
@@ -1148,6 +1451,8 @@ def it_head_dashboard(request):
         'it_team':                  it_team,
         'view_mode':                view_mode,
         'priority_filter':          priority_filter,
+        'category_filter':          category_filter,
+        'filter_categories':        _ticket_category_options(),
         'escalation_count':         _escalation_count(),
         'pending_pm_reviews_count': pending_pm_reviews_count,
         'all_categories':           TicketCategory.objects.all().order_by('sort_order', 'label'),
@@ -1168,6 +1473,7 @@ def it_staff_dashboard(request):
     priority_filter = request.GET.get('priority_filter', '')
     status_filter   = request.GET.get('status_filter', '')
     type_filter     = request.GET.get('type_filter', '')
+    category_filter = request.GET.get('category_filter', '')
 
     if request.method == 'POST':
             ticket_id = request.POST.get('ticket_id')
@@ -1330,6 +1636,8 @@ def it_staff_dashboard(request):
         'priority_filter':       priority_filter,
         'status_filter':         status_filter,
         'type_filter':           type_filter,
+        'category_filter':       category_filter,
+        'filter_categories':     _ticket_category_options(),
         'maintenance_tasks':     RecurringTask.objects.filter(is_active=True).order_by('-created_at'),
     }
 
@@ -1339,6 +1647,8 @@ def it_staff_dashboard(request):
         ).order_by('-updated_at')
         if priority_filter:
             history_tickets = history_tickets.filter(priority=priority_filter)
+        if category_filter:
+            history_tickets = history_tickets.filter(category=category_filter)
         if status_filter:
             history_tickets = history_tickets.filter(status=status_filter)
         if type_filter == 'pm':
@@ -1354,6 +1664,8 @@ def it_staff_dashboard(request):
         my_tasks = Ticket.objects.filter(assigned_to=request.user, status='IN_PROGRESS').order_by('-created_at')
         if priority_filter:
             my_tasks = my_tasks.filter(priority=priority_filter)
+        if category_filter:
+            my_tasks = my_tasks.filter(category=category_filter)
         if type_filter == 'pm':
             my_tasks = my_tasks.filter(is_preventive_maintenance=True)
         elif type_filter == 'standard':
@@ -1648,5 +1960,5 @@ def head_create_ticket(request):
             'client_name': request.user.get_full_name() or request.user.username,
         })
  
-    categories = TicketCategory.objects.filter(is_active=True).order_by('sort_order', 'label')
+    categories = _ticket_category_options()
     return render(request, 'tickets/head_create_ticket.html', {'form': form, 'categories': categories})

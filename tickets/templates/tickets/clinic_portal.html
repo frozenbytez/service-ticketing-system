@@ -256,6 +256,12 @@
                 <option value="REJECTED"     {% if request.GET.approval_filter == 'REJECTED' %}selected{% endif %}> Declined</option>
                 <option value="NOT_REQUIRED" {% if request.GET.approval_filter == 'NOT_REQUIRED' %}selected{% endif %}> No Approval Needed</option>
             </select>
+            <select name="category_filter" id="categoryFilter">
+                <option value="">All Categories</option>
+                {% for category in filter_categories %}
+                <option value="{{ category.key }}" {% if request.GET.category_filter == category.key %}selected{% endif %}>{{ category.label }}</option>
+                {% endfor %}
+            </select>
         </form>
     </div>
 
@@ -303,6 +309,8 @@
 
             <div class="ticket-meta" style="flex-wrap: wrap;">
                 <span><i class="fa-solid fa-building"></i> {{ ticket.client_name }}</span>
+
+                <span><i class="{{ ticket.category_icon }}"></i> {{ ticket.category_label }}</span>
             
                 <span>
                     <i class="fa-regular fa-calendar-plus"></i>
@@ -555,7 +563,7 @@ searchInput.addEventListener('input', () => {
 });
 
 // ── Auto-submit on any filter select change ─────────────────
-['statusFilter', 'approvalFilter'].forEach(id => {
+['statusFilter', 'approvalFilter', 'categoryFilter'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('change', () => document.getElementById('filterForm').submit());
 });

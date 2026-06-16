@@ -95,11 +95,27 @@
                     <option value="HIGH" {% if priority_filter == 'HIGH' %}selected{% endif %}>🟡 High</option>
                     <option value="URGENT" {% if priority_filter == 'URGENT' %}selected{% endif %}>🔴 Urgent</option>
                 </select>
-                {% if priority_filter or status_filter or type_filter %}
+                <select name="category_filter" id="historyCategoryFilter">
+                    <option value="">All Categories</option>
+                    {% for category in filter_categories %}
+                    <option value="{{ category.key }}" {% if category_filter == category.key %}selected{% endif %}>{{ category.label }}</option>
+                    {% endfor %}
+                </select>
+                {% if priority_filter or status_filter or type_filter or category_filter %}
                 <a href="?view=history" style="display:inline-flex; align-items:center; gap:6px; padding:9px 14px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:13px; color:var(--slate); text-decoration:none; font-weight:600; background:var(--bg);">
                     <i class="fa-solid fa-xmark"></i> Clear Filters
                 </a>
                 {% endif %}
+                <a href="{% url 'export_tickets_csv' %}?{{ request.GET.urlencode }}"
+                   style="display:inline-flex;align-items:center;gap:6px;padding:9px 15px;background:#ecfdf5;color:#059669;border:1.5px solid #a7f3d0;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;"
+                   title="Download CSV (Excel-compatible)">
+                    <i class="fa-solid fa-file-excel"></i> CSV
+                </a>
+                <a href="{% url 'export_tickets_pdf' %}?{{ request.GET.urlencode }}"
+                   style="display:inline-flex;align-items:center;gap:6px;padding:9px 15px;background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;"
+                   title="Download PDF Report">
+                    <i class="fa-solid fa-file-pdf"></i> PDF
+                </a>
             </form>
         </div>
 
@@ -299,7 +315,13 @@
                     <option value="HIGH"   {% if priority_filter == 'HIGH' %}selected{% endif %}>🟡 High</option>
                     <option value="URGENT" {% if priority_filter == 'URGENT' %}selected{% endif %}>🔴 Urgent</option>
                 </select>
-                {% if priority_filter or type_filter %}
+                <select name="category_filter" id="categoryFilter">
+                    <option value="">All Categories</option>
+                    {% for category in filter_categories %}
+                    <option value="{{ category.key }}" {% if category_filter == category.key %}selected{% endif %}>{{ category.label }}</option>
+                    {% endfor %}
+                </select>
+                {% if priority_filter or type_filter or category_filter %}
                 <a href="?" style="display:inline-flex; align-items:center; gap:6px; padding:9px 14px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:13px; color:var(--slate); text-decoration:none; font-weight:600; background:var(--bg);">
                     <i class="fa-solid fa-xmark"></i> Clear Filters
                 </a>
@@ -452,7 +474,7 @@
         {% empty %}
         <div class="empty-state">
             <div class="empty-icon"><i class="fa-solid fa-mug-hot"></i></div>
-            <h4>{% if priority_filter or type_filter %}No tasks match your filters{% else %}You have no assigned tasks{% endif %}</h4>
+            <h4>{% if priority_filter or type_filter or category_filter %}No tasks match your filters{% else %}You have no assigned tasks{% endif %}</h4>
             <p>{% if priority_filter or type_filter %}Try clearing the filter to see all tasks.{% else %}Take a break — or check with your IT Head for new assignments!{% endif %}</p>
         </div>
         {% endfor %}
@@ -463,7 +485,7 @@
 
 <script>
 // Auto-submit on filter change for both Active Tasks and History Tabs
-['priorityFilter', 'typeFilter', 'historyTypeFilter', 'historyStatusFilter', 'historyPriorityFilter'].forEach(id => {
+['priorityFilter', 'typeFilter', 'categoryFilter', 'historyTypeFilter', 'historyStatusFilter', 'historyPriorityFilter', 'historyCategoryFilter'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('change', () => el.closest('form').submit());
 });

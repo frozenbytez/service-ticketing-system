@@ -125,15 +125,27 @@
         <h1 class="dashboard-title">
             <i class="fa-solid fa-chart-pie"></i> My Activity Overview
         </h1>
-        <form method="GET" class="time-filter-form" id="timeFilterForm">
-            <select name="time_filter" onchange="document.getElementById('timeFilterForm').submit();">
-                <option value="all"     {% if time_filter == 'all'     %}selected{% endif %}>All Time</option>
-                <option value="daily"   {% if time_filter == 'daily'   %}selected{% endif %}>Today</option>
-                <option value="weekly"  {% if time_filter == 'weekly'  %}selected{% endif %}>This Week</option>
-                <option value="monthly" {% if time_filter == 'monthly' %}selected{% endif %}>This Month</option>
-                <option value="yearly"  {% if time_filter == 'yearly'  %}selected{% endif %}>This Year</option>
-            </select>
-        </form>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <form method="GET" class="time-filter-form" id="timeFilterForm">
+                <select name="time_filter" onchange="document.getElementById('timeFilterForm').submit();">
+                    <option value="all"     {% if time_filter == 'all'     %}selected{% endif %}>All Time</option>
+                    <option value="daily"   {% if time_filter == 'daily'   %}selected{% endif %}>Today</option>
+                    <option value="weekly"  {% if time_filter == 'weekly'  %}selected{% endif %}>This Week</option>
+                    <option value="monthly" {% if time_filter == 'monthly' %}selected{% endif %}>This Month</option>
+                    <option value="yearly"  {% if time_filter == 'yearly'  %}selected{% endif %}>This Year</option>
+                </select>
+            </form>
+            <a href="{% url 'export_tickets_csv' %}?{{ request.GET.urlencode }}"
+               style="display:inline-flex;align-items:center;gap:7px;padding:9px 16px;background:#ecfdf5;color:#059669;border:1.5px solid #a7f3d0;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;"
+               title="Download CSV (Excel-compatible)">
+                <i class="fa-solid fa-file-excel"></i> Export Excel
+            </a>
+            <a href="{% url 'export_tickets_pdf' %}?{{ request.GET.urlencode }}"
+               style="display:inline-flex;align-items:center;gap:7px;padding:9px 16px;background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;"
+               title="Download PDF Report">
+                <i class="fa-solid fa-file-pdf"></i> Export PDF
+            </a>
+        </div>
     </div>
 
     <!-- ── STAT CARDS ── -->

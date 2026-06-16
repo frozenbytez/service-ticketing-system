@@ -30,4 +30,7 @@ urlpatterns = [
     path('notifications/<int:notif_id>/click/', views.read_and_redirect_notification, name='notification_click'),
     path('notifications/inbox/', views.notifications_inbox, name='notifications_inbox'),
     path('head/new-request/', views.head_create_ticket, name='head_create_ticket'),
+
+    path('tickets/export/csv/', views.export_tickets_csv, name='export_tickets_csv'),
+    path('tickets/export/pdf/', views.export_tickets_pdf, name='export_tickets_pdf'),
 ]
