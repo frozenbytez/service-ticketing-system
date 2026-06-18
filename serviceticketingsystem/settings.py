@@ -76,11 +76,14 @@ WSGI_APPLICATION = 'serviceticketingsystem.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    'default': dj_database_url.config(
-        default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'),
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'cityclinic_db',
+        'USER': 'clinic_admin',
+        'PASSWORD': 'Pass123!', # Use the password you set in Step 1
+        'HOST': 'localhost',
+        'PORT': '5433', # Note: We are using 5433 based on your previous installation step!
+    }
 }
 
 

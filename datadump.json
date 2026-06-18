@@ -1,0 +1,4046 @@
+[
+{
+    "model": "auth.user",
+    "fields": {
+        "password": "pbkdf2_sha256$1200000$P8muWeGskrgnUrTHQlwZl8$w7QM3HsIj4jxT8UTdLQ4oS1ezZYeEG8tHvrQbhld2Q8=",
+        "last_login": "2026-06-16T05:10:56.155Z",
+        "is_superuser": false,
+        "username": "head_claims_joy",
+        "first_name": "Joy",
+        "last_name": "Lara",
+        "email": "echavezmartin19@gmail.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-05-21T00:59:44Z",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "auth.user",
+    "fields": {
+        "password": "pbkdf2_sha256$1200000$ZwNyh08jgfB7p6USdKPBZZ$YtXUFmoHyM0h52jz7VyvdJ6J6RO9eHenZlQ8UzvX/Bw=",
+        "last_login": "2026-06-16T08:50:22.051Z",
+        "is_superuser": false,
+        "username": "it_head_mark",
+        "first_name": "Mark",
+        "last_name": "Concepcion",
+        "email": "frozenbytes23@gmail.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-05-21T01:12:02Z",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "auth.user",
+    "fields": {
+        "password": "pbkdf2_sha256$1200000$cjsOFR6uEkYHbQ79ApLG2w$jbLm0RisWS17uVdTYSX12niuletwFt+2ensCtHwu5ys=",
+        "last_login": "2026-06-16T08:37:52.988Z",
+        "is_superuser": false,
+        "username": "claims_jane",
+        "first_name": "Jane",
+        "last_name": "Aguinaldo",
+        "email": "visarascrt@gmail.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-05-21T01:16:00Z",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "auth.user",
+    "fields": {
+        "password": "pbkdf2_sha256$1200000$QohZV3wWtRjgJ2FkCnLei8$LWMlPap5Ryx0b9MhSHjI4lIL+6QVVrwjbkNiX4c0Tgw=",
+        "last_login": "2026-06-08T00:53:23.340Z",
+        "is_superuser": true,
+        "username": "super_admin",
+        "first_name": "",
+        "last_name": "",
+        "email": "frozenbytes23@gmail.com",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2026-05-21T03:10:48Z",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "auth.user",
+    "fields": {
+        "password": "pbkdf2_sha256$1200000$A5LYfUfaEjXwcmuLDND3Sw$/VGDdg6NIkor7yg+XqT7r5CFaO7LYv3YGxjfCZwRyBM=",
+        "last_login": "2026-06-16T02:57:21.766Z",
+        "is_superuser": false,
+        "username": "it_staff_carl",
+        "first_name": "Carl",
+        "last_name": "Echavez",
+        "email": "frozenbytes23@gmail.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-05-21T03:14:45Z",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "auth.user",
+    "fields": {
+        "password": "pbkdf2_sha256$1200000$U4k3GXMrp6zDeCjz4Kvw4V$Xf1iVkKfLqZMMt8pFRjkRnNSrPrCN5uSwW38VJIqaIQ=",
+        "last_login": "2026-06-16T08:42:23.314Z",
+        "is_superuser": false,
+        "username": "it_staff_louis",
+        "first_name": "Louis",
+        "last_name": "Clavacio",
+        "email": "visara.web.app@gmail.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-05-22T02:00:12.844Z",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "auth.user",
+    "fields": {
+        "password": "pbkdf2_sha256$1200000$VptYfoT8IbufstkXQluJk8$kXWs7rDJbzgfJjBrXlSDUolgQ8kk/Z/SHMxeRrqEHls=",
+        "last_login": "2026-05-26T06:07:44.991Z",
+        "is_superuser": false,
+        "username": "it_supervisor_angel",
+        "first_name": "Angel",
+        "last_name": "Fijer",
+        "email": "frozenbytes23@gmail.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2026-05-22T02:25:57Z",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "08wjfuwsufk1h3abkiolbxvr8d7ejuct",
+    "fields": {
+        "session_data": ".eJxVjMsOwiAQAP9lz4YUKK8evfsNZBcWqZqSlPZk_HfTpAe9zkzmDRH3rca98xrnDBMYuPwywvTk5RD5gcu9idSWbZ1JHIk4bRe3lvl1Pdu_QcVeYQLrtE9WKe1MYRyJhzEN7L0KqNCQLjKRDVkWq7koUpaD5ZEkJ6d1oQCfL-KLOD0:1wUwMJ:nqd9qhqJqYgFfMsL3UphA5c7U26NHTU-78Y2rzI5_JE",
+        "expire_date": "2026-06-18T00:54:55.047Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "3kobdtc2x284ja8fd8libsq3adewm2cj",
+    "fields": {
+        "session_data": ".eJxVjDkOwjAQAP-yNbJsx2dKet4QrddrHEC2lKNC_B1FSgHtzGjeMOG-1WlfeZnmDCNouPyyhPTkdoj8wHbvgnrbljmJIxGnXcWtZ35dz_ZvUHGtMEKwHFxURNkU0tHgwJyDtZrl4DGRT9EVVNYmlDGYUngIxRuprE6OooTPF_ShOBQ:1wYxXh:uKRZ3GiW-pQjqd8BA5z54rEGmjxshMdY3ndrheqyRkA",
+        "expire_date": "2026-06-29T02:59:17.123Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "8jpu8rxgljgc20idv8gqm7cj2mon06h7",
+    "fields": {
+        "session_data": ".eJxVjMsKwjAQAP9lzxKyzbtH735D2GQTW5UUmvYk_rsUetDrzDBviLRvU9x7WePMMIKGyy9LlJ-lHYIf1O6LyEvb1jmJIxGn7eK2cHldz_ZvMFGfYISMrlqFrhqnBi3RqqGiTcqYFGxQNXlZimKpiQxhYDuwN5i0tuxdwACfL7iONr0:1wRPSo:9azbX3gt8jTacb1PpcqK--NhS4q6mqGAnQbqRsm0cg4",
+        "expire_date": "2026-06-08T07:11:02.314Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "dfnx9um1xjkcm8mc97nccqjtqy5xsajb",
+    "fields": {
+        "session_data": ".eJxVjDkOwjAQAP-yNbJsx2dKet4QrddrHEC2lKNC_B1FSgHtzGjeMOG-1WlfeZnmDCNouPyyhPTkdoj8wHbvgnrbljmJIxGnXcWtZ35dz_ZvUHGtMEKwHFxURNkU0tHgwJyDtZrl4DGRT9EVVNYmlDGYUngIxRuprE6OooTPF_ShOBQ:1wRJdI:y4lJScwzuZBRIVDKWVPhIKlVbC4osXMBSX22f0dUhHk",
+        "expire_date": "2026-06-08T00:57:28.881Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "g26c5wp0xjb52fr7lrbpche2izkecn6g",
+    "fields": {
+        "session_data": ".eJxVjEEOwiAQAP_C2ZCyQO169N43kN0FpWogKe3J-HdD0oNeZybzVoH2LYe9pTUsUV2UVadfxiTPVLqIDyr3qqWWbV1Y90Qftum5xvS6Hu3fIFPLfUsWRVCcH8GIQRftCJEn8I4IvWe6MTCS4XNMCM64JGDtAGiAhimpzxfdiDeN:1wPtL7:dYchMCO17ijY5HYV_mNz1TDAeIqtQ6vXgGCYeOtAAp4",
+        "expire_date": "2026-06-04T02:40:49.330Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "g90flco4n62c7yeysfbr27840mjjf8ga",
+    "fields": {
+        "session_data": ".eJxVjEEOwiAQAP_C2ZCyQO169N43kN0FpWogKe3J-HdD0oNeZybzVoH2LYe9pTUsUV2UVadfxiTPVLqIDyr3qqWWbV1Y90Qftum5xvS6Hu3fIFPLfUsWRVCcH8GIQRftCJEn8I4IvWe6MTCS4XNMCM64JGDtAGiAhimpzxfdiDeN:1wPs9I:l2eAHnUM-DUMXjkESqkQeB_QFqi1YfecQXh0KEKbSDo",
+        "expire_date": "2026-06-04T01:24:32.586Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "ge9a653t5yaptrkf323s8tawnwku1l3b",
+    "fields": {
+        "session_data": ".eJxVjMsKwjAQAP9lzxKyzbtH735D2GQTW5UUmvYk_rsUetDrzDBviLRvU9x7WePMMIKGyy9LlJ-lHYIf1O6LyEvb1jmJIxGn7eK2cHldz_ZvMFGfYISMrlqFrhqnBi3RqqGiTcqYFGxQNXlZimKpiQxhYDuwN5i0tuxdwACfL7iONr0:1wYyUF:bHqNvcimKFujPR-zzMqoXUGjvZUIgAq1TZL2C1tZF9o",
+        "expire_date": "2026-06-29T03:59:47.045Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "gufk716w9s657s3bpp0fhxe6kv629tty",
+    "fields": {
+        "session_data": ".eJxVjEEOwiAQRe8ya0MoUIEu3fcMZIYBqRqalHZlvLsh6UKX_72X_4aAx17C0dIWFoYJDFx-GWF8ptoFP7DeVxHXum8LiZ6I0zYxr5xet7P9OyjYCkwwWu0poWbO6qq5D68oZS39SI5ctNkY5eMgHbMbdGRJXpK0UkW2jPD5AvgnOGM:1wPsEB:qbI7_My-i6ASSdu3qRT71FY-iDqPqQACs8ESa3-6QZw",
+        "expire_date": "2026-06-04T01:29:35.490Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "ifdk048bsczlb02rwnltytn4w07q1nie",
+    "fields": {
+        "session_data": ".eJxVjMsOwiAQAP9lz4YUKK8evfsNZBcWqZqSlPZk_HfTpAe9zkzmDRH3rca98xrnDBMYuPwywvTk5RD5gcu9idSWbZ1JHIk4bRe3lvl1Pdu_QcVeYQLrtE9WKe1MYRyJhzEN7L0KqNCQLjKRDVkWq7koUpaD5ZEkJ6d1oQCfL-KLOD0:1wRiSF:tkslUwQ2NH1cCwUn3gBNXgOKvzcahjA6FVhfyPNAVnA",
+        "expire_date": "2026-06-09T03:27:43.494Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "igaz39gtepibea3uou3ll7uvthy560in",
+    "fields": {
+        "session_data": ".eJxVjMsOwiAQAP9lz4YUKK8evfsNZBcWqZqSlPZk_HfTpAe9zkzmDRH3rca98xrnDBMYuPwywvTk5RD5gcu9idSWbZ1JHIk4bRe3lvl1Pdu_QcVeYQLrtE9WKe1MYRyJhzEN7L0KqNCQLjKRDVkWq7koUpaD5ZEkJ6d1oQCfL-KLOD0:1wUaUb:AQp-tPo7wqTkGkFdBr888FZr_hjyihVJ4h0lhGBWrrA",
+        "expire_date": "2026-06-17T01:34:01.518Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "kwnijxdkdtrhv1665qtjmmykn8n0x50a",
+    "fields": {
+        "session_data": ".eJxVjLsOgzAMAP_FcxUlNqSEsTvfgGzHNLQVSDymqv9eITG0693p3tDzvpV-X23pxwwtRLj8MmF92nSI_ODpPjudp20ZxR2JO-3qujnb63a2f4PCa4EWPCaiKCGqD-iNDTFHyYmEBgq1KXoZar0yVpUlj1UgJo6N5tioeIHPF89zN6o:1wPwH6:JC3lTaMWgoDc0aqJau_o-qnBDlfoTGUmsALJ5UEf0sU",
+        "expire_date": "2026-06-04T05:48:52.160Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "na9k3j4ya1yo0lp3jk7jvyyugoa8mvqt",
+    "fields": {
+        "session_data": ".eJxVjMsOwiAQAP9lz4YUKK8evfsNZBcWqZqSlPZk_HfTpAe9zkzmDRH3rca98xrnDBMYuPwywvTk5RD5gcu9idSWbZ1JHIk4bRe3lvl1Pdu_QcVeYQLrtE9WKe1MYRyJhzEN7L0KqNCQLjKRDVkWq7koUpaD5ZEkJ6d1oQCfL-KLOD0:1wWOF1:PsFUtv8_CAn0tEDGFoqJfXLsWYimX_tj34oT1fEJxy0",
+        "expire_date": "2026-06-22T00:53:23.345Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "oj1gpxa4qun9j65g7cotlh3brnochedu",
+    "fields": {
+        "session_data": ".eJxVjMsOwiAQAP9lz4YUKK8evfsNZBcWqZqSlPZk_HfTpAe9zkzmDRH3rca98xrnDBMYuPwywvTk5RD5gcu9idSWbZ1JHIk4bRe3lvl1Pdu_QcVeYQLrtE9WKe1MYRyJhzEN7L0KqNCQLjKRDVkWq7koUpaD5ZEkJ6d1oQCfL-KLOD0:1wQFxu:Ks871RLnTKvQrbkB7DkIWfv5B-Hv_oMbres2WsfNdzY",
+        "expire_date": "2026-06-05T02:50:22.587Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "p1yit1j1na580jwfdnuoqwhvaatdzcfr",
+    "fields": {
+        "session_data": ".eJxVjMsOgjAQAP9lz6bpi7Jw9O43NNvtIqhpEwon478bEg56nZnMGyLt2xz3JmtcMoxg4fLLEvFTyiHyg8q9Kq5lW5ekjkSdtqlbzfK6nu3fYKY2wwhMPlidjEZkdOjchD1TtmHqBtJDkuCD9cYY1iLUeWcE2SWPnZV-mDx8vszKN0I:1wPtx2:6PFBTW_Rk0BNCIo-Hdd-MiOSVF-noeWCigq_I5RMrDY",
+        "expire_date": "2026-06-04T03:20:00.785Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "pphzpyl80zqqjr3a9p23908jdmm7kfyg",
+    "fields": {
+        "session_data": ".eJxVjMsOgjAQAP9lz6bpEyhH735Ds8tuBTVtQuFk_HdDwkGvM5N5Q8J9m9PeZE0LwwgOLr-McHpKOQQ_sNyrmmrZ1oXUkajTNnWrLK_r2f4NZmwzjKAz-YGsn6KJGNhFb1iiGENs-qEbcvDsLJH4XovtSBvOPVodMGuO5ODzBeKVN_c:1wZPV0:sLVbqL6MV64ptVavaq-VZdLEJOsqgoJSizjDu4udu4U",
+        "expire_date": "2026-06-30T08:50:22.054Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "pwcpzlf84deberrsqulekzh4vi4brg3h",
+    "fields": {
+        "session_data": ".eJxVjMsOwiAQAP9lz4YUKK8evfsNZBcWqZqSlPZk_HfTpAe9zkzmDRH3rca98xrnDBMYuPwywvTk5RD5gcu9idSWbZ1JHIk4bRe3lvl1Pdu_QcVeYQLrtE9WKe1MYRyJhzEN7L0KqNCQLjKRDVkWq7koUpaD5ZEkJ6d1oQCfL-KLOD0:1wUEFQ:z4qM6ONIQr2lSE71BM-KtcOHdV5bWe1LTnM6GZKfmEw",
+        "expire_date": "2026-06-16T01:48:52.001Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "rixs73jta7wn8htirkg55qsr5myg148g",
+    "fields": {
+        "session_data": ".eJxVjEEOwiAQAP_C2ZCyQO169N43kN0FpWogKe3J-HdD0oNeZybzVoH2LYe9pTUsUV2UVadfxiTPVLqIDyr3qqWWbV1Y90Qftum5xvS6Hu3fIFPLfUsWRVCcH8GIQRftCJEn8I4IvWe6MTCS4XNMCM64JGDtAGiAhimpzxfdiDeN:1wPu0Y:MvdDIORYgH22uCRNbwAo4I-GOGysPG9FQV71e5bCITA",
+        "expire_date": "2026-06-04T03:23:38.895Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "s9n33sxk3auaoc6p0u2ipq515rgbbd7x",
+    "fields": {
+        "session_data": ".eJxVjDkOwjAQAP-yNbJsx2dKet4QrddrHEC2lKNC_B1FSgHtzGjeMOG-1WlfeZnmDCNouPyyhPTkdoj8wHbvgnrbljmJIxGnXcWtZ35dz_ZvUHGtMEKwHFxURNkU0tHgwJyDtZrl4DGRT9EVVNYmlDGYUngIxRuprE6OooTPF_ShOBQ:1wV1r3:i9b9Otyt4aonMkX_O3JSgz9XmIspQ5-pO0Sh6cnclWA",
+        "expire_date": "2026-06-18T06:47:01.338Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "smjziwur6khqffmizsqwsl3kcc4iiqu2",
+    "fields": {
+        "session_data": ".eJxVjEEOwiAQAP_C2ZCyQO169N43kN0FpWogKe3J-HdD0oNeZybzVoH2LYe9pTUsUV2UVadfxiTPVLqIDyr3qqWWbV1Y90Qftum5xvS6Hu3fIFPLfUsWRVCcH8GIQRftCJEn8I4IvWe6MTCS4XNMCM64JGDtAGiAhimpzxfdiDeN:1wPsIz:LNyEa_9OFQgizBK2YZm3Yoe5LUy-INT2UEJJ1F7oN64",
+        "expire_date": "2026-06-04T01:34:33.387Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "twouf6om0u6ahqllv9dzio6opc71h8if",
+    "fields": {
+        "session_data": ".eJxVjMsOgjAQAP9lz6bpi7Jw9O43NNvtIqhpEwon478bEg56nZnMGyLt2xz3JmtcMoxg4fLLEvFTyiHyg8q9Kq5lW5ekjkSdtqlbzfK6nu3fYKY2wwhMPlidjEZkdOjchD1TtmHqBtJDkuCD9cYY1iLUeWcE2SWPnZV-mDx8vszKN0I:1wPrmj:HFVvno0yFfo5vC-4jalbNLkUE__dDmCFmoG1PXT9nmY",
+        "expire_date": "2026-06-04T01:01:13.200Z"
+    }
+},
+{
+    "model": "sessions.session",
+    "pk": "z4abrmvel3batzu8f26jb9swd8nwjenm",
+    "fields": {
+        "session_data": ".eJxVjMsOgjAQAP9lz6bpLkItR-9-A9lHEdS0CYWT8d8NCQe9zkzmDQNv6zRsNS3DbNBDB6dfJqzPlHdhD8734rTkdZnF7Yk7bHW3Yul1Pdq_wcR1gh5GQWMLAUPC1Ablhjry6juLNIYzUeOF28gR2xg8sVxElAQbUvFqCJ8v5lk33g:1wXD0l:K0CHIpl4ohLvV50z0PmVeg0SBzonhjaUMhblaDvVlvo",
+        "expire_date": "2026-06-24T07:06:03.237Z"
+    }
+},
+{
+    "model": "tickets.employeeprofile",
+    "pk": 1,
+    "fields": {
+        "user": [
+            "head_claims_joy"
+        ],
+        "department": "CLAIMS",
+        "is_department_head": true,
+        "it_tier": "TIER_1"
+    }
+},
+{
+    "model": "tickets.employeeprofile",
+    "pk": 2,
+    "fields": {
+        "user": [
+            "it_head_mark"
+        ],
+        "department": "IT",
+        "is_department_head": true,
+        "it_tier": "TIER_1"
+    }
+},
+{
+    "model": "tickets.employeeprofile",
+    "pk": 3,
+    "fields": {
+        "user": [
+            "claims_jane"
+        ],
+        "department": "CLAIMS",
+        "is_department_head": false,
+        "it_tier": "TIER_1"
+    }
+},
+{
+    "model": "tickets.employeeprofile",
+    "pk": 4,
+    "fields": {
+        "user": [
+            "it_staff_carl"
+        ],
+        "department": "IT",
+        "is_department_head": false,
+        "it_tier": "TIER_1"
+    }
+},
+{
+    "model": "tickets.employeeprofile",
+    "pk": 5,
+    "fields": {
+        "user": [
+            "it_staff_louis"
+        ],
+        "department": "IT",
+        "is_department_head": false,
+        "it_tier": "TIER_2"
+    }
+},
+{
+    "model": "tickets.employeeprofile",
+    "pk": 6,
+    "fields": {
+        "user": [
+            "it_supervisor_angel"
+        ],
+        "department": "IT",
+        "is_department_head": true,
+        "it_tier": "TIER_1"
+    }
+},
+{
+    "model": "tickets.ticket",
+    "pk": 3,
+    "fields": {
+        "ticket_number": "2354354",
+        "due_date": null,
+        "is_preventive_maintenance": false,
+        "start_time": null,
+        "end_time": null,
+        "category": "OTHER",
+        "needs_head_approval": true,
+        "approval_status": "APPROVED",
+        "approval_notes": null,
+        "requester": [
+            "claims_jane"
+        ],
+        "client_name": "Jane",
+        "client_email": "visara.web.app@gmail.com",
+        "department": "CLAIMS",
+        "title": "Broken Mouse",
+        "description": "not working",
+        "priority": "LOW",
+        "status": "CLOSED",
+        "assigned_to": [
+            "it_staff_carl"
+        ],
+        "is_escalated": true,
+        "escalated_from_tier": null,
+        "escalated_by": null,
+        "dispatch_notes": null,
+        "resolution_notes": "I reset the drivers and install it again",
+        "started_at": null,
+        "resolved_at": null,
+        "client_feedback_rating": 5,
+        "client_feedback_notes": "Iwdjijajidwjijwadjiwddaw",
+        "pm_review_rating": null,
+        "pm_review_notes": null,
+        "pm_reviewed_by": null,
+        "pm_reviewed_at": null,
+        "source_recurring_task": null,
+        "scheduled_start_time": null,
+        "scheduled_end_time": null,
+        "reopen_reason": null,
+        "reopened_at": null,
+        "reopen_count": 0,
+        "created_at": "2026-05-21T03:18:38.692Z",
+        "updated_at": "2026-05-26T08:32:48.654Z"
+    }
+},
+{
+    "model": "tickets.ticket",
+    "pk": 4,
+    "fields": {
+        "ticket_number": "4314253fweef",
+        "due_date": null,
+        "is_preventive_maintenance": false,
+        "start_time": null,
+        "end_time": null,
+        "category": "OTHER",
+        "needs_head_approval": false,
+        "approval_status": "NOT_REQUIRED",
+        "approval_notes": null,
+        "requester": [
+            "claims_jane"
+        ],
+        "client_name": "Jane",
+        "client_email": "visara.web.app@gmail.com",
+        "department": "CLAIMS",
+        "title": "Broken Keyboard",
+        "description": "Not working at all",
+        "priority": "HIGH",
+        "status": "CLOSED",
+        "assigned_to": [
+            "it_staff_carl"
+        ],
+        "is_escalated": true,
+        "escalated_from_tier": null,
+        "escalated_by": null,
+        "dispatch_notes": null,
+        "resolution_notes": "Idk",
+        "started_at": null,
+        "resolved_at": null,
+        "client_feedback_rating": 1,
+        "client_feedback_notes": "Fast Fixing",
+        "pm_review_rating": null,
+        "pm_review_notes": null,
+        "pm_reviewed_by": null,
+        "pm_reviewed_at": null,
+        "source_recurring_task": null,
+        "scheduled_start_time": null,
+        "scheduled_end_time": null,
+        "reopen_reason": null,
+        "reopened_at": null,
+        "reopen_count": 0,
+        "created_at": "2026-05-21T03:19:03.326Z",
+        "updated_at": "2026-06-04T06:46:33.422Z"
+    }
+},
+{
+    "model": "tickets.ticket",
+    "pk": 5,
+    "fields": {
+        "ticket_number": "232323132",
+        "due_date": null,
+        "is_preventive_maintenance": false,
+        "start_time": null,
+        "end_time": null,
+        "category": "OTHER",
+        "needs_head_approval": false,
+        "approval_status": "NOT_REQUIRED",
+        "approval_notes": null,
+        "requester": [
+            "claims_jane"
+        ],
+        "client_name": "Robus Leck",
+        "client_email": "visara.web.app@gmail.com",
+        "department": "CLAIMS",
+        "title": "OWDAKWDKODAWK",
+        "description": "odwKWADKOWKD",
+        "priority": "URGENT",
+        "status": "CLOSED",
+        "assigned_to": [
+            "it_staff_carl"
+        ],
+        "is_escalated": false,
+        "escalated_from_tier": null,
+        "escalated_by": null,
+        "dispatch_notes": null,
+        "resolution_notes": "???",
+        "started_at": null,
+        "resolved_at": null,
+        "client_feedback_rating": 5,
+        "client_feedback_notes": "nice",
+        "pm_review_rating": null,
+        "pm_review_notes": null,
+        "pm_reviewed_by": null,
+        "pm_reviewed_at": null,
+        "source_recurring_task": null,
+        "scheduled_start_time": null,
+        "scheduled_end_time": null,
+        "reopen_reason": null,
+        "reopened_at": null,
+        "reopen_count": 0,
+        "created_at": "2026-05-21T05:41:54.908Z",
+        "updated_at": "2026-06-16T08:38:26.106Z"
+    }
+},
+{
+    "model": "tickets.ticket",
+    "pk": 6,
+    "fields": {
+        "ticket_number": "232323",
+        "due_date": null,
+        "is_preventive_maintenance": false,
+        "start_time": null,
+        "end_time": null,
+        "category": "OTHER",
+        "needs_head_approval": true,
+        "approval_status": "APPROVED",
+        "approval_notes": null,
+        "requester": [
+            "claims_jane"
+        ],
+        "client_name": "Jane Aguinaldo",
+        "client_email": null,
+        "department": "CLAIMS",
+        "title": "Needs new Mouse",
+        "description": "My mouse just got broken recently",
+        "priority": "HIGH",
+        "status": "CLOSED",
+        "assigned_to": [
+            "it_staff_louis"
+        ],
+        "is_escalated": false,
+        "escalated_from_tier": null,
+        "escalated_by": null,
+        "dispatch_notes": null,
+        "resolution_notes": "I fix it",
+        "started_at": null,
+        "resolved_at": null,
+        "client_feedback_rating": 5,
+        "client_feedback_notes": "ty",
+        "pm_review_rating": null,
+        "pm_review_notes": null,
+        "pm_reviewed_by": null,
+        "pm_reviewed_at": null,
+        "source_recurring_task": null,
+        "scheduled_start_time": null,
+        "scheduled_end_time": null,
+        "reopen_reason": null,
+        "reopened_at": null,
+        "reopen_count": 0,
+        "created_at": "2026-05-22T02:48:41.060Z",
+        "updated_at": "2026-06-16T08:38:30.459Z"
+    }
+},
+{
+    "model": "tickets.ticket",
+    "pk": 7,
+    "fields": {
+        "ticket_number": "1234235",
+        "due_date": null,
+        "is_preventive_maintenance": false,
+        "start_time": null,
+        "end_time": null,
+        "category": "OTHER",
+        "needs_head_approval": true,
+        "approval_status": "APPROVED",
+        "approval_notes": null,
+        "requester": [
+            "claims_jane"
+        ],
+        "client_name": "Jane Aguinaldo",
+        "client_email": null,
+        "department": "CLAIMS",
+        "title": "Glitching Monitor",
+        "description": "Naiwan nyang matagal nakabuklas",
+        "priority": "LOW",
+        "status": "CLOSED",
+        "assigned_to": [
+            "it_staff_louis"
+        ],
+        "is_escalated": false,
+        "escalated_from_tier": null,
+        "escalated_by": null,
+        "dispatch_notes": null,
+        "resolution_notes": "Updated the graphics",
+        "started_at": null,
+        "resolved_at": null,
+        "client_feedback_rating": 5,
+        "client_feedback_notes": "WDadwad",
+        "pm_review_rating": null,
+        "pm_review_notes": null,
+        "pm_reviewed_by": null,
+        "pm_reviewed_at": null,
+        "source_recurring_task": null,
+        "scheduled_start_time": null,
+        "scheduled_end_time": null,
+        "reopen_reason": null,
+        "reopened_at": null,
+        "reopen_count": 0,
+        "created_at": "2026-05-25T07:12:49.021Z",
+        "updated_at": "2026-05-26T08:33:07.771Z"
+    }
+},
+{
+    "model": "tickets.ticket",
+    "pk": 8,
+    "fields": {
+        "ticket_number": "TKT-202606-0007",
+        "due_date": null,
+        "is_preventive_maintenance": false,
+        "start_time": null,
+        "end_time": null,
+        "category": "OTHER",
+        "needs_head_approval": true,
+        "approval_status": "APPROVED",
+        "approval_notes": null,
+        "requester": [
+            "claims_jane"
+        ],
+        "client_name": "Jane Aguinaldo",
+        "client_email": null,
+        "department": "CLAIMS",
+        "title": "PC Charger",
+        "description": "Not charging my laptop",
+        "priority": "HIGH",
+        "status": "CLOSED",
+        "assigned_to": [
+            "it_staff_carl"
+        ],
+        "is_escalated": false,
+        "escalated_from_tier": null,
+        "escalated_by": null,
+        "dispatch_notes": null,
+        "resolution_notes": "Done",
+        "started_at": null,
+        "resolved_at": null,
+        "client_feedback_rating": 5,
+        "client_feedback_notes": "Done",
+        "pm_review_rating": null,
+        "pm_review_notes": null,
+        "pm_reviewed_by": null,
+        "pm_reviewed_at": null,
+        "source_recurring_task": null,
+        "scheduled_start_time": null,
+        "scheduled_end_time": null,
+        "reopen_reason": null,
+        "reopened_at": null,
+        "reopen_count": 0,
+        "created_at": "2026-05-28T08:43:55.140Z",
+        "updated_at": "2026-06-10T07:01:37.716Z"
+    }
+},
+{
+    "model": "tickets.ticket",
+    "pk": 9,
+    "fields": {
+        "ticket_number": "TKT-202605-0006",
+        "due_date": null,
+        "is_preventive_maintenance": false,
+        "start_time": null,
+        "end_time": null,
+        "category": "OTHER",
+        "needs_head_approval": true,
+        "approval_status": "APPROVED",
+        "approval_notes": null,
+        "requester": [
+            "claims_jane"
+        ],
+        "client_name": "Jane Aguinaldo",
+        "client_email": null,
+        "department": "CLAIMS",
+        "title": "Laptop not opening",
+        "description": "Some drivers arent fixed",
+        "priority": "HIGH",
+        "status": "CLOSED",
+        "assigned_to": [
+            "it_staff_carl"
+        ],
+        "is_escalated": false,
+        "escalated_from_tier": null,
+        "escalated_by": null,
+        "dispatch_notes": null,
+        "resolution_notes": "Fixed the drivers and updated",
+        "started_at": null,
+        "resolved_at": null,
+        "client_feedback_rating": 4,
+        "client_feedback_notes": "Fast Fixing",
+        "pm_review_rating": null,
+        "pm_review_notes": null,
+        "pm_reviewed_by": null,
+        "pm_reviewed_at": null,
+        "source_recurring_task": null,
+        "scheduled_start_time": null,
+        "scheduled_end_time": null,
+        "reopen_reason": null,
+        "reopened_at": null,
+        "reopen_count": 0,
+        "created_at": "2026-05-28T09:01:06.093Z",
+        "updated_at": "2026-05-28T09:04:46.936Z"
+    }
+},
+{
+    "model": "tickets.ticket",
+    "pk": 10,
+    "fields": {
+        "ticket_number": null,
+        "due_date": null,
+        "is_preventive_maintenance": false,
+        "start_time": null,
+        "end_time": null,
+        "category": "OTHER",
+        "needs_head_approval": true,
+        "approval_status": "REJECTED",
+        "approval_notes": null,
+        "requester": [
+            "claims_jane"
+        ],
+        "client_name": "Jane Aguinaldo",
+        "client_email": null,
+        "department": "CLAIMS",
+        "title": "New ticket",
+        "description": "IDK",
+        "priority": "MEDIUM",
+        "status": "CLOSED",
+        "assigned_to": null,
+        "is_escalated": false,
+        "escalated_from_tier": null,
+        "escalated_by": null,
+        "dispatch_notes": null,
+        "resolution_notes": null,
+        "started_at": null,
+        "resolved_at": null,
+        "client_feedback_rating": null,
+        "client_feedback_notes": null,
+        "pm_review_rating": null,
+        "pm_review_notes": null,
+        "pm_reviewed_by": null,
+        "pm_reviewed_at": null,
+        "source_recurring_task": null,
+        "scheduled_start_time": null,
+        "scheduled_end_time": null,
+        "reopen_reason": null,
+        "reopened_at": null,
+        "reopen_count": 0,
+        "created_at": "2026-06-02T00:54:23.914Z",
+        "updated_at": "2026-06-02T00:55:03.875Z"
+    }
+},
+{
+    "model": "tickets.ticket",
+    "pk": 14,
+    "fields": {
+        "ticket_number": "TKT-202606-0013",
+        "due_date": null,
+        "is_preventive_maintenance": false,
+        "start_time": null,
+        "end_time": null,
+        "category": "OTHER",
+        "needs_head_approval": false,
+        "approval_status": "APPROVED",
+        "approval_notes": "",
+        "requester": [
+            "claims_jane"
+        ],
+        "client_name": "Jane Aguinaldo",
+        "client_email": null,
+        "department": "CLAIMS",
+        "title": "Printer Toner",
+        "description": "No more ink",
+        "priority": "MEDIUM",
+        "status": "CLOSED",
+        "assigned_to": [
+            "it_staff_carl"
+        ],
+        "is_escalated": false,
+        "escalated_from_tier": null,
+        "escalated_by": null,
+        "dispatch_notes": "Troubleshoot the printer and make sure the toner is intact",
+        "resolution_notes": "Did it",
+        "started_at": "2026-06-10T06:56:04.120Z",
+        "resolved_at": "2026-06-10T07:06:25.474Z",
+        "client_feedback_rating": 5,
+        "client_feedback_notes": "Very Fast",
+        "pm_review_rating": null,
+        "pm_review_notes": null,
+        "pm_reviewed_by": null,
+        "pm_reviewed_at": null,
+        "source_recurring_task": null,
+        "scheduled_start_time": null,
+        "scheduled_end_time": null,
+        "reopen_reason": "Toner is not working",
+        "reopened_at": "2026-06-08T00:40:57.252Z",
+        "reopen_count": 1,
+        "created_at": "2026-06-03T01:12:54.321Z",
+        "updated_at": "2026-06-10T07:09:17.923Z"
+    }
+},
+{
+    "model": "tickets.ticket",
+    "pk": 17,
+    "fields": {
+        "ticket_number": "TKT-202606-0010",
+        "due_date": null,
+        "is_preventive_maintenance": false,
+        "start_time": null,
+        "end_time": null,
+        "category": "OTHER",
+        "needs_head_approval": true,
+        "approval_status": "APPROVED",
+        "approval_notes": "",
+        "requester": [
+            "claims_jane"
+        ],
+        "client_name": "Jane Aguinaldo",
+        "client_email": null,
+        "department": "CLAIMS",
+        "title": "Broken LCD of Laptop",
+        "description": "I recently punched the screen of my laptop due to angerness, pls fix it",
+        "priority": "MEDIUM",
+        "status": "RESOLVED",
+        "assigned_to": [
+            "it_staff_louis"
+        ],
+        "is_escalated": true,
+        "escalated_from_tier": "TIER_1",
+        "escalated_by": null,
+        "dispatch_notes": "Try to replace the lcd",
+        "resolution_notes": "Done",
+        "started_at": "2026-06-16T08:43:01.018Z",
+        "resolved_at": "2026-06-16T08:43:09.658Z",
+        "client_feedback_rating": null,
+        "client_feedback_notes": null,
+        "pm_review_rating": null,
+        "pm_review_notes": null,
+        "pm_reviewed_by": null,
+        "pm_reviewed_at": null,
+        "source_recurring_task": null,
+        "scheduled_start_time": null,
+        "scheduled_end_time": null,
+        "reopen_reason": null,
+        "reopened_at": null,
+        "reopen_count": 0,
+        "created_at": "2026-06-04T00:53:22.219Z",
+        "updated_at": "2026-06-16T08:43:09.658Z"
+    }
+},
+{
+    "model": "tickets.ticket",
+    "pk": 19,
+    "fields": {
+        "ticket_number": "TKT-202606-0011",
+        "due_date": "2026-06-30",
+        "is_preventive_maintenance": true,
+        "start_time": null,
+        "end_time": null,
+        "category": "OTHER",
+        "needs_head_approval": false,
+        "approval_status": "APPROVED",
+        "approval_notes": null,
+        "requester": [
+            "it_head_mark"
+        ],
+        "client_name": "System Scheduled Maintenance",
+        "client_email": null,
+        "department": "IT",
+        "title": "[PM] Serve Room Cleaning",
+        "description": "Clean server room, look for deficiencies etc",
+        "priority": "HIGH",
+        "status": "CLOSED",
+        "assigned_to": [
+            "it_staff_carl"
+        ],
+        "is_escalated": false,
+        "escalated_from_tier": null,
+        "escalated_by": null,
+        "dispatch_notes": "8am to 5",
+        "resolution_notes": "CLEANED",
+        "started_at": null,
+        "resolved_at": null,
+        "client_feedback_rating": 5,
+        "client_feedback_notes": "BOMBO",
+        "pm_review_rating": null,
+        "pm_review_notes": null,
+        "pm_reviewed_by": null,
+        "pm_reviewed_at": null,
+        "source_recurring_task": 3,
+        "scheduled_start_time": null,
+        "scheduled_end_time": null,
+        "reopen_reason": null,
+        "reopened_at": null,
+        "reopen_count": 0,
+        "created_at": "2026-06-04T06:38:48.502Z",
+        "updated_at": "2026-06-04T06:42:18.154Z"
+    }
+},
+{
+    "model": "tickets.ticket",
+    "pk": 22,
+    "fields": {
+        "ticket_number": "TKT-202606-0012",
+        "due_date": "2026-06-14",
+        "is_preventive_maintenance": true,
+        "start_time": null,
+        "end_time": null,
+        "category": "OTHER",
+        "needs_head_approval": false,
+        "approval_status": "APPROVED",
+        "approval_notes": null,
+        "requester": [
+            "it_head_mark"
+        ],
+        "client_name": "System Scheduled Maintenance",
+        "client_email": null,
+        "department": "IT",
+        "title": "[PM] Serve Room Cleaning",
+        "description": "Clean server room, look for deficiencies etc",
+        "priority": "MEDIUM",
+        "status": "CLOSED",
+        "assigned_to": [
+            "it_staff_carl"
+        ],
+        "is_escalated": false,
+        "escalated_from_tier": null,
+        "escalated_by": null,
+        "dispatch_notes": "Clean the room",
+        "resolution_notes": "Done",
+        "started_at": null,
+        "resolved_at": null,
+        "client_feedback_rating": null,
+        "client_feedback_notes": null,
+        "pm_review_rating": 5,
+        "pm_review_notes": "Nice",
+        "pm_reviewed_by": [
+            "it_head_mark"
+        ],
+        "pm_reviewed_at": "2026-06-08T08:23:50.094Z",
+        "source_recurring_task": 3,
+        "scheduled_start_time": null,
+        "scheduled_end_time": null,
+        "reopen_reason": null,
+        "reopened_at": null,
+        "reopen_count": 0,
+        "created_at": "2026-06-08T02:56:32.689Z",
+        "updated_at": "2026-06-08T08:23:50.095Z"
+    }
+},
+{
+    "model": "tickets.ticket",
+    "pk": 23,
+    "fields": {
+        "ticket_number": "TKT-202606-0014",
+        "due_date": "2026-06-10",
+        "is_preventive_maintenance": true,
+        "start_time": null,
+        "end_time": null,
+        "category": "OTHER",
+        "needs_head_approval": false,
+        "approval_status": "APPROVED",
+        "approval_notes": null,
+        "requester": [
+            "it_head_mark"
+        ],
+        "client_name": "System Scheduled Maintenance",
+        "client_email": null,
+        "department": "IT",
+        "title": "[PM] Oowooowoow",
+        "description": "oawdkoawoddw",
+        "priority": "MEDIUM",
+        "status": "CLOSED",
+        "assigned_to": [
+            "it_staff_carl"
+        ],
+        "is_escalated": false,
+        "escalated_from_tier": null,
+        "escalated_by": null,
+        "dispatch_notes": "OWKDOAWKADW",
+        "resolution_notes": "wadpwadlpawd",
+        "started_at": "2026-06-10T06:50:51.721Z",
+        "resolved_at": "2026-06-10T06:51:22.597Z",
+        "client_feedback_rating": null,
+        "client_feedback_notes": null,
+        "pm_review_rating": 5,
+        "pm_review_notes": "",
+        "pm_reviewed_by": [
+            "it_head_mark"
+        ],
+        "pm_reviewed_at": "2026-06-10T06:52:29.658Z",
+        "source_recurring_task": null,
+        "scheduled_start_time": "08:00:00",
+        "scheduled_end_time": "17:00:00",
+        "reopen_reason": null,
+        "reopened_at": null,
+        "reopen_count": 0,
+        "created_at": "2026-06-10T05:56:28.000Z",
+        "updated_at": "2026-06-10T06:52:29.658Z"
+    }
+},
+{
+    "model": "tickets.ticket",
+    "pk": 24,
+    "fields": {
+        "ticket_number": "TKT-202606-0015",
+        "due_date": "2026-06-10",
+        "is_preventive_maintenance": true,
+        "start_time": null,
+        "end_time": null,
+        "category": "OTHER",
+        "needs_head_approval": false,
+        "approval_status": "APPROVED",
+        "approval_notes": null,
+        "requester": [
+            "it_head_mark"
+        ],
+        "client_name": "System Scheduled Maintenance",
+        "client_email": null,
+        "department": "IT",
+        "title": "[PM] Server Room Cleaning",
+        "description": "Clean server room, look for deficiencies etc",
+        "priority": "MEDIUM",
+        "status": "RESOLVED",
+        "assigned_to": [
+            "it_staff_carl"
+        ],
+        "is_escalated": false,
+        "escalated_from_tier": null,
+        "escalated_by": null,
+        "dispatch_notes": "Beng",
+        "resolution_notes": "Done",
+        "started_at": "2026-06-10T06:53:31.114Z",
+        "resolved_at": "2026-06-15T00:50:52.920Z",
+        "client_feedback_rating": null,
+        "client_feedback_notes": null,
+        "pm_review_rating": null,
+        "pm_review_notes": null,
+        "pm_reviewed_by": null,
+        "pm_reviewed_at": null,
+        "source_recurring_task": 3,
+        "scheduled_start_time": "08:00:00",
+        "scheduled_end_time": "17:00:00",
+        "reopen_reason": null,
+        "reopened_at": null,
+        "reopen_count": 0,
+        "created_at": "2026-06-10T06:52:46.338Z",
+        "updated_at": "2026-06-15T00:50:52.920Z"
+    }
+},
+{
+    "model": "tickets.ticket",
+    "pk": 25,
+    "fields": {
+        "ticket_number": "TKT-202606-0016",
+        "due_date": "2026-06-10",
+        "is_preventive_maintenance": true,
+        "start_time": null,
+        "end_time": null,
+        "category": "OTHER",
+        "needs_head_approval": false,
+        "approval_status": "APPROVED",
+        "approval_notes": null,
+        "requester": [
+            "it_head_mark"
+        ],
+        "client_name": "System Scheduled Maintenance",
+        "client_email": null,
+        "department": "IT",
+        "title": "[PM] Booom",
+        "description": "wdawdaadwdw",
+        "priority": "MEDIUM",
+        "status": "CLOSED",
+        "assigned_to": [
+            "it_staff_carl"
+        ],
+        "is_escalated": false,
+        "escalated_from_tier": null,
+        "escalated_by": null,
+        "dispatch_notes": "Auto-generated for Every Day maintenance schedule.",
+        "resolution_notes": "Did it",
+        "started_at": "2026-06-10T06:54:59.180Z",
+        "resolved_at": "2026-06-10T06:55:12.598Z",
+        "client_feedback_rating": null,
+        "client_feedback_notes": null,
+        "pm_review_rating": 5,
+        "pm_review_notes": "Nice",
+        "pm_reviewed_by": [
+            "it_head_mark"
+        ],
+        "pm_reviewed_at": "2026-06-10T06:55:26.314Z",
+        "source_recurring_task": null,
+        "scheduled_start_time": "08:00:00",
+        "scheduled_end_time": "17:00:00",
+        "reopen_reason": null,
+        "reopened_at": null,
+        "reopen_count": 0,
+        "created_at": "2026-06-10T06:54:52.360Z",
+        "updated_at": "2026-06-10T06:55:26.314Z"
+    }
+},
+{
+    "model": "tickets.ticket",
+    "pk": 26,
+    "fields": {
+        "ticket_number": "TKT-202606-0017",
+        "due_date": "2026-06-15",
+        "is_preventive_maintenance": true,
+        "start_time": null,
+        "end_time": null,
+        "category": "OTHER",
+        "needs_head_approval": false,
+        "approval_status": "APPROVED",
+        "approval_notes": null,
+        "requester": [
+            "it_head_mark"
+        ],
+        "client_name": "System Scheduled Maintenance",
+        "client_email": null,
+        "department": "IT",
+        "title": "[PM] Server Room Cleaning",
+        "description": "Clean server room, look for deficiencies etc",
+        "priority": "HIGH",
+        "status": "OPEN",
+        "assigned_to": null,
+        "is_escalated": false,
+        "escalated_from_tier": null,
+        "escalated_by": null,
+        "dispatch_notes": "Auto-generated for Every Day maintenance schedule.",
+        "resolution_notes": null,
+        "started_at": null,
+        "resolved_at": null,
+        "client_feedback_rating": null,
+        "client_feedback_notes": null,
+        "pm_review_rating": null,
+        "pm_review_notes": null,
+        "pm_reviewed_by": null,
+        "pm_reviewed_at": null,
+        "source_recurring_task": 3,
+        "scheduled_start_time": "08:00:00",
+        "scheduled_end_time": "17:00:00",
+        "reopen_reason": null,
+        "reopened_at": null,
+        "reopen_count": 0,
+        "created_at": "2026-06-15T00:56:45.554Z",
+        "updated_at": "2026-06-15T00:56:45.563Z"
+    }
+},
+{
+    "model": "tickets.ticket",
+    "pk": 27,
+    "fields": {
+        "ticket_number": "TKT-202606-0018",
+        "due_date": null,
+        "is_preventive_maintenance": false,
+        "start_time": null,
+        "end_time": null,
+        "category": "ACCOUNT",
+        "needs_head_approval": false,
+        "approval_status": "NOT_REQUIRED",
+        "approval_notes": null,
+        "requester": [
+            "head_claims_joy"
+        ],
+        "client_name": "Joy Lara",
+        "client_email": null,
+        "department": "CLAIMS",
+        "title": "No windows activation on my laptop",
+        "description": "Cannot use any office apps",
+        "priority": "HIGH",
+        "status": "CLOSED",
+        "assigned_to": [
+            "it_staff_carl"
+        ],
+        "is_escalated": false,
+        "escalated_from_tier": null,
+        "escalated_by": null,
+        "dispatch_notes": "Add microsoft accounts",
+        "resolution_notes": "DOne",
+        "started_at": "2026-06-15T01:14:23.821Z",
+        "resolved_at": "2026-06-15T01:15:03.900Z",
+        "client_feedback_rating": 5,
+        "client_feedback_notes": "Very Fast",
+        "pm_review_rating": null,
+        "pm_review_notes": null,
+        "pm_reviewed_by": null,
+        "pm_reviewed_at": null,
+        "source_recurring_task": null,
+        "scheduled_start_time": null,
+        "scheduled_end_time": null,
+        "reopen_reason": null,
+        "reopened_at": null,
+        "reopen_count": 0,
+        "created_at": "2026-06-15T01:12:33.087Z",
+        "updated_at": "2026-06-16T01:44:12.972Z"
+    }
+},
+{
+    "model": "tickets.ticket",
+    "pk": 28,
+    "fields": {
+        "ticket_number": "TKT-202606-0019",
+        "due_date": null,
+        "is_preventive_maintenance": false,
+        "start_time": null,
+        "end_time": null,
+        "category": "SECURITY",
+        "needs_head_approval": true,
+        "approval_status": "APPROVED",
+        "approval_notes": "",
+        "requester": [
+            "claims_jane"
+        ],
+        "client_name": "Jane Aguinaldo",
+        "client_email": null,
+        "department": "CLAIMS",
+        "title": "Testing",
+        "description": "Priority Level",
+        "priority": "URGENT",
+        "status": "RESOLVED",
+        "assigned_to": [
+            "it_staff_louis"
+        ],
+        "is_escalated": false,
+        "escalated_from_tier": null,
+        "escalated_by": null,
+        "dispatch_notes": "ynynyn",
+        "resolution_notes": "Done",
+        "started_at": "2026-06-16T08:42:57.741Z",
+        "resolved_at": "2026-06-16T08:43:15.323Z",
+        "client_feedback_rating": null,
+        "client_feedback_notes": null,
+        "pm_review_rating": null,
+        "pm_review_notes": null,
+        "pm_reviewed_by": null,
+        "pm_reviewed_at": null,
+        "source_recurring_task": null,
+        "scheduled_start_time": null,
+        "scheduled_end_time": null,
+        "reopen_reason": null,
+        "reopened_at": null,
+        "reopen_count": 0,
+        "created_at": "2026-06-15T01:17:33.743Z",
+        "updated_at": "2026-06-16T08:43:15.324Z"
+    }
+},
+{
+    "model": "tickets.ticket",
+    "pk": 29,
+    "fields": {
+        "ticket_number": "TKT-202606-0020",
+        "due_date": null,
+        "is_preventive_maintenance": false,
+        "start_time": null,
+        "end_time": null,
+        "category": "PRINTER",
+        "needs_head_approval": false,
+        "approval_status": "NOT_REQUIRED",
+        "approval_notes": null,
+        "requester": [
+            "head_claims_joy"
+        ],
+        "client_name": "Joy Lara",
+        "client_email": null,
+        "department": "CLAIMS",
+        "title": "Change Toner or Drum",
+        "description": "Currently out of toner the printer here i department",
+        "priority": "MEDIUM",
+        "status": "IN_PROGRESS",
+        "assigned_to": [
+            "it_staff_carl"
+        ],
+        "is_escalated": false,
+        "escalated_from_tier": null,
+        "escalated_by": null,
+        "dispatch_notes": "Fix it boi",
+        "resolution_notes": null,
+        "started_at": null,
+        "resolved_at": null,
+        "client_feedback_rating": null,
+        "client_feedback_notes": null,
+        "pm_review_rating": null,
+        "pm_review_notes": null,
+        "pm_reviewed_by": null,
+        "pm_reviewed_at": null,
+        "source_recurring_task": null,
+        "scheduled_start_time": null,
+        "scheduled_end_time": null,
+        "reopen_reason": null,
+        "reopened_at": null,
+        "reopen_count": 0,
+        "created_at": "2026-06-15T03:52:14.304Z",
+        "updated_at": "2026-06-15T03:52:41.462Z"
+    }
+},
+{
+    "model": "tickets.ticket",
+    "pk": 30,
+    "fields": {
+        "ticket_number": "TKT-202606-0021",
+        "due_date": null,
+        "is_preventive_maintenance": false,
+        "start_time": null,
+        "end_time": null,
+        "category": "PRINTER",
+        "needs_head_approval": true,
+        "approval_status": "APPROVED",
+        "approval_notes": "awdadwa",
+        "requester": [
+            "claims_jane"
+        ],
+        "client_name": "Jane Aguinaldo",
+        "client_email": null,
+        "department": "CLAIMS",
+        "title": "Change of Toner",
+        "description": "Out of toner",
+        "priority": "MEDIUM",
+        "status": "OPEN",
+        "assigned_to": null,
+        "is_escalated": false,
+        "escalated_from_tier": null,
+        "escalated_by": null,
+        "dispatch_notes": null,
+        "resolution_notes": null,
+        "started_at": null,
+        "resolved_at": null,
+        "client_feedback_rating": null,
+        "client_feedback_notes": null,
+        "pm_review_rating": null,
+        "pm_review_notes": null,
+        "pm_reviewed_by": null,
+        "pm_reviewed_at": null,
+        "source_recurring_task": null,
+        "scheduled_start_time": null,
+        "scheduled_end_time": null,
+        "reopen_reason": null,
+        "reopened_at": null,
+        "reopen_count": 0,
+        "created_at": "2026-06-15T04:03:00.693Z",
+        "updated_at": "2026-06-16T05:20:57.055Z"
+    }
+},
+{
+    "model": "tickets.ticket",
+    "pk": 31,
+    "fields": {
+        "ticket_number": "TKT-202606-0022",
+        "due_date": null,
+        "is_preventive_maintenance": false,
+        "start_time": null,
+        "end_time": null,
+        "category": "OTHER",
+        "needs_head_approval": false,
+        "approval_status": "NOT_REQUIRED",
+        "approval_notes": null,
+        "requester": [
+            "head_claims_joy"
+        ],
+        "client_name": "Joy Lara",
+        "client_email": null,
+        "department": "CLAIMS",
+        "title": "asaWDawdsd",
+        "description": "awdawdsd",
+        "priority": "MEDIUM",
+        "status": "OPEN",
+        "assigned_to": null,
+        "is_escalated": false,
+        "escalated_from_tier": null,
+        "escalated_by": null,
+        "dispatch_notes": null,
+        "resolution_notes": null,
+        "started_at": null,
+        "resolved_at": null,
+        "client_feedback_rating": null,
+        "client_feedback_notes": null,
+        "pm_review_rating": null,
+        "pm_review_notes": null,
+        "pm_reviewed_by": null,
+        "pm_reviewed_at": null,
+        "source_recurring_task": null,
+        "scheduled_start_time": null,
+        "scheduled_end_time": null,
+        "reopen_reason": null,
+        "reopened_at": null,
+        "reopen_count": 0,
+        "created_at": "2026-06-16T06:16:51.162Z",
+        "updated_at": "2026-06-16T06:16:51.162Z"
+    }
+},
+{
+    "model": "tickets.recurringtask",
+    "pk": 3,
+    "fields": {
+        "title": "Server Room Cleaning",
+        "description": "Clean server room, look for deficiencies etc",
+        "recurrence_type": "DAILY",
+        "custom_date_start": null,
+        "custom_date_end": null,
+        "start_time": "08:00:00",
+        "end_time": "17:00:00",
+        "assigned_to": null,
+        "priority": "HIGH",
+        "is_active": true,
+        "last_generated": "2026-06-15",
+        "created_by": [
+            "it_head_mark"
+        ],
+        "created_at": "2026-06-04T06:38:48.473Z"
+    }
+},
+{
+    "model": "tickets.ticketcategory",
+    "pk": 1,
+    "fields": {
+        "key": "HARDWARE",
+        "label": "Hardware Issue",
+        "icon": "fa-solid fa-tag",
+        "is_active": true,
+        "sort_order": 0,
+        "created_at": "2026-06-15T02:39:27.035Z"
+    }
+},
+{
+    "model": "tickets.ticketcategory",
+    "pk": 3,
+    "fields": {
+        "key": "COMPUTE",
+        "label": "Computer Issues",
+        "icon": "fa-solid fa-tag",
+        "is_active": true,
+        "sort_order": 1,
+        "created_at": "2026-06-15T04:01:52.285Z"
+    }
+},
+{
+    "model": "tickets.ticketcategory",
+    "pk": 4,
+    "fields": {
+        "key": "PRINTER",
+        "label": "Printer Issue",
+        "icon": "fa-solid fa-tag",
+        "is_active": true,
+        "sort_order": 0,
+        "created_at": "2026-06-15T04:02:35.493Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 1,
+    "fields": {
+        "recipient": [
+            "head_claims_joy"
+        ],
+        "notif_type": "needs_approval",
+        "title": "Ticket Needs Your Approval",
+        "message": "Jane Aguinaldo submitted \"Broken LCD of Laptop\" and it requires your approval.",
+        "ticket": 17,
+        "is_read": true,
+        "created_at": "2026-06-04T00:53:22.234Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 2,
+    "fields": {
+        "recipient": [
+            "claims_jane"
+        ],
+        "notif_type": "ticket_approved",
+        "title": "Your Ticket Was Approved",
+        "message": "Your ticket \"Broken LCD of Laptop\" has been approved by Joy Lara and is now in the IT queue.",
+        "ticket": 17,
+        "is_read": true,
+        "created_at": "2026-06-04T01:05:42.135Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 3,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "needs_assigning",
+        "title": "New Ticket Needs Assigning",
+        "message": "\"Broken LCD of Laptop\" from Claims has been approved and is waiting for an IT staff assignment.",
+        "ticket": 17,
+        "is_read": true,
+        "created_at": "2026-06-04T01:05:42.140Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 4,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "needs_assigning",
+        "title": "New Ticket Needs Assigning",
+        "message": "\"Broken LCD of Laptop\" from Claims has been approved and is waiting for an IT staff assignment.",
+        "ticket": 17,
+        "is_read": false,
+        "created_at": "2026-06-04T01:05:42.144Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 5,
+    "fields": {
+        "recipient": [
+            "claims_jane"
+        ],
+        "notif_type": "ticket_rejected",
+        "title": "Your Ticket Was Declined",
+        "message": "Your ticket \"Printer Toner\" was declined by Joy Lara.",
+        "ticket": 14,
+        "is_read": true,
+        "created_at": "2026-06-04T01:05:43.692Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 6,
+    "fields": {
+        "recipient": [
+            "it_staff_carl"
+        ],
+        "notif_type": "ticket_assigned",
+        "title": "New Ticket Assigned to You",
+        "message": "Ticket #TKT-202606-0010 \"Broken LCD of Laptop\" (High priority) has been assigned to you.\nNote: Fix this until 5pm today",
+        "ticket": 17,
+        "is_read": true,
+        "created_at": "2026-06-04T01:06:37.769Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 7,
+    "fields": {
+        "recipient": [
+            "head_claims_joy"
+        ],
+        "notif_type": "ticket_dispatched",
+        "title": "Ticket Assigned to IT Staff",
+        "message": "Ticket \"Broken LCD of Laptop\" from your department has been assigned to Carl Echavez and is now In Progress.",
+        "ticket": 17,
+        "is_read": true,
+        "created_at": "2026-06-04T01:06:37.782Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 8,
+    "fields": {
+        "recipient": [
+            "it_staff_louis"
+        ],
+        "notif_type": "ticket_assigned",
+        "title": "New Ticket Assigned to You",
+        "message": "Ticket #TKT-202606-0009 \"[PM] WDAwaddw\" (Medium priority) has been assigned to you.\nNote: CLavaciawjcoic",
+        "ticket": null,
+        "is_read": true,
+        "created_at": "2026-06-04T01:06:45.454Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 9,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "ticket_dispatched",
+        "title": "Ticket Assigned to IT Staff",
+        "message": "Ticket \"[PM] WDAwaddw\" from your department has been assigned to Louis Clavacio and is now In Progress.",
+        "ticket": null,
+        "is_read": true,
+        "created_at": "2026-06-04T01:06:45.465Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 10,
+    "fields": {
+        "recipient": [
+            "claims_jane"
+        ],
+        "notif_type": "ticket_resolved",
+        "title": "Your Ticket Has Been Resolved",
+        "message": "Your ticket \"Needs new Mouse\" has been resolved by Louis Clavacio. Please review and close it.",
+        "ticket": 6,
+        "is_read": true,
+        "created_at": "2026-06-04T03:52:53.367Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 11,
+    "fields": {
+        "recipient": [
+            "head_claims_joy"
+        ],
+        "notif_type": "ticket_resolved",
+        "title": "Department Ticket Resolved",
+        "message": "Ticket \"Needs new Mouse\" submitted by Jane Aguinaldo has been resolved.",
+        "ticket": 6,
+        "is_read": true,
+        "created_at": "2026-06-04T03:52:53.379Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 12,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Louis Clavacio resolved \"Needs new Mouse\" — awaiting client feedback.",
+        "ticket": 6,
+        "is_read": true,
+        "created_at": "2026-06-04T03:52:53.388Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 13,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Louis Clavacio resolved \"Needs new Mouse\" — awaiting client feedback.",
+        "ticket": 6,
+        "is_read": false,
+        "created_at": "2026-06-04T03:52:53.394Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 14,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "needs_assigning",
+        "title": "Escalated Ticket Needs Reassigning",
+        "message": "Ticket \"Broken LCD of Laptop\" was escalated by Carl Echavez (Tier 1 — First Response) and needs to be reassigned.",
+        "ticket": 17,
+        "is_read": true,
+        "created_at": "2026-06-04T06:16:56.025Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 15,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "needs_assigning",
+        "title": "Escalated Ticket Needs Reassigning",
+        "message": "Ticket \"Broken LCD of Laptop\" was escalated by Carl Echavez (Tier 1 — First Response) and needs to be reassigned.",
+        "ticket": 17,
+        "is_read": false,
+        "created_at": "2026-06-04T06:16:56.032Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 16,
+    "fields": {
+        "recipient": [
+            "it_staff_louis"
+        ],
+        "notif_type": "ticket_escalated",
+        "title": "Ticket Escalated",
+        "message": "Ticket \"Broken LCD of Laptop\" was escalated from Tier 1 by Carl Echavez and may be assigned to you.",
+        "ticket": 17,
+        "is_read": true,
+        "created_at": "2026-06-04T06:16:56.038Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 17,
+    "fields": {
+        "recipient": [
+            "it_staff_carl"
+        ],
+        "notif_type": "ticket_assigned",
+        "title": "New Ticket Assigned to You",
+        "message": "Ticket #TKT-202606-0011 \"[PM] Serve Room Cleaning\" (High priority) has been assigned to you.\nNote: 8am to 5",
+        "ticket": 19,
+        "is_read": true,
+        "created_at": "2026-06-04T06:39:17.947Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 18,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "ticket_dispatched",
+        "title": "Ticket Assigned to IT Staff",
+        "message": "Ticket \"[PM] Serve Room Cleaning\" from your department has been assigned to Carl Echavez and is now In Progress.",
+        "ticket": 19,
+        "is_read": true,
+        "created_at": "2026-06-04T06:39:17.951Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 19,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "ticket_resolved",
+        "title": "Your Ticket Has Been Resolved",
+        "message": "Your ticket \"[PM] Serve Room Cleaning\" has been resolved by Carl Echavez. Please review and close it.",
+        "ticket": 19,
+        "is_read": true,
+        "created_at": "2026-06-04T06:41:06.560Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 20,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Carl Echavez resolved \"[PM] Serve Room Cleaning\" — awaiting client feedback.",
+        "ticket": 19,
+        "is_read": true,
+        "created_at": "2026-06-04T06:41:06.568Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 21,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Carl Echavez resolved \"[PM] Serve Room Cleaning\" — awaiting client feedback.",
+        "ticket": 19,
+        "is_read": false,
+        "created_at": "2026-06-04T06:41:06.571Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 22,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "pm_finished",
+        "title": "PM Task Completed",
+        "message": "Carl Echavez completed preventive maintenance task \"[PM] Serve Room Cleaning\". Please review it in the PM History tab.",
+        "ticket": 19,
+        "is_read": true,
+        "created_at": "2026-06-04T06:41:06.575Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 23,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "pm_finished",
+        "title": "PM Task Completed",
+        "message": "Carl Echavez completed preventive maintenance task \"[PM] Serve Room Cleaning\". Please review it in the PM History tab.",
+        "ticket": 19,
+        "is_read": false,
+        "created_at": "2026-06-04T06:41:06.579Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 24,
+    "fields": {
+        "recipient": [
+            "it_staff_carl"
+        ],
+        "notif_type": "feedback_received",
+        "title": "You Received a Rating",
+        "message": "You received a 5★ rating on \"[PM] Serve Room Cleaning\" from Mark Concepcion.",
+        "ticket": 19,
+        "is_read": true,
+        "created_at": "2026-06-04T06:42:18.164Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 25,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "rating_received",
+        "title": "IT Staff Received a Rating",
+        "message": "Carl Echavez received 5★ on ticket \"[PM] Serve Room Cleaning\".",
+        "ticket": 19,
+        "is_read": true,
+        "created_at": "2026-06-04T06:42:18.171Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 26,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "rating_received",
+        "title": "IT Staff Received a Rating",
+        "message": "Carl Echavez received 5★ on ticket \"[PM] Serve Room Cleaning\".",
+        "ticket": 19,
+        "is_read": false,
+        "created_at": "2026-06-04T06:42:18.177Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 27,
+    "fields": {
+        "recipient": [
+            "it_staff_carl"
+        ],
+        "notif_type": "feedback_received",
+        "title": "You Received a Rating",
+        "message": "You received a 1★ rating on \"Broken Keyboard\" from Jane Aguinaldo.",
+        "ticket": 4,
+        "is_read": true,
+        "created_at": "2026-06-04T06:46:33.431Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 28,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "rating_received",
+        "title": "IT Staff Received a Rating",
+        "message": "Carl Echavez received 1★ on ticket \"Broken Keyboard\".",
+        "ticket": 4,
+        "is_read": true,
+        "created_at": "2026-06-04T06:46:33.440Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 29,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "rating_received",
+        "title": "IT Staff Received a Rating",
+        "message": "Carl Echavez received 1★ on ticket \"Broken Keyboard\".",
+        "ticket": 4,
+        "is_read": false,
+        "created_at": "2026-06-04T06:46:33.446Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 30,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "ticket_reopened",
+        "title": "Ticket Reopened — Needs Reassignment",
+        "message": "Ticket #14 \"Printer Toner\" was reopened by Jane Aguinaldo. Reason: Toner is not working",
+        "ticket": 14,
+        "is_read": true,
+        "created_at": "2026-06-08T00:40:57.269Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 31,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "ticket_reopened",
+        "title": "Ticket Reopened — Needs Reassignment",
+        "message": "Ticket #14 \"Printer Toner\" was reopened by Jane Aguinaldo. Reason: Toner is not working",
+        "ticket": 14,
+        "is_read": false,
+        "created_at": "2026-06-08T00:40:57.273Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 32,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "ticket_resolved",
+        "title": "Your Ticket Has Been Resolved",
+        "message": "Your ticket \"[PM] WDAwaddw\" has been resolved by Louis Clavacio. Please review and close it.",
+        "ticket": null,
+        "is_read": true,
+        "created_at": "2026-06-08T00:56:09.257Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 33,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Louis Clavacio resolved \"[PM] WDAwaddw\" — awaiting client feedback.",
+        "ticket": null,
+        "is_read": true,
+        "created_at": "2026-06-08T00:56:09.266Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 34,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Louis Clavacio resolved \"[PM] WDAwaddw\" — awaiting client feedback.",
+        "ticket": null,
+        "is_read": false,
+        "created_at": "2026-06-08T00:56:09.274Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 35,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "pm_finished",
+        "title": "PM Task Completed",
+        "message": "Louis Clavacio completed preventive maintenance task \"[PM] WDAwaddw\". Please review it in the PM History tab.",
+        "ticket": null,
+        "is_read": true,
+        "created_at": "2026-06-08T00:56:09.285Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 36,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "pm_finished",
+        "title": "PM Task Completed",
+        "message": "Louis Clavacio completed preventive maintenance task \"[PM] WDAwaddw\". Please review it in the PM History tab.",
+        "ticket": null,
+        "is_read": false,
+        "created_at": "2026-06-08T00:56:09.292Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 37,
+    "fields": {
+        "recipient": [
+            "it_staff_louis"
+        ],
+        "notif_type": "ticket_assigned",
+        "title": "New Ticket Assigned to You",
+        "message": "Ticket #TKT-202606-0010 \"Broken LCD of Laptop\" (Medium priority) has been assigned to you.\nNote: Try to replace the lcd",
+        "ticket": 17,
+        "is_read": true,
+        "created_at": "2026-06-08T03:56:24.543Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 38,
+    "fields": {
+        "recipient": [
+            "head_claims_joy"
+        ],
+        "notif_type": "ticket_dispatched",
+        "title": "Ticket Assigned to IT Staff",
+        "message": "Ticket \"Broken LCD of Laptop\" from your department has been assigned to Louis Clavacio and is now In Progress.",
+        "ticket": 17,
+        "is_read": false,
+        "created_at": "2026-06-08T03:56:24.551Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 39,
+    "fields": {
+        "recipient": [
+            "it_staff_carl"
+        ],
+        "notif_type": "ticket_assigned",
+        "title": "New Ticket Assigned to You",
+        "message": "Ticket #TKT-202606-0013 \"Printer Toner\" (Medium priority) has been assigned to you.\nNote: Troubleshoot the printer and make sure the toner is intact",
+        "ticket": 14,
+        "is_read": true,
+        "created_at": "2026-06-08T03:56:48.371Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 40,
+    "fields": {
+        "recipient": [
+            "head_claims_joy"
+        ],
+        "notif_type": "ticket_dispatched",
+        "title": "Ticket Assigned to IT Staff",
+        "message": "Ticket \"Printer Toner\" from your department has been assigned to Carl Echavez and is now In Progress.",
+        "ticket": 14,
+        "is_read": false,
+        "created_at": "2026-06-08T03:56:48.376Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 41,
+    "fields": {
+        "recipient": [
+            "it_staff_carl"
+        ],
+        "notif_type": "ticket_assigned",
+        "title": "New Ticket Assigned to You",
+        "message": "Ticket #TKT-202606-0012 \"[PM] Serve Room Cleaning\" (Medium priority) has been assigned to you.\nNote: Clean the room",
+        "ticket": 22,
+        "is_read": true,
+        "created_at": "2026-06-08T04:31:17.407Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 42,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "ticket_dispatched",
+        "title": "Ticket Assigned to IT Staff",
+        "message": "Ticket \"[PM] Serve Room Cleaning\" from your department has been assigned to Carl Echavez and is now In Progress.",
+        "ticket": 22,
+        "is_read": true,
+        "created_at": "2026-06-08T04:31:17.420Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 43,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "ticket_resolved",
+        "title": "Your Ticket Has Been Resolved",
+        "message": "Your ticket \"[PM] Serve Room Cleaning\" has been resolved by Carl Echavez. Please review and close it.",
+        "ticket": 22,
+        "is_read": false,
+        "created_at": "2026-06-08T04:32:47.310Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 44,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Carl Echavez resolved \"[PM] Serve Room Cleaning\" — awaiting client feedback.",
+        "ticket": 22,
+        "is_read": false,
+        "created_at": "2026-06-08T04:32:47.317Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 45,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Carl Echavez resolved \"[PM] Serve Room Cleaning\" — awaiting client feedback.",
+        "ticket": 22,
+        "is_read": false,
+        "created_at": "2026-06-08T04:32:47.325Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 46,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "pm_finished",
+        "title": "PM Task Completed",
+        "message": "Carl Echavez completed preventive maintenance task \"[PM] Serve Room Cleaning\". Please review it in the PM History tab.",
+        "ticket": 22,
+        "is_read": true,
+        "created_at": "2026-06-08T04:32:47.330Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 47,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "pm_finished",
+        "title": "PM Task Completed",
+        "message": "Carl Echavez completed preventive maintenance task \"[PM] Serve Room Cleaning\". Please review it in the PM History tab.",
+        "ticket": 22,
+        "is_read": false,
+        "created_at": "2026-06-08T04:32:47.335Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 48,
+    "fields": {
+        "recipient": [
+            "it_staff_carl"
+        ],
+        "notif_type": "ticket_assigned",
+        "title": "New Ticket Assigned to You",
+        "message": "Ticket #TKT-202606-0014 \"[PM] Oowooowoow\" (Medium priority) has been assigned to you.\nNote: OWKDOAWKADW",
+        "ticket": 23,
+        "is_read": false,
+        "created_at": "2026-06-10T05:58:29.760Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 49,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "ticket_dispatched",
+        "title": "Ticket Assigned to IT Staff",
+        "message": "Ticket \"[PM] Oowooowoow\" from your department has been assigned to Carl Echavez and is now In Progress.",
+        "ticket": 23,
+        "is_read": false,
+        "created_at": "2026-06-10T05:58:29.765Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 50,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "ticket_resolved",
+        "title": "Your Ticket Has Been Resolved",
+        "message": "Your ticket \"[PM] Oowooowoow\" has been resolved by Carl Echavez. Please review and close it.",
+        "ticket": 23,
+        "is_read": false,
+        "created_at": "2026-06-10T06:51:22.614Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 51,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Carl Echavez resolved \"[PM] Oowooowoow\" — awaiting client feedback.",
+        "ticket": 23,
+        "is_read": false,
+        "created_at": "2026-06-10T06:51:22.637Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 52,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Carl Echavez resolved \"[PM] Oowooowoow\" — awaiting client feedback.",
+        "ticket": 23,
+        "is_read": false,
+        "created_at": "2026-06-10T06:51:22.652Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 53,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "pm_finished",
+        "title": "PM Task Completed",
+        "message": "Carl Echavez completed preventive maintenance task \"[PM] Oowooowoow\". Please review it in the PM History tab.",
+        "ticket": 23,
+        "is_read": true,
+        "created_at": "2026-06-10T06:51:22.667Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 54,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "pm_finished",
+        "title": "PM Task Completed",
+        "message": "Carl Echavez completed preventive maintenance task \"[PM] Oowooowoow\". Please review it in the PM History tab.",
+        "ticket": 23,
+        "is_read": false,
+        "created_at": "2026-06-10T06:51:22.681Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 55,
+    "fields": {
+        "recipient": [
+            "it_staff_carl"
+        ],
+        "notif_type": "ticket_assigned",
+        "title": "New Ticket Assigned to You",
+        "message": "Ticket #TKT-202606-0015 \"[PM] Server Room Cleaning\" (Medium priority) has been assigned to you.\nNote: Beng",
+        "ticket": 24,
+        "is_read": false,
+        "created_at": "2026-06-10T06:52:57.266Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 56,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "ticket_dispatched",
+        "title": "Ticket Assigned to IT Staff",
+        "message": "Ticket \"[PM] Server Room Cleaning\" from your department has been assigned to Carl Echavez and is now In Progress.",
+        "ticket": 24,
+        "is_read": false,
+        "created_at": "2026-06-10T06:52:57.272Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 57,
+    "fields": {
+        "recipient": [
+            "it_staff_carl"
+        ],
+        "notif_type": "pm_announced",
+        "title": "New PM Task Posted",
+        "message": "A new preventive maintenance task has been scheduled for you: \"Booom\" (Every Day).",
+        "ticket": 25,
+        "is_read": false,
+        "created_at": "2026-06-10T06:54:52.407Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 58,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "ticket_resolved",
+        "title": "Your Ticket Has Been Resolved",
+        "message": "Your ticket \"[PM] Booom\" has been resolved by Carl Echavez. Please review and close it.",
+        "ticket": 25,
+        "is_read": false,
+        "created_at": "2026-06-10T06:55:12.613Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 59,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Carl Echavez resolved \"[PM] Booom\" — awaiting client feedback.",
+        "ticket": 25,
+        "is_read": false,
+        "created_at": "2026-06-10T06:55:12.626Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 60,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Carl Echavez resolved \"[PM] Booom\" — awaiting client feedback.",
+        "ticket": 25,
+        "is_read": false,
+        "created_at": "2026-06-10T06:55:12.638Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 61,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "pm_finished",
+        "title": "PM Task Completed",
+        "message": "Carl Echavez completed preventive maintenance task \"[PM] Booom\". Please review it in the PM History tab.",
+        "ticket": 25,
+        "is_read": false,
+        "created_at": "2026-06-10T06:55:12.649Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 62,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "pm_finished",
+        "title": "PM Task Completed",
+        "message": "Carl Echavez completed preventive maintenance task \"[PM] Booom\". Please review it in the PM History tab.",
+        "ticket": 25,
+        "is_read": false,
+        "created_at": "2026-06-10T06:55:12.656Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 63,
+    "fields": {
+        "recipient": [
+            "it_staff_carl"
+        ],
+        "notif_type": "feedback_received",
+        "title": "You Received a Rating",
+        "message": "You received a 5★ rating on \"PC Charger\" from Jane Aguinaldo.",
+        "ticket": 8,
+        "is_read": false,
+        "created_at": "2026-06-10T07:01:37.738Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 64,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "rating_received",
+        "title": "IT Staff Received a Rating",
+        "message": "Carl Echavez received 5★ on ticket \"PC Charger\".",
+        "ticket": 8,
+        "is_read": false,
+        "created_at": "2026-06-10T07:01:37.760Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 65,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "rating_received",
+        "title": "IT Staff Received a Rating",
+        "message": "Carl Echavez received 5★ on ticket \"PC Charger\".",
+        "ticket": 8,
+        "is_read": false,
+        "created_at": "2026-06-10T07:01:37.779Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 66,
+    "fields": {
+        "recipient": [
+            "claims_jane"
+        ],
+        "notif_type": "ticket_resolved",
+        "title": "Your Ticket Has Been Resolved",
+        "message": "Your ticket \"Printer Toner\" has been resolved by Carl Echavez. Please review and close it.",
+        "ticket": 14,
+        "is_read": true,
+        "created_at": "2026-06-10T07:06:25.509Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 67,
+    "fields": {
+        "recipient": [
+            "head_claims_joy"
+        ],
+        "notif_type": "ticket_resolved",
+        "title": "Department Ticket Resolved",
+        "message": "Ticket \"Printer Toner\" submitted by Jane Aguinaldo has been resolved.",
+        "ticket": 14,
+        "is_read": false,
+        "created_at": "2026-06-10T07:06:25.546Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 68,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Carl Echavez resolved \"Printer Toner\" — awaiting client feedback.",
+        "ticket": 14,
+        "is_read": false,
+        "created_at": "2026-06-10T07:06:25.586Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 69,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Carl Echavez resolved \"Printer Toner\" — awaiting client feedback.",
+        "ticket": 14,
+        "is_read": false,
+        "created_at": "2026-06-10T07:06:25.611Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 70,
+    "fields": {
+        "recipient": [
+            "it_staff_carl"
+        ],
+        "notif_type": "feedback_received",
+        "title": "You Received a Rating",
+        "message": "You received a 5★ rating on \"Printer Toner\" from Jane Aguinaldo.",
+        "ticket": 14,
+        "is_read": false,
+        "created_at": "2026-06-10T07:09:17.941Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 71,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "rating_received",
+        "title": "IT Staff Received a Rating",
+        "message": "Carl Echavez received 5★ on ticket \"Printer Toner\".",
+        "ticket": 14,
+        "is_read": false,
+        "created_at": "2026-06-10T07:09:17.964Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 72,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "rating_received",
+        "title": "IT Staff Received a Rating",
+        "message": "Carl Echavez received 5★ on ticket \"Printer Toner\".",
+        "ticket": 14,
+        "is_read": false,
+        "created_at": "2026-06-10T07:09:17.992Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 73,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "ticket_resolved",
+        "title": "Your Ticket Has Been Resolved",
+        "message": "Your ticket \"[PM] Server Room Cleaning\" has been resolved by Carl Echavez. Please review and close it.",
+        "ticket": 24,
+        "is_read": false,
+        "created_at": "2026-06-15T00:50:52.936Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 74,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Carl Echavez resolved \"[PM] Server Room Cleaning\" — awaiting client feedback.",
+        "ticket": 24,
+        "is_read": false,
+        "created_at": "2026-06-15T00:50:52.949Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 75,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Carl Echavez resolved \"[PM] Server Room Cleaning\" — awaiting client feedback.",
+        "ticket": 24,
+        "is_read": false,
+        "created_at": "2026-06-15T00:50:52.955Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 76,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "pm_finished",
+        "title": "PM Task Completed",
+        "message": "Carl Echavez completed preventive maintenance task \"[PM] Server Room Cleaning\". Please review it in the PM History tab.",
+        "ticket": 24,
+        "is_read": false,
+        "created_at": "2026-06-15T00:50:52.959Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 77,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "pm_finished",
+        "title": "PM Task Completed",
+        "message": "Carl Echavez completed preventive maintenance task \"[PM] Server Room Cleaning\". Please review it in the PM History tab.",
+        "ticket": 24,
+        "is_read": false,
+        "created_at": "2026-06-15T00:50:52.964Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 78,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "needs_assigning",
+        "title": "New Ticket — Needs Assignment",
+        "message": "Joy Lara (Claims Head) submitted \"No windows activation on my laptop\" and it is ready to be assigned to IT staff.",
+        "ticket": 27,
+        "is_read": false,
+        "created_at": "2026-06-15T01:12:33.096Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 79,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "needs_assigning",
+        "title": "New Ticket — Needs Assignment",
+        "message": "Joy Lara (Claims Head) submitted \"No windows activation on my laptop\" and it is ready to be assigned to IT staff.",
+        "ticket": 27,
+        "is_read": false,
+        "created_at": "2026-06-15T01:12:33.106Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 80,
+    "fields": {
+        "recipient": [
+            "it_staff_carl"
+        ],
+        "notif_type": "ticket_assigned",
+        "title": "New Ticket Assigned to You",
+        "message": "Ticket #TKT-202606-0018 \"No windows activation on my laptop\" (High priority) has been assigned to you.\nNote: Add microsoft accounts",
+        "ticket": 27,
+        "is_read": false,
+        "created_at": "2026-06-15T01:13:47.291Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 81,
+    "fields": {
+        "recipient": [
+            "head_claims_joy"
+        ],
+        "notif_type": "ticket_dispatched",
+        "title": "Ticket Assigned to IT Staff",
+        "message": "Ticket \"No windows activation on my laptop\" from your department has been assigned to Carl Echavez and is now In Progress.",
+        "ticket": 27,
+        "is_read": false,
+        "created_at": "2026-06-15T01:13:47.309Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 82,
+    "fields": {
+        "recipient": [
+            "head_claims_joy"
+        ],
+        "notif_type": "ticket_resolved",
+        "title": "Your Ticket Has Been Resolved",
+        "message": "Your ticket \"No windows activation on my laptop\" has been resolved by Carl Echavez. Please review and close it.",
+        "ticket": 27,
+        "is_read": false,
+        "created_at": "2026-06-15T01:15:03.920Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 83,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Carl Echavez resolved \"No windows activation on my laptop\" — awaiting client feedback.",
+        "ticket": 27,
+        "is_read": false,
+        "created_at": "2026-06-15T01:15:03.929Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 84,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Carl Echavez resolved \"No windows activation on my laptop\" — awaiting client feedback.",
+        "ticket": 27,
+        "is_read": false,
+        "created_at": "2026-06-15T01:15:03.938Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 85,
+    "fields": {
+        "recipient": [
+            "head_claims_joy"
+        ],
+        "notif_type": "needs_approval",
+        "title": "Ticket Needs Your Approval",
+        "message": "Jane Aguinaldo submitted \"Testing\" and it requires your approval.",
+        "ticket": 28,
+        "is_read": false,
+        "created_at": "2026-06-15T01:17:33.752Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 86,
+    "fields": {
+        "recipient": [
+            "claims_jane"
+        ],
+        "notif_type": "ticket_approved",
+        "title": "Your Ticket Was Approved",
+        "message": "Your ticket \"Testing\" has been approved by Joy Lara and is now in the IT queue.",
+        "ticket": 28,
+        "is_read": true,
+        "created_at": "2026-06-15T01:18:13.279Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 87,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "needs_assigning",
+        "title": "New Ticket Needs Assigning",
+        "message": "\"Testing\" from Claims has been approved and is waiting for an IT staff assignment.",
+        "ticket": 28,
+        "is_read": false,
+        "created_at": "2026-06-15T01:18:13.287Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 88,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "needs_assigning",
+        "title": "New Ticket Needs Assigning",
+        "message": "\"Testing\" from Claims has been approved and is waiting for an IT staff assignment.",
+        "ticket": 28,
+        "is_read": false,
+        "created_at": "2026-06-15T01:18:13.294Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 89,
+    "fields": {
+        "recipient": [
+            "it_staff_louis"
+        ],
+        "notif_type": "ticket_assigned",
+        "title": "New Ticket Assigned to You",
+        "message": "Ticket #TKT-202606-0019 \"Testing\" (Urgent priority) has been assigned to you.\nNote: ynynyn",
+        "ticket": 28,
+        "is_read": false,
+        "created_at": "2026-06-15T01:18:46.123Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 90,
+    "fields": {
+        "recipient": [
+            "head_claims_joy"
+        ],
+        "notif_type": "ticket_dispatched",
+        "title": "Ticket Assigned to IT Staff",
+        "message": "Ticket \"Testing\" from your department has been assigned to Louis Clavacio and is now In Progress.",
+        "ticket": 28,
+        "is_read": false,
+        "created_at": "2026-06-15T01:18:46.131Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 91,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "needs_assigning",
+        "title": "New Ticket — Needs Assignment",
+        "message": "Joy Lara (Claims Head) submitted \"Change Toner or Drum\" and it is ready to be assigned to IT staff.",
+        "ticket": 29,
+        "is_read": false,
+        "created_at": "2026-06-15T03:52:14.313Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 92,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "needs_assigning",
+        "title": "New Ticket — Needs Assignment",
+        "message": "Joy Lara (Claims Head) submitted \"Change Toner or Drum\" and it is ready to be assigned to IT staff.",
+        "ticket": 29,
+        "is_read": false,
+        "created_at": "2026-06-15T03:52:14.317Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 93,
+    "fields": {
+        "recipient": [
+            "it_staff_carl"
+        ],
+        "notif_type": "ticket_assigned",
+        "title": "New Ticket Assigned to You",
+        "message": "Ticket #TKT-202606-0020 \"Change Toner or Drum\" (Medium priority) has been assigned to you.\nNote: Fix it boi",
+        "ticket": 29,
+        "is_read": false,
+        "created_at": "2026-06-15T03:52:41.466Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 94,
+    "fields": {
+        "recipient": [
+            "head_claims_joy"
+        ],
+        "notif_type": "ticket_dispatched",
+        "title": "Ticket Assigned to IT Staff",
+        "message": "Ticket \"Change Toner or Drum\" from your department has been assigned to Carl Echavez and is now In Progress.",
+        "ticket": 29,
+        "is_read": false,
+        "created_at": "2026-06-15T03:52:41.471Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 95,
+    "fields": {
+        "recipient": [
+            "head_claims_joy"
+        ],
+        "notif_type": "needs_approval",
+        "title": "Ticket Needs Your Approval",
+        "message": "Jane Aguinaldo submitted \"Change of Toner\" and it requires your approval.",
+        "ticket": 30,
+        "is_read": false,
+        "created_at": "2026-06-15T04:03:00.711Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 96,
+    "fields": {
+        "recipient": [
+            "it_staff_carl"
+        ],
+        "notif_type": "feedback_received",
+        "title": "You Received a Rating",
+        "message": "You received a 5★ rating on \"No windows activation on my laptop\" from Joy Lara.",
+        "ticket": 27,
+        "is_read": true,
+        "created_at": "2026-06-16T01:44:12.981Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 97,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "rating_received",
+        "title": "IT Staff Received a Rating",
+        "message": "Carl Echavez received 5★ on ticket \"No windows activation on my laptop\".",
+        "ticket": 27,
+        "is_read": false,
+        "created_at": "2026-06-16T01:44:12.989Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 98,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "rating_received",
+        "title": "IT Staff Received a Rating",
+        "message": "Carl Echavez received 5★ on ticket \"No windows activation on my laptop\".",
+        "ticket": 27,
+        "is_read": false,
+        "created_at": "2026-06-16T01:44:12.993Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 99,
+    "fields": {
+        "recipient": [
+            "claims_jane"
+        ],
+        "notif_type": "ticket_approved",
+        "title": "Your Ticket Was Approved",
+        "message": "Your ticket \"Change of Toner\" has been approved by Joy Lara and is now in the IT queue.",
+        "ticket": 30,
+        "is_read": false,
+        "created_at": "2026-06-16T05:20:57.065Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 100,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "needs_assigning",
+        "title": "New Ticket Needs Assigning",
+        "message": "\"Change of Toner\" from Claims has been approved and is waiting for an IT staff assignment.",
+        "ticket": 30,
+        "is_read": false,
+        "created_at": "2026-06-16T05:20:57.071Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 101,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "needs_assigning",
+        "title": "New Ticket Needs Assigning",
+        "message": "\"Change of Toner\" from Claims has been approved and is waiting for an IT staff assignment.",
+        "ticket": 30,
+        "is_read": false,
+        "created_at": "2026-06-16T05:20:57.076Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 102,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "needs_assigning",
+        "title": "New Ticket — Needs Assignment",
+        "message": "Joy Lara (Claims Head) submitted \"asaWDawdsd\" and it is ready to be assigned to IT staff.",
+        "ticket": 31,
+        "is_read": false,
+        "created_at": "2026-06-16T06:16:51.200Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 103,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "needs_assigning",
+        "title": "New Ticket — Needs Assignment",
+        "message": "Joy Lara (Claims Head) submitted \"asaWDawdsd\" and it is ready to be assigned to IT staff.",
+        "ticket": 31,
+        "is_read": false,
+        "created_at": "2026-06-16T06:16:51.214Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 104,
+    "fields": {
+        "recipient": [
+            "it_staff_carl"
+        ],
+        "notif_type": "feedback_received",
+        "title": "You Received a Rating",
+        "message": "You received a 5★ rating on \"OWDAKWDKODAWK\" from Jane Aguinaldo.",
+        "ticket": 5,
+        "is_read": false,
+        "created_at": "2026-06-16T08:38:26.114Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 105,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "rating_received",
+        "title": "IT Staff Received a Rating",
+        "message": "Carl Echavez received 5★ on ticket \"OWDAKWDKODAWK\".",
+        "ticket": 5,
+        "is_read": false,
+        "created_at": "2026-06-16T08:38:26.118Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 106,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "rating_received",
+        "title": "IT Staff Received a Rating",
+        "message": "Carl Echavez received 5★ on ticket \"OWDAKWDKODAWK\".",
+        "ticket": 5,
+        "is_read": false,
+        "created_at": "2026-06-16T08:38:26.123Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 107,
+    "fields": {
+        "recipient": [
+            "it_staff_louis"
+        ],
+        "notif_type": "feedback_received",
+        "title": "You Received a Rating",
+        "message": "You received a 5★ rating on \"Needs new Mouse\" from Jane Aguinaldo.",
+        "ticket": 6,
+        "is_read": false,
+        "created_at": "2026-06-16T08:38:30.464Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 108,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "rating_received",
+        "title": "IT Staff Received a Rating",
+        "message": "Louis Clavacio received 5★ on ticket \"Needs new Mouse\".",
+        "ticket": 6,
+        "is_read": false,
+        "created_at": "2026-06-16T08:38:30.468Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 109,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "rating_received",
+        "title": "IT Staff Received a Rating",
+        "message": "Louis Clavacio received 5★ on ticket \"Needs new Mouse\".",
+        "ticket": 6,
+        "is_read": false,
+        "created_at": "2026-06-16T08:38:30.472Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 110,
+    "fields": {
+        "recipient": [
+            "claims_jane"
+        ],
+        "notif_type": "ticket_resolved",
+        "title": "Your Ticket Has Been Resolved",
+        "message": "Your ticket \"Broken LCD of Laptop\" has been resolved by Louis Clavacio. Please review and close it.",
+        "ticket": 17,
+        "is_read": false,
+        "created_at": "2026-06-16T08:43:09.666Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 111,
+    "fields": {
+        "recipient": [
+            "head_claims_joy"
+        ],
+        "notif_type": "ticket_resolved",
+        "title": "Department Ticket Resolved",
+        "message": "Ticket \"Broken LCD of Laptop\" submitted by Jane Aguinaldo has been resolved.",
+        "ticket": 17,
+        "is_read": false,
+        "created_at": "2026-06-16T08:43:09.676Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 112,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Louis Clavacio resolved \"Broken LCD of Laptop\" — awaiting client feedback.",
+        "ticket": 17,
+        "is_read": false,
+        "created_at": "2026-06-16T08:43:09.682Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 113,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Louis Clavacio resolved \"Broken LCD of Laptop\" — awaiting client feedback.",
+        "ticket": 17,
+        "is_read": false,
+        "created_at": "2026-06-16T08:43:09.686Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 114,
+    "fields": {
+        "recipient": [
+            "claims_jane"
+        ],
+        "notif_type": "ticket_resolved",
+        "title": "Your Ticket Has Been Resolved",
+        "message": "Your ticket \"Testing\" has been resolved by Louis Clavacio. Please review and close it.",
+        "ticket": 28,
+        "is_read": false,
+        "created_at": "2026-06-16T08:43:15.333Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 115,
+    "fields": {
+        "recipient": [
+            "head_claims_joy"
+        ],
+        "notif_type": "ticket_resolved",
+        "title": "Department Ticket Resolved",
+        "message": "Ticket \"Testing\" submitted by Jane Aguinaldo has been resolved.",
+        "ticket": 28,
+        "is_read": false,
+        "created_at": "2026-06-16T08:43:15.343Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 116,
+    "fields": {
+        "recipient": [
+            "it_head_mark"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Louis Clavacio resolved \"Testing\" — awaiting client feedback.",
+        "ticket": 28,
+        "is_read": false,
+        "created_at": "2026-06-16T08:43:15.349Z"
+    }
+},
+{
+    "model": "tickets.notification",
+    "pk": 117,
+    "fields": {
+        "recipient": [
+            "it_supervisor_angel"
+        ],
+        "notif_type": "it_resolved",
+        "title": "IT Staff Resolved a Ticket",
+        "message": "Louis Clavacio resolved \"Testing\" — awaiting client feedback.",
+        "ticket": 28,
+        "is_read": false,
+        "created_at": "2026-06-16T08:43:15.355Z"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 9,
+    "fields": {
+        "action_time": "2026-05-21T03:11:36.283Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "ticket"
+        ],
+        "object_id": "2",
+        "object_repr": "[In Progress] Keyboard BUgging - Claims",
+        "action_flag": 3,
+        "change_message": ""
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 10,
+    "fields": {
+        "action_time": "2026-05-21T03:11:36.284Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "ticket"
+        ],
+        "object_id": "1",
+        "object_repr": "[In Progress] Broken Mouse - Claims",
+        "action_flag": 3,
+        "change_message": ""
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 11,
+    "fields": {
+        "action_time": "2026-05-21T03:12:04.820Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "object_id": "1",
+        "object_repr": "Super_Admin",
+        "action_flag": 3,
+        "change_message": ""
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 12,
+    "fields": {
+        "action_time": "2026-05-21T03:12:43.082Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "object_id": "5",
+        "object_repr": "super_admin",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Username\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 13,
+    "fields": {
+        "action_time": "2026-05-21T03:13:15.937Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "object_id": "3",
+        "object_repr": "it_head_angel",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Username\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 14,
+    "fields": {
+        "action_time": "2026-05-21T03:13:26.222Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "object_id": "2",
+        "object_repr": "head_claims_joy",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Username\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 15,
+    "fields": {
+        "action_time": "2026-05-21T03:13:33.118Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "object_id": "4",
+        "object_repr": "claims_jane",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Username\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 16,
+    "fields": {
+        "action_time": "2026-05-21T03:13:43.997Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "employeeprofile"
+        ],
+        "object_id": "2",
+        "object_repr": "it_head_angel - IT (Head)",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Is department head\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 17,
+    "fields": {
+        "action_time": "2026-05-21T03:14:47.822Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "object_id": "6",
+        "object_repr": "it_staff_carl",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 18,
+    "fields": {
+        "action_time": "2026-05-21T03:14:55.977Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "employeeprofile"
+        ],
+        "object_id": "4",
+        "object_repr": "it_staff_carl - IT (Staff)",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 19,
+    "fields": {
+        "action_time": "2026-05-21T05:31:15.249Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "employeeprofile"
+        ],
+        "object_id": "4",
+        "object_repr": "it_staff_carl - IT (Staff)",
+        "action_flag": 2,
+        "change_message": "[]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 20,
+    "fields": {
+        "action_time": "2026-05-22T02:00:13.541Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "object_id": "7",
+        "object_repr": "it_staff_louis",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 21,
+    "fields": {
+        "action_time": "2026-05-22T02:00:32.780Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "employeeprofile"
+        ],
+        "object_id": "5",
+        "object_repr": "it_staff_louis - IT (Staff)",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 22,
+    "fields": {
+        "action_time": "2026-05-22T02:01:13.854Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "object_id": "4",
+        "object_repr": "claims_jane",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"First name\", \"Last name\", \"Email address\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 23,
+    "fields": {
+        "action_time": "2026-05-22T02:01:31.425Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "object_id": "3",
+        "object_repr": "it_head_angel",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"password\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 24,
+    "fields": {
+        "action_time": "2026-05-22T02:01:46.044Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "object_id": "6",
+        "object_repr": "it_staff_carl",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"password\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 25,
+    "fields": {
+        "action_time": "2026-05-22T02:02:00.920Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "object_id": "4",
+        "object_repr": "claims_jane",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"password\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 26,
+    "fields": {
+        "action_time": "2026-05-22T02:02:20.751Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "object_id": "2",
+        "object_repr": "head_claims_joy",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"First name\", \"Last name\", \"Email address\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 27,
+    "fields": {
+        "action_time": "2026-05-22T02:05:42.018Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "object_id": "3",
+        "object_repr": "it_head_mark",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Username\", \"First name\", \"Last name\", \"Email address\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 28,
+    "fields": {
+        "action_time": "2026-05-22T02:05:55.248Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "object_id": "6",
+        "object_repr": "it_staff_carl",
+        "action_flag": 2,
+        "change_message": "[]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 29,
+    "fields": {
+        "action_time": "2026-05-22T02:25:58.409Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "object_id": "8",
+        "object_repr": "it_supervisor_angel",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 30,
+    "fields": {
+        "action_time": "2026-05-22T02:26:08.912Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "employeeprofile"
+        ],
+        "object_id": "6",
+        "object_repr": "it_supervisor_angel - IT (Head)",
+        "action_flag": 1,
+        "change_message": "[{\"added\": {}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 31,
+    "fields": {
+        "action_time": "2026-05-22T02:50:22.574Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "object_id": "2",
+        "object_repr": "head_claims_joy",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"password\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 32,
+    "fields": {
+        "action_time": "2026-05-22T02:50:26.609Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "object_id": "2",
+        "object_repr": "head_claims_joy",
+        "action_flag": 2,
+        "change_message": "[]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 33,
+    "fields": {
+        "action_time": "2026-05-25T02:02:45.328Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "object_id": "6",
+        "object_repr": "it_staff_carl",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"First name\", \"Last name\", \"Email address\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 34,
+    "fields": {
+        "action_time": "2026-05-26T03:27:25.560Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "object_id": "3",
+        "object_repr": "it_head_mark",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"password\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 35,
+    "fields": {
+        "action_time": "2026-05-26T03:27:43.475Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "object_id": "8",
+        "object_repr": "it_supervisor_angel",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"password\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 36,
+    "fields": {
+        "action_time": "2026-05-26T03:28:17.016Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "auth",
+            "user"
+        ],
+        "object_id": "8",
+        "object_repr": "it_supervisor_angel",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Last name\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 37,
+    "fields": {
+        "action_time": "2026-05-26T03:28:27.559Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "employeeprofile"
+        ],
+        "object_id": "6",
+        "object_repr": "it_supervisor_angel - IT (Head)",
+        "action_flag": 2,
+        "change_message": "[]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 38,
+    "fields": {
+        "action_time": "2026-05-26T08:32:30.141Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "ticket"
+        ],
+        "object_id": "7",
+        "object_repr": "[Closed] Glitching Monitor - Claims",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Ticket Number\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 39,
+    "fields": {
+        "action_time": "2026-05-26T08:32:34.578Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "ticket"
+        ],
+        "object_id": "6",
+        "object_repr": "[In Progress] Needs new Mouse - Claims",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Ticket Number\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 40,
+    "fields": {
+        "action_time": "2026-05-26T08:32:40.405Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "ticket"
+        ],
+        "object_id": "5",
+        "object_repr": "[Resolved (Pending Feedback)] OWDAKWDKODAWK - Claims",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Ticket Number\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 41,
+    "fields": {
+        "action_time": "2026-05-26T08:32:45.237Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "ticket"
+        ],
+        "object_id": "4",
+        "object_repr": "[Resolved (Pending Feedback)] Broken Keyboard - Claims",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Ticket Number\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 42,
+    "fields": {
+        "action_time": "2026-05-26T08:32:48.657Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "ticket"
+        ],
+        "object_id": "3",
+        "object_repr": "[Closed] Broken Mouse - Claims",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"Ticket Number\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 43,
+    "fields": {
+        "action_time": "2026-05-26T08:32:55.661Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "ticket"
+        ],
+        "object_id": "4",
+        "object_repr": "[Resolved (Pending Feedback)] Broken Keyboard - Claims",
+        "action_flag": 2,
+        "change_message": "[]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 44,
+    "fields": {
+        "action_time": "2026-05-26T08:33:07.774Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "ticket"
+        ],
+        "object_id": "7",
+        "object_repr": "[Closed] Glitching Monitor - Claims",
+        "action_flag": 2,
+        "change_message": "[]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 45,
+    "fields": {
+        "action_time": "2026-06-02T01:49:06.769Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "employeeprofile"
+        ],
+        "object_id": "5",
+        "object_repr": "it_staff_louis - IT (Staff) [Tier 2 — Advanced Support]",
+        "action_flag": 2,
+        "change_message": "[{\"changed\": {\"fields\": [\"IT Support Tier\"]}}]"
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 46,
+    "fields": {
+        "action_time": "2026-06-03T06:52:10.594Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "ticket"
+        ],
+        "object_id": "15",
+        "object_repr": "[Resolved (Pending Feedback)] [PM] WDAwaddw - IT",
+        "action_flag": 3,
+        "change_message": ""
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 47,
+    "fields": {
+        "action_time": "2026-06-03T06:52:10.595Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "ticket"
+        ],
+        "object_id": "13",
+        "object_repr": "[In Progress] [PM] Hello - IT",
+        "action_flag": 3,
+        "change_message": ""
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 48,
+    "fields": {
+        "action_time": "2026-06-03T06:52:10.595Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "ticket"
+        ],
+        "object_id": "12",
+        "object_repr": "[In Progress] [MAINTENANCE] Computer Checking in every department - IT",
+        "action_flag": 3,
+        "change_message": ""
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 49,
+    "fields": {
+        "action_time": "2026-06-03T06:52:10.595Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "ticket"
+        ],
+        "object_id": "11",
+        "object_repr": "[Resolved (Pending Feedback)] [MAINTENANCE] Server Room Cleaning - IT",
+        "action_flag": 3,
+        "change_message": ""
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 50,
+    "fields": {
+        "action_time": "2026-06-08T01:19:24.475Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "ticket"
+        ],
+        "object_id": "20",
+        "object_repr": "[Open (Unassigned)] [PM] Awadw - IT",
+        "action_flag": 3,
+        "change_message": ""
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 51,
+    "fields": {
+        "action_time": "2026-06-08T01:19:24.475Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "ticket"
+        ],
+        "object_id": "18",
+        "object_repr": "[Closed] [PM] WDAwaddw - IT",
+        "action_flag": 3,
+        "change_message": ""
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 52,
+    "fields": {
+        "action_time": "2026-06-08T01:19:24.475Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "ticket"
+        ],
+        "object_id": "16",
+        "object_repr": "[Closed] [PM] Awadw - IT",
+        "action_flag": 3,
+        "change_message": ""
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 53,
+    "fields": {
+        "action_time": "2026-06-08T01:19:33.075Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "ticket"
+        ],
+        "object_id": "21",
+        "object_repr": "[Open (Unassigned)] [PM] WDAwaddw - IT",
+        "action_flag": 3,
+        "change_message": ""
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 54,
+    "fields": {
+        "action_time": "2026-06-08T03:35:13.151Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "ticket"
+        ],
+        "object_id": "24",
+        "object_repr": "[Open (Unassigned)] [PM] Boom - IT",
+        "action_flag": 3,
+        "change_message": ""
+    }
+},
+{
+    "model": "admin.logentry",
+    "pk": 55,
+    "fields": {
+        "action_time": "2026-06-08T03:35:13.152Z",
+        "user": [
+            "super_admin"
+        ],
+        "content_type": [
+            "tickets",
+            "ticket"
+        ],
+        "object_id": "23",
+        "object_repr": "[Open (Unassigned)] [PM] IT Server CLeaning - IT",
+        "action_flag": 3,
+        "change_message": ""
+    }
+}
+]
