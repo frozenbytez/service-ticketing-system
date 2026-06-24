@@ -731,6 +731,32 @@ def it_staff_dashboard_home(request):
     time_filter = request.GET.get('time_filter', 'all')
     tickets = apply_time_filter(Ticket.objects.filter(assigned_to=request.user), time_filter)
 
+    reviewer_entries = []
+
+    # Client feedback ratings
+    for ticket in tickets.filter(client_feedback_rating__isnull=False).select_related('requester'):
+        reviewer_entries.append({
+            "name":   ticket.requester.get_full_name() or ticket.requester.username,
+            "role":   dict(DEPARTMENT_CHOICES).get(ticket.department, ticket.department),
+            "ticket": ticket.title,
+            "rating": ticket.client_feedback_rating,
+            "date":   ticket.resolved_at.strftime("%b %d, %Y") if ticket.resolved_at else "—",
+        })
+
+    # IT Head PM review ratings
+    for ticket in tickets.filter(pm_review_rating__isnull=False).select_related('pm_reviewed_by'):
+        if ticket.pm_reviewed_by:
+            reviewer_entries.append({
+                "name":   ticket.pm_reviewed_by.get_full_name() or ticket.pm_reviewed_by.username,
+                "role":   "IT Head (PM Review)",
+                "ticket": ticket.title,
+                "rating": ticket.pm_review_rating,
+                "date":   ticket.pm_reviewed_at.strftime("%b %d, %Y") if ticket.pm_reviewed_at else "—",
+            })
+
+    # Sort newest first
+    reviewer_entries.sort(key=lambda x: x["date"], reverse=True)
+
     total_assigned = tickets.count()
     total_resolved = tickets.filter(status__in=['RESOLVED', 'CLOSED']).count()
     total_active   = tickets.filter(status='IN_PROGRESS').count()
@@ -797,6 +823,7 @@ def it_staff_dashboard_home(request):
         'rating_chart_data':      json.dumps(rating_data),
         'monthly_labels':         json.dumps(monthly_labels),
         'monthly_counts':         json.dumps(monthly_counts),
+        'reviewer_ratings_json': json.dumps(reviewer_entries),
     }
     return render(request, 'tickets/it_staff_dashboard_home.html', context)
 

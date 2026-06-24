@@ -116,6 +116,67 @@
         }
         .avg-rating-stars { font-size: 22px; color: #d97706; letter-spacing: 3px; margin: 6px 0 4px; }
         .avg-rating-sub { font-size: 12px; color: var(--slate); }
+
+        /* ── Reviewer Matrix ─────────────────────────────── */
+        .reviewer-scroll {
+            overflow-y: auto;
+            max-height: 230px;
+            margin-top: 6px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+        .reviewer-scroll::-webkit-scrollbar { width: 5px; }
+        .reviewer-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .reviewer-matrix {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .reviewer-matrix thead th {
+            position: sticky; top: 0; z-index: 1;
+            background: #f8fafc;
+            font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .06em; color: var(--slate);
+            padding: 7px 10px; border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+        .reviewer-matrix tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+            transition: background .15s;
+        }
+        .reviewer-matrix tbody tr:last-child { border-bottom: none; }
+        .reviewer-matrix tbody tr:hover { background: #f8fafc; }
+        .reviewer-matrix td { padding: 9px 10px; vertical-align: middle; }
+
+        .rev-name-cell { display: flex; align-items: center; gap: 8px; }
+        .rev-avatar {
+            width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+            background: var(--teal-dim); border: 1px solid rgba(0,196,184,.25);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px; font-weight: 700; color: #00897b;
+            font-family: 'Sora', sans-serif;
+        }
+        .rev-name { font-size: 12.5px; font-weight: 600; color: var(--navy); white-space: nowrap; }
+        .rev-role { font-size: 10.5px; color: var(--slate-light); }
+
+        .rev-ticket {
+            font-size: 12px; color: var(--slate);
+            max-width: 140px; overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap;
+        }
+
+        .rev-stars { display: flex; align-items: center; gap: 2px; white-space: nowrap; }
+        .rev-stars i { font-size: 11px; color: #d97706; }
+        .rev-stars i.empty { color: #e2e8f0; }
+        .rev-score { font-size: 11px; font-weight: 700; color: var(--navy); margin-left: 4px; }
+
+        .rev-date { font-size: 11px; color: var(--slate-light); white-space: nowrap; }
+
+        .reviewer-empty {
+            text-align: center; padding: 32px 16px;
+            color: var(--slate-light); font-size: 13px;
+        }
+        .reviewer-empty i { font-size: 22px; color: var(--border); display: block; margin-bottom: 8px; }
     </style>
 </head>
 <body>
@@ -162,7 +223,7 @@
 </aside>
 
 <div class="page-wrapper">
-<div class="container">
+<div class="container" style="max-width:1280px;">
 
     <!-- ── Header ──────────────────────────────────────── -->
     <div class="dashboard-header">
@@ -223,7 +284,7 @@
         <div class="stat-card card-feedback">
             <div class="stat-icon"><i class="fa-solid fa-star"></i></div>
             <div class="stat-info">
-                <span class="stat-value">{{ avg_rating }}</span>
+                <span class="stat-value">{{ avg_rating }}/5.0</span>
                 <span class="stat-label">Avg Client Rating</span>
                 <div class="star-display">
                     {% with avg_rating|floatformat:0 as r %}
@@ -235,7 +296,7 @@
                             {% endif %}
                         {% endfor %}
                     {% endwith %}
-                    <span>/ 5.0</span>
+                    
                 </div>
             </div>
         </div>
@@ -294,6 +355,30 @@
                 <div style="display:flex; align-items:baseline; gap:6px;">
                     <span style="font-family:'Sora',sans-serif; font-size:28px; font-weight:800; color:var(--navy);">{{ avg_rating }}</span>
                     <span style="font-size:13px; color:var(--slate);">/ 5.0 avg</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reviewer Matrix -->
+        <div class="chart-card">
+            <div class="chart-title"><i class="fa-solid fa-table-list"></i> Who Rated Me</div>
+            <div class="reviewer-scroll">
+                <table class="reviewer-matrix">
+                    <thead>
+                        <tr>
+                            <th>Reviewer</th>
+                            <th>Ticket</th>
+                            <th>Rating</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reviewerMatrixBody">
+                        <!-- populated by JS below -->
+                    </tbody>
+                </table>
+                <div class="reviewer-empty" id="reviewerEmptyState" style="display:none;">
+                    <i class="fa-regular fa-face-meh"></i>
+                    No ratings received yet for this period.
                 </div>
             </div>
         </div>
@@ -417,7 +502,46 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    /* ── Monthly Trend Line ─────────────────────────────── */
+    /* ── Reviewer Matrix ─────────────────────────────────── */
+    const reviewerData = JSON.parse('{{ reviewer_ratings_json|safe|default:"[]" }}');
+    const tbody = document.getElementById('reviewerMatrixBody');
+    const emptyState = document.getElementById('reviewerEmptyState');
+
+    if (reviewerData.length === 0) {
+        emptyState.style.display = 'block';
+    } else {
+        reviewerData.forEach(function(r) {
+            const initials = r.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+            let stars = '';
+            for (let s = 1; s <= 5; s++) {
+                stars += s <= r.rating
+                    ? '<i class="fa-solid fa-star"></i>'
+                    : '<i class="fa-regular fa-star empty"></i>';
+            }
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <div class="rev-name-cell">
+                        <div class="rev-avatar">${initials}</div>
+                        <div>
+                            <div class="rev-name">${r.name}</div>
+                            <div class="rev-role">${r.role || ''}</div>
+                        </div>
+                    </div>
+                </td>
+                <td><div class="rev-ticket" title="${r.ticket}">${r.ticket}</div></td>
+                <td>
+                    <div class="rev-stars">
+                        ${stars}
+                        <span class="rev-score">${r.rating}</span>
+                    </div>
+                </td>
+                <td><span class="rev-date">${r.date}</span></td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
     const ctx  = document.getElementById('trendChart').getContext('2d');
     const grad = ctx.createLinearGradient(0, 0, 0, 200);
     grad.addColorStop(0, 'rgba(0,196,184,0.28)');

@@ -71,51 +71,53 @@
     {% endif %}
 
     {% if view_mode == 'history' %}
-        <div class="section-header">
+        <div class="section-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
             <h2 class="section-title"><i class="fa-solid fa-folder-open"></i> My Resolved Tickets</h2>
+            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                <a href="{% url 'export_tickets_csv' %}?{{ request.GET.urlencode }}"
+                   style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:#ecfdf5;color:#059669;border:1.5px solid #a7f3d0;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;"
+                   title="Download CSV (Excel-compatible)">
+                    <i class="fa-solid fa-file-excel"></i> CSV
+                </a>
+                <a href="{% url 'export_tickets_pdf' %}?{{ request.GET.urlencode }}"
+                   style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;"
+                   title="Download PDF Report">
+                    <i class="fa-solid fa-file-pdf"></i> PDF
+                </a>
+            </div>
         </div>
 
-        <div class="filter-bar">
-            <form method="GET" class="search-form" id="historyFilterForm">
+        <div class="filter-bar filter-bar--compact">
+            <form method="GET" class="search-form" id="historyFilterForm" style="flex-wrap:nowrap; overflow-x:auto; align-items:center;">
                 <input type="hidden" name="view" value="history">
-                <select name="type_filter" id="historyTypeFilter">
+                <select name="type_filter" id="historyTypeFilter" style="flex:0 0 auto; width:auto; min-width:0; font-size:14px; padding:8px 11px;">
                     <option value="">All Ticket Types</option>
                     <option value="standard" {% if type_filter == 'standard' %}selected{% endif %}>Standard Employee Requests</option>
                     <option value="pm" {% if type_filter == 'pm' %}selected{% endif %}>Preventive Maintenance Only</option>
                 </select>
-                <select name="status_filter" id="historyStatusFilter">
+                <select name="status_filter" id="historyStatusFilter" style="flex:0 0 auto; width:auto; min-width:0; font-size:14px; padding:8px 11px;">
                     <option value="">All Statuses</option>
                     <option value="RESOLVED" {% if status_filter == 'RESOLVED' %}selected{% endif %}>Pending Feedback (Resolved)</option>
                     <option value="CLOSED" {% if status_filter == 'CLOSED' %}selected{% endif %}>Completed & Rated (Closed)</option>
                 </select>
-                <select name="priority_filter" id="historyPriorityFilter">
+                <select name="priority_filter" id="historyPriorityFilter" style="flex:0 0 auto; width:auto; min-width:0; font-size:14px; padding:8px 11px;">
                     <option value="">All Priorities</option>
                     <option value="LOW" {% if priority_filter == 'LOW' %}selected{% endif %}>🟢 Low</option>
                     <option value="MEDIUM" {% if priority_filter == 'MEDIUM' %}selected{% endif %}>🔵 Medium</option>
                     <option value="HIGH" {% if priority_filter == 'HIGH' %}selected{% endif %}>🟡 High</option>
                     <option value="URGENT" {% if priority_filter == 'URGENT' %}selected{% endif %}>🔴 Urgent</option>
                 </select>
-                <select name="category_filter" id="historyCategoryFilter">
+                <select name="category_filter" id="historyCategoryFilter" style="flex:0 0 auto; width:auto; min-width:0; font-size:14px; padding:8px 11px;">
                     <option value="">All Categories</option>
                     {% for category in filter_categories %}
                     <option value="{{ category.key }}" {% if category_filter == category.key %}selected{% endif %}>{{ category.label }}</option>
                     {% endfor %}
                 </select>
                 {% if priority_filter or status_filter or type_filter or category_filter %}
-                <a href="?view=history" style="display:inline-flex; align-items:center; gap:6px; padding:9px 14px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:13px; color:var(--slate); text-decoration:none; font-weight:600; background:var(--bg);">
+                <a href="?view=history" style="display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-size:14px; color:var(--slate); text-decoration:none; font-weight:600; background:var(--bg); white-space:nowrap; flex-shrink:0;">
                     <i class="fa-solid fa-xmark"></i> Clear Filters
                 </a>
                 {% endif %}
-                <a href="{% url 'export_tickets_csv' %}?{{ request.GET.urlencode }}"
-                   style="display:inline-flex;align-items:center;gap:6px;padding:9px 15px;background:#ecfdf5;color:#059669;border:1.5px solid #a7f3d0;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;"
-                   title="Download CSV (Excel-compatible)">
-                    <i class="fa-solid fa-file-excel"></i> CSV
-                </a>
-                <a href="{% url 'export_tickets_pdf' %}?{{ request.GET.urlencode }}"
-                   style="display:inline-flex;align-items:center;gap:6px;padding:9px 15px;background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;"
-                   title="Download PDF Report">
-                    <i class="fa-solid fa-file-pdf"></i> PDF
-                </a>
             </form>
         </div>
 

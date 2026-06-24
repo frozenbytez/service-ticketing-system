@@ -135,7 +135,7 @@ html, body {
 .btn-ghost:hover { background: rgba(255,255,255,0.09); color: var(--white); border-color: rgba(255,255,255,0.32); }
 
 /* ── Container ───────────────────────────────────────────────── */
-.container { max-width: 880px; margin: 0 auto; padding: 44px 28px 72px; }
+.container { max-width: 1280px; margin: 0 auto; padding: 44px 28px 72px; }
 
 /* ── Page Header ─────────────────────────────────────────────── */
 .page-header {

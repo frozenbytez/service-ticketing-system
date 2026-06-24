@@ -172,7 +172,7 @@ html, body {
 }
 
 /* ── Container / Section ─────────────────────────────────────── */
-.container { max-width: 1140px; margin: 0 auto; padding: 44px 28px 80px; }
+.container { max-width: 1280px; margin: 0 auto; padding: 44px 28px 80px; }
 .section-header { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid var(--border); }
 .section-title {
   font-family: 'Sora', sans-serif; font-size: 23px; font-weight: 700;
@@ -332,4 +332,4 @@ html, body {
   .navbar { padding: 0 18px; }
   .grid { grid-template-columns: 1fr; }
   .history-card { flex-direction: column; align-items: flex-start; }
-} 
+}
